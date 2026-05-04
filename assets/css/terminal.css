@@ -1,0 +1,1001 @@
+/* ====================================================================
+ * TERMINAL DA ORDEM - Folha de estilo principal
+ * Identidade : Terminal Secreto / Investigação Paranormal
+ * Tipografia : Monoespaçada (JetBrains Mono)
+ * Paleta     : Sangue (vermelho), Morte (branco), Conhecimento (amarelo), Energia (roxo)
+ * ==================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&display=swap');
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+:root {
+    /* Canvas / superfícies */
+    --canvas: #000000;
+    --surface-1: #0a0a0a;
+    --surface-2: #121212;
+    --surface-3: #1a1a1a;
+
+    /* Bordas */
+    --border: rgba(232, 232, 232, 0.10);
+    --border-strong: rgba(232, 232, 232, 0.28);
+
+    /* Tipografia */
+    --ink: #e8e8e8;
+    --ink-dim: #8a8a8a;
+    --ink-faint: #4a4a4a;
+
+    /* Elementos do RPG (canon Ordem Paranormal) */
+    --el-sangue: #c8102e;
+    --el-morte: #f5f5f5;
+    --el-conhecimento: #ffd60a;
+    --el-energia: #9d4edd;
+
+    /* Estados */
+    --critico: #00ff66;
+    --falha: #ff3838;
+    --aviso: #ffd60a;
+
+    /* Tipos */
+    --mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', Consolas, 'Courier New', monospace;
+
+    /* Métricas */
+    --r: 2px;
+    --gutter: 24px;
+}
+
+html { scroll-behavior: smooth; }
+html, body { height: 100%; }
+
+body {
+    font-family: var(--mono);
+    background: var(--canvas);
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+}
+
+/* Scanlines decorativas */
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+        0deg,
+        rgba(255, 255, 255, 0.018) 0 1px,
+        transparent 1px 3px
+    );
+    z-index: 100;
+}
+
+/* Vinheta nas bordas */
+body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(
+        ellipse at center,
+        transparent 40%,
+        rgba(0, 0, 0, 0.55) 100%
+    );
+    z-index: 99;
+}
+
+a { color: inherit; text-decoration: none; }
+img { max-width: 100%; display: block; }
+button { font: inherit; color: inherit; cursor: pointer; }
+
+::selection {
+    background: var(--el-conhecimento);
+    color: #000;
+}
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--surface-1); }
+::-webkit-scrollbar-thumb {
+    background: var(--surface-3);
+    border: 1px solid var(--border);
+}
+::-webkit-scrollbar-thumb:hover { background: var(--ink-faint); }
+
+/* ====================================================================
+ * LAYOUT
+ * ==================================================================== */
+
+.terminal {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 24px var(--gutter);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    z-index: 1;
+}
+
+.terminal__corpo {
+    flex: 1 0 auto;
+    padding: 24px 0 48px;
+}
+
+/* ====================================================================
+ * TOPO + NAVEGAÇÃO
+ * ==================================================================== */
+
+.terminal__topo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 16px 20px;
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    flex-wrap: wrap;
+}
+
+.terminal__marca {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 8px;
+    color: var(--ink);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    font-size: 1rem;
+}
+
+.terminal__prompt { color: var(--el-conhecimento); }
+
+.terminal__cursor {
+    display: inline-block;
+    color: var(--el-conhecimento);
+    animation: piscar 1s steps(2, jump-none) infinite;
+}
+
+@keyframes piscar { 50% { opacity: 0; } }
+
+.terminal__nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.terminal__link {
+    color: var(--ink-dim);
+    font-size: 0.85rem;
+    letter-spacing: 0.05em;
+    transition: color 120ms ease, text-shadow 120ms ease;
+    padding: 4px 0;
+}
+
+.terminal__link:hover,
+.terminal__link:focus-visible {
+    color: var(--el-conhecimento);
+    text-shadow: 0 0 8px rgba(255, 214, 10, 0.4);
+}
+
+.terminal__link.is-ativo {
+    color: var(--el-conhecimento);
+    border-bottom: 1px solid var(--el-conhecimento);
+}
+
+/* ====================================================================
+ * RODAPÉ
+ * ==================================================================== */
+
+.terminal__rodape {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-top: 1px solid var(--border);
+    color: var(--ink-faint);
+    font-size: 0.78rem;
+    letter-spacing: 0.05em;
+}
+
+/* ====================================================================
+ * MENSAGENS FLASH
+ * ==================================================================== */
+
+.terminal__flashes {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.flash {
+    display: flex;
+    gap: 12px;
+    padding: 12px 16px;
+    border-left: 3px solid;
+    background: var(--surface-1);
+    align-items: baseline;
+    font-size: 0.85rem;
+}
+
+.flash--sucesso { border-color: var(--critico); }
+.flash--sucesso .flash__rotulo { color: var(--critico); }
+
+.flash--erro { border-color: var(--falha); }
+.flash--erro .flash__rotulo { color: var(--falha); }
+
+.flash--aviso { border-color: var(--aviso); }
+.flash--aviso .flash__rotulo { color: var(--aviso); }
+
+.flash__rotulo {
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    flex: 0 0 auto;
+}
+
+/* ====================================================================
+ * CABEÇALHOS DE PÁGINA
+ * ==================================================================== */
+
+.cabecalho-pagina {
+    margin-bottom: 32px;
+    padding-bottom: 16px;
+    border-bottom: 1px dashed var(--border-strong);
+}
+
+.cabecalho-pagina__titulo {
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    margin-bottom: 8px;
+    color: var(--el-morte);
+    display: inline-flex;
+    align-items: baseline;
+    gap: 12px;
+}
+
+.cabecalho-pagina__prompt,
+.cabecalho-pagina__bracket {
+    color: var(--el-conhecimento);
+}
+
+.cabecalho-pagina__subtitulo {
+    color: var(--ink-dim);
+    font-size: 0.9rem;
+    letter-spacing: 0.04em;
+}
+
+.cabecalho-pagina__subtitulo strong { color: var(--el-conhecimento); }
+
+.cabecalho-pagina__acoes {
+    margin-top: 16px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+/* ====================================================================
+ * DASHBOARD - GRADE DE MÓDULOS
+ * ==================================================================== */
+
+.grade-modulos {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+}
+
+.cartao-modulo {
+    display: block;
+    padding: 24px;
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    transition: border-color 200ms ease, transform 200ms ease, box-shadow 200ms ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.cartao-modulo::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent 60%, rgba(255, 214, 10, 0.04));
+    pointer-events: none;
+}
+
+.cartao-modulo--ativo:hover,
+.cartao-modulo--ativo:focus-visible {
+    border-color: var(--el-conhecimento);
+    transform: translateY(-2px);
+    box-shadow: 0 0 0 1px var(--el-conhecimento), 0 12px 32px -12px rgba(255, 214, 10, 0.2);
+}
+
+.cartao-modulo--bloqueado { opacity: 0.5; cursor: not-allowed; }
+
+.cartao-modulo__codigo {
+    color: var(--ink-faint);
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+}
+
+.cartao-modulo__nome {
+    margin: 8px 0 12px;
+    font-size: 1.15rem;
+    color: var(--el-morte);
+    letter-spacing: 0.05em;
+}
+
+.cartao-modulo--ativo .cartao-modulo__nome { color: var(--el-conhecimento); }
+
+.cartao-modulo__descricao {
+    color: var(--ink-dim);
+    font-size: 0.85rem;
+    margin-bottom: 16px;
+}
+
+.cartao-modulo__status {
+    font-size: 0.75rem;
+    color: var(--critico);
+    letter-spacing: 0.1em;
+}
+
+.cartao-modulo--bloqueado .cartao-modulo__status { color: var(--ink-faint); }
+
+/* ====================================================================
+ * BOTÕES
+ * ==================================================================== */
+
+.botao {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    background: transparent;
+    border: 1px solid var(--border-strong);
+    color: var(--ink);
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    transition: background 150ms ease, color 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
+    border-radius: var(--r);
+    text-transform: uppercase;
+}
+
+.botao:hover,
+.botao:focus-visible {
+    border-color: var(--el-conhecimento);
+    color: var(--el-conhecimento);
+    box-shadow: 0 0 14px -4px rgba(255, 214, 10, 0.5);
+    outline: none;
+}
+
+.botao--primario {
+    border-color: var(--el-conhecimento);
+    color: var(--el-conhecimento);
+}
+
+.botao--primario:hover,
+.botao--primario:focus-visible {
+    background: var(--el-conhecimento);
+    color: #000;
+    box-shadow: 0 0 18px -2px rgba(255, 214, 10, 0.6);
+}
+
+.botao--secundario {
+    border-color: var(--border-strong);
+    color: var(--ink-dim);
+}
+
+.botao--perigo {
+    border-color: rgba(200, 16, 46, 0.5);
+    color: var(--el-sangue);
+}
+
+.botao--perigo:hover,
+.botao--perigo:focus-visible {
+    background: var(--el-sangue);
+    color: #fff;
+    box-shadow: 0 0 14px -2px rgba(200, 16, 46, 0.5);
+}
+
+.botao--pequeno {
+    padding: 6px 12px;
+    font-size: 0.72rem;
+}
+
+/* ====================================================================
+ * TABELAS
+ * ==================================================================== */
+
+.tabela-envoltorio {
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+}
+
+.tabela {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+
+.tabela thead th {
+    text-align: left;
+    padding: 12px 16px;
+    background: var(--surface-2);
+    color: var(--el-conhecimento);
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    border-bottom: 1px solid var(--border-strong);
+    white-space: nowrap;
+}
+
+.tabela tbody td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    color: var(--ink);
+    vertical-align: middle;
+}
+
+.tabela tbody tr:nth-child(even) { background: rgba(255, 255, 255, 0.015); }
+.tabela tbody tr:hover { background: rgba(255, 214, 10, 0.04); }
+.tabela tbody tr:last-child td { border-bottom: none; }
+
+.tabela__id {
+    color: var(--ink-faint);
+    font-size: 0.78rem;
+    white-space: nowrap;
+}
+
+.tabela__data {
+    color: var(--ink-dim);
+    font-size: 0.78rem;
+    white-space: nowrap;
+}
+
+.tabela__truncar {
+    max-width: 320px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--ink-dim);
+}
+
+.tabela__col-acoes,
+.tabela__acoes {
+    text-align: right;
+    white-space: nowrap;
+}
+
+.tabela__acoes {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
+.formulario-inline { display: inline; }
+
+/* ====================================================================
+ * FORMULÁRIO
+ * ==================================================================== */
+
+.formulario {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    max-width: 720px;
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    padding: 32px;
+    border-radius: var(--r);
+}
+
+.campo {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.campo__rotulo {
+    color: var(--ink-dim);
+    font-size: 0.78rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+}
+
+.campo__indice { color: var(--el-conhecimento); }
+.campo__obrigatorio { color: var(--el-sangue); }
+
+.campo__entrada {
+    width: 100%;
+    padding: 12px 14px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    color: var(--ink);
+    font-family: var(--mono);
+    font-size: 0.9rem;
+    border-radius: var(--r);
+    transition: border-color 150ms ease, box-shadow 150ms ease, background 150ms ease;
+}
+
+.campo__entrada::placeholder { color: var(--ink-faint); }
+
+.campo__entrada:focus {
+    outline: none;
+    border-color: var(--el-conhecimento);
+    background: var(--surface-3);
+    box-shadow: 0 0 0 3px rgba(255, 214, 10, 0.12);
+}
+
+.campo__entrada--textarea {
+    resize: vertical;
+    min-height: 140px;
+    line-height: 1.6;
+}
+
+.campo--invalido .campo__entrada {
+    border-color: var(--falha);
+    box-shadow: 0 0 0 3px rgba(255, 56, 56, 0.12);
+}
+
+.campo__erro {
+    color: var(--falha);
+    font-size: 0.78rem;
+    min-height: 1em;
+}
+.campo__erro:empty { display: none; }
+
+.campo__ajuda {
+    color: var(--ink-faint);
+    font-size: 0.75rem;
+}
+
+.formulario__acoes {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+    padding-top: 16px;
+    border-top: 1px dashed var(--border);
+}
+
+/* ====================================================================
+ * ESTADO VAZIO
+ * ==================================================================== */
+
+.estado-vazio {
+    text-align: center;
+    padding: 48px 24px;
+    border: 1px dashed var(--border);
+    border-radius: var(--r);
+    background: var(--surface-1);
+}
+
+.estado-vazio__arte {
+    color: var(--ink-faint);
+    font-size: 0.85rem;
+    line-height: 1.4;
+    margin-bottom: 16px;
+    white-space: pre;
+}
+
+.estado-vazio__texto {
+    color: var(--ink-dim);
+    font-size: 0.9rem;
+}
+
+.link {
+    color: var(--el-conhecimento);
+    border-bottom: 1px solid currentColor;
+}
+
+/* ====================================================================
+ * ACESSIBILIDADE
+ * ==================================================================== */
+
+.visualmente-oculto {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+:focus-visible {
+    outline: 2px solid var(--el-conhecimento);
+    outline-offset: 3px;
+}
+
+/* ====================================================================
+ * RESPONSIVIDADE
+ * ==================================================================== */
+
+@media (max-width: 768px) {
+    .terminal { padding: 16px; }
+    .terminal__topo { flex-direction: column; align-items: stretch; }
+    .terminal__nav { justify-content: flex-start; }
+    .cabecalho-pagina__titulo { font-size: 1.2rem; }
+    .formulario { padding: 20px; }
+    .tabela__truncar { max-width: 160px; }
+    .tabela thead th,
+    .tabela tbody td { padding: 10px 12px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .terminal__cursor { animation: none; opacity: 1; }
+    *, *::before, *::after {
+        transition-duration: 0ms !important;
+        animation-duration: 0ms !important;
+    }
+}
+
+/* ====================================================================
+ * FILTROS (galeria)
+ * ==================================================================== */
+
+.filtros {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 16px;
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    border: 1px dashed var(--border);
+    border-radius: var(--r);
+    background: var(--surface-1);
+}
+.filtros__grupo {
+    display: flex; flex-direction: column; gap: 4px;
+    min-width: 180px; flex: 1 1 180px;
+}
+.filtros__rotulo {
+    color: var(--ink-faint);
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+}
+.filtros__select {
+    padding: 8px 10px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    color: var(--ink);
+    font: inherit;
+    border-radius: var(--r);
+}
+.filtros__select:focus {
+    outline: none;
+    border-color: var(--el-conhecimento);
+    box-shadow: 0 0 0 3px rgba(255, 214, 10, 0.12);
+}
+.filtros__acoes { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* ====================================================================
+ * GALERIA DE CARTÕES (NPC e Criatura)
+ * ==================================================================== */
+
+.galeria {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+}
+
+/* ----------------------------------------------------------- CARTAO NPC */
+.cartao-npc {
+    display: flex;
+    flex-direction: column;
+    padding: 18px 20px;
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--ink-faint);
+    border-radius: var(--r);
+    transition: border-color 200ms ease, transform 200ms ease, box-shadow 200ms ease;
+}
+.cartao-npc:hover {
+    transform: translateY(-2px);
+    border-color: var(--border-strong);
+}
+.cartao-npc--amigavel {
+    border-left-color: var(--critico);
+    box-shadow: inset 3px 0 0 0 var(--critico), 0 0 22px -10px rgba(0, 255, 102, 0.25);
+}
+.cartao-npc--amigavel:hover {
+    box-shadow: inset 3px 0 0 0 var(--critico), 0 0 26px -6px rgba(0, 255, 102, 0.35);
+}
+.cartao-npc--neutro     { border-left-color: var(--ink-dim); }
+.cartao-npc--hostil {
+    border-left-color: var(--el-sangue);
+    box-shadow: inset 3px 0 0 0 var(--el-sangue), 0 0 22px -10px rgba(200, 16, 46, 0.3);
+}
+.cartao-npc--hostil:hover {
+    box-shadow: inset 3px 0 0 0 var(--el-sangue), 0 0 26px -6px rgba(200, 16, 46, 0.45);
+}
+
+.cartao-npc__topo {
+    display: flex; justify-content: space-between; align-items: center;
+    color: var(--ink-faint);
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    margin-bottom: 10px;
+}
+.cartao-npc__atitude {
+    padding: 2px 8px;
+    border: 1px solid currentColor;
+    border-radius: 2px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+}
+.cartao-npc__atitude--amigavel { color: var(--critico); }
+.cartao-npc__atitude--neutro   { color: var(--ink-dim); }
+.cartao-npc__atitude--hostil   { color: var(--el-sangue); }
+
+.cartao-npc__nome {
+    margin: 0 0 8px;
+    color: var(--el-morte);
+    font-size: 1.1rem;
+    letter-spacing: 0.04em;
+}
+
+.cartao-npc__meta {
+    margin: 0 0 12px;
+    display: grid;
+    gap: 2px;
+    font-size: 0.78rem;
+}
+.cartao-npc__meta-linha { display: flex; gap: 8px; }
+.cartao-npc__meta dt { color: var(--ink-faint); min-width: 6em; letter-spacing: 0.06em; }
+.cartao-npc__meta dd { margin: 0; color: var(--ink); }
+
+.cartao-npc__historia {
+    flex: 1;
+    margin: 0 0 14px;
+    color: var(--ink-dim);
+    font-size: 0.82rem;
+    line-height: 1.55;
+}
+.cartao-npc__acoes { display: flex; gap: 8px; margin-top: auto; }
+
+/* ----------------------------------------------------- CARTAO CRIATURA */
+.cartao-criatura {
+    display: flex;
+    flex-direction: column;
+    padding: 18px 20px;
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-left: 3px solid;
+    border-radius: var(--r);
+    position: relative;
+    transition: transform 200ms ease;
+}
+.cartao-criatura:hover { transform: translateY(-2px); }
+.cartao-criatura__topo {
+    display: flex; justify-content: space-between; align-items: baseline;
+    color: var(--ink-faint);
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    margin-bottom: 8px;
+}
+.cartao-criatura__nome {
+    margin: 0 0 10px;
+    color: var(--el-morte);
+    font-size: 1.15rem;
+    letter-spacing: 0.04em;
+}
+.cartao-criatura__elemento {
+    display: inline-block;
+    padding: 2px 8px;
+    border: 1px solid currentColor;
+    border-radius: 2px;
+    font-weight: 700;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+}
+.cartao-criatura__stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin: 8px 0 12px;
+    padding: 10px 12px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+}
+.cartao-criatura__stat { display: flex; flex-direction: column; gap: 2px; }
+.cartao-criatura__stat dt {
+    color: var(--ink-faint);
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+}
+.cartao-criatura__stat dd {
+    margin: 0;
+    color: var(--el-conhecimento);
+    font-size: 1.05rem;
+    font-weight: 700;
+}
+.cartao-criatura__habilidades {
+    flex: 1;
+    margin: 0 0 14px;
+    color: var(--ink-dim);
+    font-size: 0.82rem;
+    line-height: 1.55;
+}
+.cartao-criatura__acoes { display: flex; gap: 8px; margin-top: auto; }
+
+/* Variações dinâmicas por elemento */
+.cartao-criatura--sangue {
+    border-left-color: var(--el-sangue);
+    animation: pulsar-sangue 2.6s ease-in-out infinite;
+}
+.cartao-criatura--sangue .cartao-criatura__elemento { color: var(--el-sangue); }
+@keyframes pulsar-sangue {
+    0%, 100% { box-shadow: inset 3px 0 0 0 var(--el-sangue), 0 0 0 rgba(200, 16, 46, 0); }
+    50%      { box-shadow: inset 3px 0 0 0 var(--el-sangue), 0 0 22px -2px rgba(200, 16, 46, 0.55); }
+}
+
+.cartao-criatura--morte {
+    border-left-color: var(--el-morte);
+    box-shadow: inset 3px 0 0 0 var(--el-morte), 0 0 30px -8px rgba(245, 245, 245, 0.18);
+}
+.cartao-criatura--morte .cartao-criatura__elemento { color: var(--el-morte); }
+.cartao-criatura--morte::before {
+    content: "";
+    position: absolute; inset: 0;
+    pointer-events: none;
+    background: radial-gradient(circle at 18% -10%, rgba(245, 245, 245, 0.08), transparent 55%);
+    border-radius: inherit;
+}
+
+.cartao-criatura--conhecimento {
+    border-left-color: var(--el-conhecimento);
+    box-shadow: inset 3px 0 0 0 var(--el-conhecimento), 0 0 18px -6px rgba(255, 214, 10, 0.35);
+}
+.cartao-criatura--conhecimento .cartao-criatura__elemento { color: var(--el-conhecimento); }
+
+.cartao-criatura--energia {
+    border-left-color: var(--el-energia);
+    animation: piscar-energia 2.4s linear infinite;
+}
+.cartao-criatura--energia .cartao-criatura__elemento { color: var(--el-energia); }
+@keyframes piscar-energia {
+    0%, 92%, 100% { box-shadow: inset 3px 0 0 0 var(--el-energia), 0 0 12px -4px rgba(157, 78, 221, 0.4); }
+    93%           { box-shadow: inset 3px 0 0 0 var(--el-energia), 0 0 28px -2px rgba(157, 78, 221, 0.85); }
+    96%           { box-shadow: inset 3px 0 0 0 var(--el-energia), 0 0 6px -4px rgba(157, 78, 221, 0.2); }
+}
+
+/* ====================================================================
+ * FORMULÁRIO - linhas com múltiplas colunas
+ * ==================================================================== */
+
+.formulario__linha {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 24px;
+}
+
+/* ====================================================================
+ * ROLADOR DE DADOS
+ * ==================================================================== */
+
+.rolador {
+    display: grid;
+    grid-template-columns: minmax(280px, 1fr) minmax(280px, 1.3fr);
+    gap: 24px;
+    align-items: start;
+}
+@media (max-width: 760px) { .rolador { grid-template-columns: 1fr; } }
+
+.rolador__painel {
+    padding: 24px;
+    border: 1px solid var(--border);
+    background: var(--surface-1);
+    border-radius: var(--r);
+}
+.rolador__resultado {
+    min-height: 360px;
+    padding: 24px;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    border-radius: var(--r);
+    text-align: center;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 16px;
+}
+.rolador__valor {
+    font-size: clamp(4rem, 12vw, 7rem);
+    line-height: 1;
+    color: var(--el-morte);
+    text-shadow: 0 0 18px rgba(245, 245, 245, 0.2);
+    letter-spacing: -0.04em;
+    transition: color 200ms ease, text-shadow 200ms ease;
+    font-weight: 700;
+}
+.rolador__valor.is-critico  {
+    color: var(--critico);
+    text-shadow: 0 0 30px rgba(0, 255, 102, 0.6);
+}
+.rolador__valor.is-desastre {
+    color: var(--falha);
+    text-shadow: 0 0 30px rgba(255, 56, 56, 0.55);
+}
+.rolador__rotulo {
+    color: var(--ink-dim);
+    letter-spacing: 0.12em;
+    font-size: 0.78rem;
+}
+.rolador__rotulo.is-critico  { color: var(--critico); }
+.rolador__rotulo.is-desastre { color: var(--falha); }
+
+.rolador__dados {
+    display: flex; flex-wrap: wrap;
+    gap: 6px; justify-content: center;
+}
+.dado-mini {
+    width: 2.4rem; height: 2.4rem;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--r);
+    background: var(--surface-3);
+    font-weight: 700;
+    color: var(--ink);
+    transform: rotate(-3deg);
+    transition: transform 150ms ease, color 150ms ease, border-color 150ms ease;
+}
+.dado-mini.is-vencedor {
+    transform: rotate(0) scale(1.12);
+    border-color: var(--el-conhecimento);
+    color: var(--el-conhecimento);
+    background: rgba(255, 214, 10, 0.08);
+}
+.dado-mini.is-perdedor { opacity: 0.4; }
+
+.dado-svg {
+    width: clamp(160px, 26vw, 240px);
+    height: clamp(160px, 26vw, 240px);
+    filter: drop-shadow(0 0 14px rgba(255, 214, 10, 0.18));
+}
+.dado-svg.is-rolando { animation: girar-dado 0.55s linear infinite; }
+@keyframes girar-dado {
+    from { transform: rotate(0) scale(1); }
+    50%  { transform: rotate(180deg) scale(1.06); }
+    to   { transform: rotate(360deg) scale(1); }
+}
+
+/* ====================================================================
+ * TABELAS - extras para histórico
+ * ==================================================================== */
+
+.tabela__resultado {
+    font-weight: 700;
+    color: var(--el-morte);
+    font-size: 1.05rem;
+}
+.tabela__resultado.is-critico  { color: var(--critico); }
+.tabela__resultado.is-desastre { color: var(--falha); }
+.tabela__tag {
+    display: inline-block;
+    padding: 1px 6px;
+    border: 1px solid currentColor;
+    border-radius: 2px;
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    margin-left: 4px;
+}
+.tabela__tag.is-critico  { color: var(--critico); }
+.tabela__tag.is-desastre { color: var(--falha); }

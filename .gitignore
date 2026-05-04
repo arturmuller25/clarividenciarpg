@@ -1,0 +1,29 @@
+# Configurações locais do Claude Code (não devem ir pro repositório)
+.claude/settings.local.json
+
+# IDE / editores
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Sistema operacional
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Logs / cache PHP
+*.log
+error_log
+php_errors.log
+*.cache
+
+# Dependências (caso futuro)
+/vendor/
+/node_modules/
+
+# Backups e temporários
+*.bak
+*.tmp
+*.orig
