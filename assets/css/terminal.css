@@ -32,40 +32,82 @@
     --border-strong: rgba(232, 232, 232, 0.28);
     --border-metal:  rgba(232, 232, 232, 0.16);
 
-    /* Tipografia */
+    /* Tipografia (cores) */
     --ink: #e8e8e8;
     --ink-dim: #8a8a8a;
     --ink-faint: #4a4a4a;
+    --ink-paper: #d8c9a5;   /* texto sobre fundo dourado (helper) */
 
-    /* Elementos do RPG (canon Ordem Paranormal — wiki/Elementos_do_Outro_Lado) */
-    /* Os 4 elementos clássicos + Medo (o "elemento mestre" / vazio primordial) */
-    --el-sangue:       #c8102e;  /* Sangue - vermelho profundo (combate, violência) */
-    --el-morte:        #d8d8d8;  /* Morte - branco pálido (silêncio, decadência) */
-    --el-conhecimento: #ffd60a;  /* Conhecimento - dourado (saber proibido) */
-    --el-energia:      #9d4edd;  /* Energia - roxo neon (caos, anomalia) */
-    --el-medo:         #5a1d8a;  /* Medo - púrpura escuro (vazio primordial) */
+    /* Elementos do RPG (canon Ordem Paranormal) — paleta ENVENENADA (Decisão D4)
+     * Cores envelhecidas/dessaturadas extraídas do design system —
+     * mostarda em vez de neon, roxo cinza, sangue antigo, fosforescente.
+     * Substituem o neon original (#ffd60a / #9d4edd / #c8102e / #00ff66). */
+    --el-sangue:       #a53846;  /* sangue antigo (era #c8102e) */
+    --el-morte:        #d8d8d8;  /* mantém — silêncio, decadência */
+    --el-conhecimento: #e0b53d;  /* mostarda envelhecida (era #ffd60a) */
+    --el-energia:      #7b4d9e;  /* roxo cinza dessaturado (era #9d4edd) */
+    --el-medo:         #5a1d8a;  /* mantém — vazio primordial */
+    --gold-dim:        #a08527;  /* helper para variantes de dourado em UI dim */
 
-    /* Glows pré-calculados (usados como acento de destaque) */
-    --glow-sangue:       0 0 18px rgba(200, 16, 46, 0.55);
+    /* Glows pré-calculados (recalculados para a paleta envenenada) */
+    --glow-sangue:       0 0 18px rgba(165,  56,  70, 0.55);
     --glow-morte:        0 0 18px rgba(245, 245, 245, 0.30);
-    --glow-conhecimento: 0 0 18px rgba(255, 214, 10, 0.55);
-    --glow-energia:      0 0 18px rgba(157, 78, 221, 0.55);
-    --glow-medo:         0 0 22px rgba(90, 29, 138, 0.45);
+    --glow-conhecimento: 0 0 18px rgba(224, 181,  61, 0.55);
+    --glow-energia:      0 0 18px rgba(123,  77, 158, 0.55);
+    --glow-medo:         0 0 22px rgba( 90,  29, 138, 0.45);
 
     /* Estados */
-    --critico: #00ff66;
-    --falha: #ff3838;
-    --aviso: #ffd60a;
+    --critico: #5fa873;   /* verde fosforescente apagado (era #00ff66) */
+    --falha:   #ff3838;   /* mantém — desastre Nat-1 segue dramático */
+    --aviso:   #e0b53d;   /* alinhado com novo --el-conhecimento */
 
-    /* Tipografia em três camadas */
+    /* Tipografia (famílias) */
     --titulo: 'Cinzel', 'Trajan Pro', 'Times New Roman', serif;
     --ui:     'Montserrat', 'Segoe UI', system-ui, sans-serif;
     --corpo:  'Helvetica Neue', Helvetica, Arial, sans-serif;
     --mono:   'JetBrains Mono', 'Fira Code', Consolas, 'Courier New', monospace;
 
-    /* Métricas */
-    --r: 2px;
-    --gutter: 24px;
+    /* Tipografia (escalas semânticas — shorthands `font:`) — Decisão D3 */
+    --t-h1:      700 1.8rem/1.2 var(--titulo);
+    --t-h2:      700 1.25rem/1.25 var(--titulo);
+    --t-h3:      600 1rem/1.3 var(--titulo);
+    --t-display: 900 clamp(3.4rem, 9vw, 5rem)/1 var(--titulo);
+    --t-ui:      500 0.85rem/1.4 var(--ui);
+    --t-label:   500 0.72rem/1.2 var(--ui);
+    --t-body:    400 0.92rem/1.65 var(--corpo);
+    --t-small:   400 0.78rem/1.5 var(--corpo);
+    --t-mono:    500 0.85rem/1.4 var(--mono);
+
+    /* Letter-spacing (terminal vibe) */
+    --ls-tight:  -0.02em;
+    --ls-base:    0.04em;
+    --ls-ui:      0.06em;
+    --ls-label:   0.10em;
+    --ls-caps:    0.12em;
+    --ls-wide:    0.18em;
+
+    /* Métricas / spacing */
+    --r:        2px;     /* radius universal — sharp corners (terminal) */
+    --gutter:   24px;
+    --space-1:  4px;
+    --space-2:  8px;
+    --space-3:  12px;
+    --space-4:  16px;
+    --space-5:  20px;
+    --space-6:  24px;
+    --space-8:  32px;
+
+    /* Elevação (shadows pré-calculados) */
+    --shadow-card:  0 8px 24px -16px rgba(0, 0, 0, 0.8);
+    --shadow-lift:  0 12px 32px -12px rgba(224, 181, 61, 0.20);  /* gold envenenado */
+    --shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+
+    /* Animação */
+    --ease-standard:  cubic-bezier(0.65, 0, 0.35, 1);
+    --ease-overshoot: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --t-fast:    150ms;
+    --t-base:    220ms;
+    --t-slow:    380ms;
 }
 
 html { scroll-behavior: smooth; }
@@ -73,11 +115,17 @@ html, body { height: 100%; }
 
 body {
     font-family: var(--corpo);
-    /* Canvas Medo: obsidiana com sutil tinta púrpura no canto superior esquerdo
-       e um pulso de sangue no inferior direito — invocando o "vazio primordial" */
+    /* Background contínuo — 6 radial gradients fixos cobrem o scroll inteiro,
+     * seções fundem em vez de cortar. Tons dominantes:
+     *   púrpura Medo (cantos), sangue antigo (centro-baixo), dourado dim (alto-direita).
+     * Origem: ui_kits/painel/index.html linhas 17-29. */
     background:
-        radial-gradient(ellipse at 12% -8%,  rgba(90, 29, 138, 0.16),  transparent 55%),
-        radial-gradient(ellipse at 92% 110%, rgba(200, 16, 46, 0.08), transparent 55%),
+        radial-gradient(640px 460px at  8%  6%, rgba( 60, 28,  90, 0.32), transparent 70%),
+        radial-gradient(520px 700px at 96% 22%, rgba( 40, 20,  55, 0.22), transparent 75%),
+        radial-gradient(900px 420px at 38% 48%, rgba( 80, 16,  30, 0.16), transparent 72%),
+        radial-gradient(720px 600px at 18% 72%, rgba( 60, 28,  90, 0.40), transparent 70%),
+        radial-gradient(820px 540px at 88% 88%, rgba( 28, 12,  46, 0.55), transparent 70%),
+        radial-gradient(260px 260px at 78%  4%, rgba(120, 90,  40, 0.10), transparent 80%),
         var(--canvas);
     background-attachment: fixed;
     color: var(--ink);
@@ -90,32 +138,32 @@ body {
     -moz-osx-font-smoothing: grayscale;
 }
 
-/* Scanlines decorativas */
+/* Grão SVG fractal — overlay contínuo (substitui scanlines lineares).
+ * z-index baixo para ficar abaixo de modais/painéis sem interferir em cliques.
+ * Origem: ui_kits/painel/index.html linhas 31-34. */
 body::before {
     content: '';
     position: fixed;
     inset: 0;
     pointer-events: none;
-    background: repeating-linear-gradient(
-        0deg,
-        rgba(255, 255, 255, 0.018) 0 1px,
-        transparent 1px 3px
-    );
-    z-index: 100;
+    z-index: 1;
+    opacity: 0.055;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.92' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.9 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
 }
 
-/* Vinheta nas bordas */
+/* Vinheta nas bordas — escurece os cantos para focar atenção no centro.
+ * Ajustada para o padrão do design system (38% transparente → 55% black). */
 body::after {
     content: '';
     position: fixed;
     inset: 0;
     pointer-events: none;
+    z-index: 2;
     background: radial-gradient(
         ellipse at center,
-        transparent 40%,
+        transparent 38%,
         rgba(0, 0, 0, 0.55) 100%
     );
-    z-index: 99;
 }
 
 a { color: inherit; text-decoration: none; }
