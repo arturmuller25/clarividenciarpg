@@ -119,6 +119,32 @@
             return (checked && DADOS[checked.value]) ? checked.value : 'd20';
         }
 
+        /**
+         * Escolhe o som apropriado para a quantidade de dados rolados.
+         *   1 dado     → audioRolagem (som padrão)
+         *   2-4 dados  → audioRolagemMulti
+         *   5+ dados   → audioRolagemMuitos
+         * Faz fallback para o som padrão se algum não estiver carregado.
+         *
+         * Definida AQUI dentro (não fora do DOMContentLoaded) para ter
+         * closure sobre as variáveis audioRolagem*.
+         */
+        function tocarAudioRolagem(quantidade) {
+            let alvo = null;
+            if (quantidade >= 5)      alvo = audioRolagemMuitos || audioRolagemMulti || audioRolagem;
+            else if (quantidade >= 2) alvo = audioRolagemMulti  || audioRolagem;
+            else                       alvo = audioRolagem;
+
+            if (!alvo) return null;
+            try {
+                alvo.pause();
+                alvo.currentTime = 0;
+                alvo.volume = 0.55;
+                alvo.play().catch(() => { /* autoplay bloqueado, ignora */ });
+            } catch (e) { /* navegador antigo */ }
+            return alvo;
+        }
+
         form.addEventListener('submit', async (evt) => {
             evt.preventDefault();
 
@@ -316,6 +342,7 @@
 
     /**
      * Cria um Audio() pré-carregado a partir de uma URL (ou null).
+     * Stateless — pode ficar no escopo da IIFE.
      */
     function criarAudio(src) {
         if (!src) return null;
@@ -326,30 +353,8 @@
     }
 
     /**
-     * Escolhe o som apropriado para a quantidade de dados rolados.
-     *   1 dado     → audioRolagem (som padrão)
-     *   2-4 dados  → audioRolagemMulti
-     *   5+ dados   → audioRolagemMuitos
-     * Faz fallback para o som padrão se algum não estiver carregado.
-     */
-    function tocarAudioRolagem(quantidade) {
-        let alvo = null;
-        if (quantidade >= 5)      alvo = audioRolagemMuitos || audioRolagemMulti || audioRolagem;
-        else if (quantidade >= 2) alvo = audioRolagemMulti  || audioRolagem;
-        else                       alvo = audioRolagem;
-
-        if (!alvo) return null;
-        try {
-            alvo.pause();
-            alvo.currentTime = 0;
-            alvo.volume = 0.55;
-            alvo.play().catch(() => { /* autoplay bloqueado, ignora */ });
-        } catch (e) { /* navegador antigo */ }
-        return alvo;
-    }
-
-    /**
      * Fade-out linear do volume usando requestAnimationFrame (suave, sem clique).
+     * Stateless — pode ficar no escopo da IIFE.
      */
     function fadeOutAudio(audioEl, duracao) {
         const volumeInicial = audioEl.volume;
