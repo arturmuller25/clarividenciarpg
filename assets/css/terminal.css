@@ -1186,6 +1186,12 @@ button { font: inherit; color: inherit; cursor: pointer; }
     background: rgba(255, 214, 10, 0.08);
 }
 .dado-mini.is-perdedor { opacity: 0.4; }
+/* Multi-dado em tipos não-d20: todos os valores valem igual, sem destaque */
+.dado-mini.is-igual {
+    color: var(--ink);
+    border-color: var(--border-strong);
+    background: var(--surface-3);
+}
 
 .dado-svg {
     width: clamp(160px, 26vw, 240px);

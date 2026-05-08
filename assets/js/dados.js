@@ -44,14 +44,15 @@
         const csrfToken = form.dataset.csrf || '';
         const apiUrl    = form.dataset.api  || '/rolagem/api.php';
 
-        // Audio da rolagem (opcional — instanciado uma vez e reusado).
-        // Volume calibrado em 0.55 para nao competir com a UI.
-        const audioSrc = form.dataset.audioRolagem || '';
-        const audioRolagem = audioSrc ? new Audio(audioSrc) : null;
-        if (audioRolagem) {
-            audioRolagem.preload = 'auto';
-            audioRolagem.volume  = 0.55;
-        }
+        // 3 sons distintos por quantidade de dados (ver tocarAudioRolagem):
+        //   1 dado    → som_para_as_rolagens.mp3
+        //   2-4 dados → som_para_rolagem_multipla.mp3
+        //   5+ dados  → som_para_rolagem_com_muitos_dados.mp3
+        const audioRolagem        = criarAudio(form.dataset.audioRolagem);
+        const audioRolagemMulti   = criarAudio(form.dataset.audioRolagemMultipla);
+        const audioRolagemMuitos  = criarAudio(form.dataset.audioRolagemMuitos);
+        let   audioAtivo          = null;  // referência ao último Audio tocando
+
         // Duracao aproximada da animacao visual (ticker 750ms + folga ate o "settle"):
         const DURACAO_ANIMACAO_MS = 1100;
 
@@ -69,11 +70,26 @@
         atualizarVisibilidadeAtributo();
 
         function atualizarVisibilidadeAtributo() {
-            const tipo = obterTipoSelecionado();
+            const tipo  = obterTipoSelecionado();
+            const isD20 = tipo === 'd20';
 
-            // Mostra/esconde o campo de atributo (apenas d20 usa)
+            // Campo de quantidade SEMPRE visível agora — todos os tipos
+            // suportam multi-dado. Apenas a ajuda muda.
             if (campoAtr) {
-                campoAtr.classList.toggle('is-oculto', tipo !== 'd20');
+                campoAtr.classList.remove('is-oculto');
+            }
+
+            // Toggle das ajudas contextuais
+            form.querySelectorAll('[data-ajuda-d20]').forEach((el) => { el.hidden = !isD20; });
+            form.querySelectorAll('[data-ajuda-outros]').forEach((el) => { el.hidden = isD20; });
+
+            // Min/max do input: d20 permite 0 (DESASTRE), demais não
+            const inputQtd = form.querySelector('#quantidade');
+            if (inputQtd) {
+                inputQtd.min = isD20 ? '0' : '1';
+                if (!isD20 && parseInt(inputQtd.value, 10) === 0) {
+                    inputQtd.value = '1';
+                }
             }
 
             // Atualiza o label dentro do SVG grande
@@ -115,9 +131,12 @@
             const descricao  = (dadosForm.get('descricao')  || '').toString().trim();
             const tipo       = obterTipoSelecionado();
             const isD20      = tipo === 'd20';
+            // Quantidade agora se aplica a TODOS os tipos. d20 permite 0 (desastre).
+            // Demais tipos: mínimo 1 (sem regra de desastre).
+            const qtdRaw     = parseInt(dadosForm.get('quantidade') || '1', 10);
             const quantidade = isD20
-                ? Math.max(0, Math.min(10, parseInt(dadosForm.get('quantidade') || '1', 10)))
-                : 1;
+                ? Math.max(0, Math.min(10, qtdRaw))
+                : Math.max(1, Math.min(10, qtdRaw));
 
             if (quemRolou === '' || descricao === '') {
                 window.alert('Identifique quem esta rolando e o motivo da rolagem.');
@@ -134,16 +153,12 @@
                 }, COOLDOWN_MS);
             }
 
-            // SFX da rolagem — disparado no MESMO instante que a animacao visual
-            // comeca, garantindo sincronia. Reset para permitir cliques rapidos.
-            if (audioRolagem) {
-                try {
-                    audioRolagem.pause();
-                    audioRolagem.currentTime = 0;
-                    audioRolagem.volume = 0.55;
-                    audioRolagem.play().catch(() => { /* autoplay bloqueado, ignora */ });
-                } catch (e) { /* navegador antigo, ignora */ }
-            }
+            // SFX: escolha o som apropriado para a quantidade.
+            //   1 dado     → som padrão da rolagem
+            //   2-4 dados  → som de rolagem múltipla (vários dados batendo)
+            //   5+ dados   → som de rolagem com muitos dados (cascata)
+            // Para d20 com atributo=0 (desastre), são 2 dados → múltipla.
+            audioAtivo = tocarAudioRolagem(quantidade === 0 ? 2 : quantidade);
 
             // Animacao de "girando"
             elSvg?.classList.add('is-rolando');
@@ -169,13 +184,13 @@
             if (ehCritico)  { elValor.classList.add('is-critico');  elRotulo.classList.add('is-critico');  }
             if (ehDesastre) { elValor.classList.add('is-desastre'); elRotulo.classList.add('is-desastre'); }
 
-            elRotulo.textContent = textoRotulo(tipo, modo, ehCritico, ehDesastre);
-            renderizarMiniDados(elDados, rolagens, resultadoFinal);
+            elRotulo.textContent = textoRotulo(tipo, modo, ehCritico, ehDesastre, rolagens, resultadoFinal);
+            renderizarMiniDados(elDados, rolagens, resultadoFinal, modo);
 
             // Sincroniza o audio com a duracao visual: se ainda estiver tocando
             // alem do tempo da animacao, faz fadeOut suave (sem corte abrupto).
-            if (audioRolagem && !audioRolagem.paused) {
-                fadeOutAudio(audioRolagem, 450);
+            if (audioAtivo && !audioAtivo.paused) {
+                fadeOutAudio(audioAtivo, 450);
             }
 
             // Persistencia server-side
@@ -202,7 +217,18 @@
     });
 
     /**
-     * Lanca dados conforme o tipo e regra aplicavel.
+     * Lança dados conforme o tipo e a regra aplicável.
+     *
+     * d20:
+     *   - quantidade = 0 → DESASTRE: 2d20, mantém o MENOR
+     *   - quantidade = 1 → NORMAL: 1d20
+     *   - quantidade ≥ 2 → VANTAGEM: NdN, mantém o MAIOR
+     *   resultadoFinal = valor único escolhido
+     *
+     * Outros tipos (d4, d6, d8, d10, d12, d100):
+     *   - quantidade = 1 → SIMPLES: 1 dado, valor exibido
+     *   - quantidade ≥ 2 → MÚLTIPLA: N dados independentes,
+     *     TODOS exibidos na UI, resultadoFinal = SOMA
      */
     function rolar(tipo, quantidade) {
         const lados = DADOS[tipo] || 20;
@@ -220,15 +246,19 @@
                 modo = n === 1 ? 'normal' : 'vantagem';
             }
         } else {
-            // d4, d6, d8, d10, d12, d100 — rolagem simples
-            rolagens = [rolarDado(lados)];
-            resultadoFinal = rolagens[0];
-            modo = 'simples';
+            const n = Math.max(1, Math.min(10, quantidade));
+            rolagens = Array.from({ length: n }, () => rolarDado(lados));
+            if (n === 1) {
+                resultadoFinal = rolagens[0];
+                modo = 'simples';
+            } else {
+                resultadoFinal = rolagens.reduce((s, v) => s + v, 0);
+                modo = 'multipla';
+            }
         }
 
-        // Brilho APENAS em 1 (Falha Critica) e 20 (Sucesso Critico) NO d20.
-        // Outros tipos de dado (d4, d6, d8, d10, d12, d100) NAO possuem
-        // criticos/desastres — sao rolagens neutras do ponto de vista de regra.
+        // Brilho APENAS em 1 (Falha) e 20 (Sucesso) NO d20.
+        // Outros tipos de dado e multi-dado não acionam crítico nem desastre.
         const ehD20 = tipo === 'd20';
         return {
             rolagens,
@@ -247,30 +277,75 @@
         return new Promise((resolve) => setTimeout(resolve, ms));
     }
 
-    function textoRotulo(tipo, modo, ehCritico, ehDesastre) {
+    function textoRotulo(tipo, modo, ehCritico, ehDesastre, rolagens, resultadoFinal) {
         if (ehCritico)  return '>> SUCESSO CRÍTICO! O Outro Lado responde com clareza.';
         if (ehDesastre) return '>> FALHA CRÍTICA. As entidades sussurram com escárnio.';
         if (modo === 'desastre') return '>> DESASTRE. Resultado mantido: menor dado.';
         if (modo === 'vantagem') return '>> VANTAGEM. Resultado mantido: maior dado.';
         if (modo === 'simples')  return '>> ' + tipo.toUpperCase() + ' — rolagem simples confirmada.';
+        if (modo === 'multipla') {
+            return '>> ' + rolagens.length + tipo.toUpperCase() + ' — '
+                 + rolagens.join(' + ') + ' = ' + resultadoFinal;
+        }
         return '>> ROLAGEM CONFIRMADA.';
     }
 
-    function renderizarMiniDados(container, rolagens, resultadoFinal) {
+    function renderizarMiniDados(container, rolagens, resultadoFinal, modo) {
         container.innerHTML = '';
+        // Em multi não-d20 (modo='multipla'), TODOS os valores valem igual —
+        // não há "vencedor". Renderizamos todos com a mesma ênfase.
+        const exibirVencedor = modo === 'normal' || modo === 'vantagem' || modo === 'desastre';
         let jaDestacado = false;
         rolagens.forEach((valor) => {
             const el = document.createElement('span');
             el.className = 'dado-mini';
             el.textContent = String(valor);
-            if (!jaDestacado && valor === resultadoFinal) {
-                el.classList.add('is-vencedor');
-                jaDestacado = true;
+            if (exibirVencedor) {
+                if (!jaDestacado && valor === resultadoFinal) {
+                    el.classList.add('is-vencedor');
+                    jaDestacado = true;
+                } else {
+                    el.classList.add('is-perdedor');
+                }
             } else {
-                el.classList.add('is-perdedor');
+                el.classList.add('is-igual');  // todos pesam igual
             }
             container.appendChild(el);
         });
+    }
+
+    /**
+     * Cria um Audio() pré-carregado a partir de uma URL (ou null).
+     */
+    function criarAudio(src) {
+        if (!src) return null;
+        const a = new Audio(src);
+        a.preload = 'auto';
+        a.volume  = 0.55;
+        return a;
+    }
+
+    /**
+     * Escolhe o som apropriado para a quantidade de dados rolados.
+     *   1 dado     → audioRolagem (som padrão)
+     *   2-4 dados  → audioRolagemMulti
+     *   5+ dados   → audioRolagemMuitos
+     * Faz fallback para o som padrão se algum não estiver carregado.
+     */
+    function tocarAudioRolagem(quantidade) {
+        let alvo = null;
+        if (quantidade >= 5)      alvo = audioRolagemMuitos || audioRolagemMulti || audioRolagem;
+        else if (quantidade >= 2) alvo = audioRolagemMulti  || audioRolagem;
+        else                       alvo = audioRolagem;
+
+        if (!alvo) return null;
+        try {
+            alvo.pause();
+            alvo.currentTime = 0;
+            alvo.volume = 0.55;
+            alvo.play().catch(() => { /* autoplay bloqueado, ignora */ });
+        } catch (e) { /* navegador antigo */ }
+        return alvo;
     }
 
     /**

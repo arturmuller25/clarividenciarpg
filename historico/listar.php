@@ -79,11 +79,13 @@ require __DIR__ . '/../views/cabecalho.php';
                     $ehDesastre = (bool) $r['eh_desastre'];
                     $classeRes  = $ehCritico ? 'is-critico' : ($ehDesastre ? 'is-desastre' : '');
                     $qtd        = (int) $r['quantidade_dados'];
-                    // Para d20 com regra de Ordem Paranormal, mostrar Nd20 ou 2d20 (desastre).
-                    // Para outros tipos, sempre 1 dado simples.
-                    $rotuloDados = $tipoDado === 'd20'
-                        ? (($qtd === 0 ? '2' : (string) $qtd) . 'd20')
-                        : ('1' . $tipoDado);
+                    // Rótulo NdX:
+                    //   d20 atributo=0 (DESASTRE) → 2d20
+                    //   demais casos → quantidade real (mín. 1)
+                    $qtdReal     = $tipoDado === 'd20' && $qtd === 0
+                        ? 2
+                        : max(1, $qtd);
+                    $rotuloDados = $qtdReal . $tipoDado;
                 ?>
                     <tr>
                         <td class="tabela__data" data-label="Quando">

@@ -217,14 +217,14 @@ CREATE TABLE log_rolagens (
     tipo_dado         ENUM('d4','d6','d8','d10','d12','d20','d100')
                                        NOT NULL DEFAULT 'd20',
     resultados_brutos JSON             NOT NULL,
-    resultado_final   TINYINT UNSIGNED NOT NULL,
+    resultado_final   SMALLINT UNSIGNED NOT NULL,
     eh_critico        BOOLEAN          NOT NULL DEFAULT FALSE,
     eh_desastre       BOOLEAN          NOT NULL DEFAULT FALSE,
     rolado_em         TIMESTAMP        NOT NULL DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_log_rolado_em (rolado_em),
     INDEX idx_log_quem      (quem_rolou),
     INDEX idx_log_tipo_dado (tipo_dado),
-    CONSTRAINT chk_log_resultado CHECK (resultado_final BETWEEN 1 AND 100),
+    CONSTRAINT chk_log_resultado CHECK (resultado_final BETWEEN 1 AND 2000),
     CONSTRAINT chk_log_qtd       CHECK (quantidade_dados BETWEEN 0 AND 10)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

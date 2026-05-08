@@ -34,6 +34,8 @@ require __DIR__ . '/../views/cabecalho.php';
           data-csrf="<?= escapar(gerarTokenCsrf()) ?>"
           data-api="<?= escapar(url('/rolagem/api.php')) ?>"
           data-audio-rolagem="<?= escapar(url('/assets/audio/som_para_as_rolagens.mp3')) ?>"
+          data-audio-rolagem-multipla="<?= escapar(url('/assets/audio/som_para_rolagem_multipla.mp3')) ?>"
+          data-audio-rolagem-muitos="<?= escapar(url('/assets/audio/som_para_rolagem_com_muitos_dados.mp3')) ?>"
           autocomplete="off">
 
         <div class="campo">
@@ -138,13 +140,19 @@ require __DIR__ . '/../views/cabecalho.php';
 
         <div class="campo" id="campo-atributo">
             <label for="quantidade" class="campo__rotulo">
-                <span class="campo__indice">04.</span> ATRIBUTO (N&Uacute;MERO DE DADOS)
+                <span class="campo__indice">04.</span> QUANTIDADE DE DADOS
             </label>
             <input type="number" id="quantidade" name="quantidade"
                    class="campo__entrada" min="0" max="10" value="3" required>
-            <small class="campo__ajuda">
-                0 = DESASTRE (rola 2, pega menor). 1-10 = vantagem (rola N, pega maior).
-                <strong>Exclusivo do d20.</strong>
+            <!-- Ajuda específica para d20 -->
+            <small class="campo__ajuda" data-ajuda-d20>
+                <strong>d20:</strong> 0 = DESASTRE (rola 2, pega o menor).
+                1-10 = vantagem (rola N, pega o maior).
+            </small>
+            <!-- Ajuda específica para os demais tipos de dado -->
+            <small class="campo__ajuda" data-ajuda-outros hidden>
+                Rola N dados independentes; <strong>todos os valores são exibidos</strong>
+                e o resultado é a SOMA. Mín. 1, máx. 10.
             </small>
         </div>
 

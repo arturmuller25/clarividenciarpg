@@ -81,12 +81,12 @@ try {
 }
 
 // Coerência: quantidade de dados rolados deve casar com a regra
-//   d20: quantidade=0 -> esperado 2; quantidade>=1 -> esperado N
-//   outros tipos: sempre 1 dado
+//   d20:    quantidade=0 → esperado 2; quantidade≥1 → esperado N
+//   outros: sempre N (mínimo 1)
 $quantidadeEsperada = match (true) {
     $tipoDado === 'd20' && $quantidade === 0 => 2,
     $tipoDado === 'd20'                      => $quantidade,
-    default                                  => 1,
+    default                                  => max(1, $quantidade),
 };
 if (!$erros && count($brutos) !== $quantidadeEsperada) {
     $erros[] = sprintf(
@@ -105,14 +105,22 @@ if ($erros) {
 }
 
 // Recalcula sempre no servidor — nunca confie em valores derivados do cliente.
+//   d20:
+//     quantidade=0  → DESASTRE: min(brutos)
+//     quantidade≥1  → VANTAGEM/NORMAL: max(brutos)
+//   outros tipos:
+//     1 dado        → o próprio valor
+//     N dados (>1)  → SOMA de todos
 $resultadoFinal = match (true) {
     $tipoDado === 'd20' && $quantidade === 0 => min($brutos),
     $tipoDado === 'd20'                      => max($brutos),
-    default                                  => $brutos[0],
+    count($brutos) === 1                     => $brutos[0],
+    default                                  => array_sum($brutos),
 };
 
 // Crítico/Desastre APENAS no d20 (regra Ordem Paranormal). Outros tipos
-// de dado registram a rolagem mas sem flags de crítico/falha.
+// de dado e rolagens multi-dado registram a rolagem mas sem flags de
+// crítico/falha — a SOMA não é "crítica" mesmo quando vale 20.
 $ehCritico  = $tipoDado === 'd20' && $resultadoFinal === 20;
 $ehDesastre = $tipoDado === 'd20' && $resultadoFinal === 1;
 
