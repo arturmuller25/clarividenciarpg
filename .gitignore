@@ -39,3 +39,8 @@ uploads/*/*
 /som_para_as_rolagens.mp3
 /som_para_rolagem_multipla.mp3
 /som_para_rolagem_com_muitos_dados.mp3
+
+# Pasta temporária de assets do Claude Design (extraídos via handoff/ZIP).
+# Conteúdo é movido para os destinos finais durante a integração e a pasta
+# pode ser deletada no fim. Não vai pro Git.
+/_design_import/
