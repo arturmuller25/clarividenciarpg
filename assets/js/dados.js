@@ -30,6 +30,33 @@
         d100: 100,
     };
 
+    /**
+     * Calibragem MANUAL de volume por arquivo.
+     *
+     * Os 3 .mp3 foram gravados com volumes diferentes (peak/RMS distintos).
+     * Como nao reencodamos os arquivos, ajustamos o volume de reproducao
+     * em JS para deixar tudo na mesma "loudness perceptual".
+     *
+     * Valores entre 0.0 e 1.0. Ajuste se algum som ainda parecer alto/baixo:
+     *  - rolagem  (som padrao)         — base de comparacao
+     *  - multipla (2-4 dados)          — ajustado para empilhar com rolagem
+     *  - muitos   (5+ dados)           — ajustado para empilhar com os 2 acima
+     *
+     * Quando varios sons tocam JUNTOS, valores menores evitam saturacao
+     * (clipping) na mistura.
+     */
+    const VOLUMES = {
+        rolagem:  0.55,
+        multipla: 0.50,
+        muitos:   0.50,
+    };
+
+    /**
+     * FadeOut bem rapido: o som termina no INSTANTE em que o numero
+     * aparece na tela (ticker dura ~750ms; este fade encerra em 80ms).
+     */
+    const FADE_OUT_MS = 80;
+
     document.addEventListener('DOMContentLoaded', () => {
         const form = document.getElementById('form-rolagem');
         if (!form) return;
@@ -44,14 +71,16 @@
         const csrfToken = form.dataset.csrf || '';
         const apiUrl    = form.dataset.api  || '/rolagem/api.php';
 
-        // 3 sons distintos por quantidade de dados (ver tocarAudioRolagem):
-        //   1 dado    → som_para_as_rolagens.mp3
-        //   2-4 dados → som_para_rolagem_multipla.mp3
-        //   5+ dados  → som_para_rolagem_com_muitos_dados.mp3
+        // 3 sons que se EMPILHAM conforme a quantidade de dados:
+        //   1 dado    → som_para_as_rolagens (sozinho)
+        //   2-4 dados → som_para_as_rolagens + som_para_rolagem_multipla
+        //   5+ dados  → som_para_as_rolagens + som_para_rolagem_multipla
+        //                                    + som_para_rolagem_com_muitos_dados
+        // Empilhar = sensacao de varios dados rolando juntos.
         const audioRolagem        = criarAudio(form.dataset.audioRolagem);
         const audioRolagemMulti   = criarAudio(form.dataset.audioRolagemMultipla);
         const audioRolagemMuitos  = criarAudio(form.dataset.audioRolagemMuitos);
-        let   audioAtivo          = null;  // referência ao último Audio tocando
+        let   audiosAtivos        = [];   // array dos Audios tocando agora
 
         // Duracao aproximada da animacao visual (ticker 750ms + folga ate o "settle"):
         const DURACAO_ANIMACAO_MS = 1100;
@@ -120,29 +149,36 @@
         }
 
         /**
-         * Escolhe o som apropriado para a quantidade de dados rolados.
-         *   1 dado     → audioRolagem (som padrão)
-         *   2-4 dados  → audioRolagemMulti
-         *   5+ dados   → audioRolagemMuitos
-         * Faz fallback para o som padrão se algum não estiver carregado.
+         * Dispara TODOS os sons aplicáveis para a quantidade de dados rolados.
+         * Os sons tocam SIMULTANEAMENTE — efeito de cascata de dados batendo.
          *
-         * Definida AQUI dentro (não fora do DOMContentLoaded) para ter
-         * closure sobre as variáveis audioRolagem*.
+         *   1 dado    → [rolagem]
+         *   2-4 dados → [rolagem, multipla]
+         *   5+ dados  → [rolagem, multipla, muitos]
+         *
+         * Cada audio toca com seu volume calibrado em VOLUMES.* para que
+         * a mistura nao sature.
+         *
+         * Definida AQUI dentro do DOMContentLoaded para ter closure sobre
+         * as variaveis audioRolagem* / VOLUMES.
          */
-        function tocarAudioRolagem(quantidade) {
-            let alvo = null;
-            if (quantidade >= 5)      alvo = audioRolagemMuitos || audioRolagemMulti || audioRolagem;
-            else if (quantidade >= 2) alvo = audioRolagemMulti  || audioRolagem;
-            else                       alvo = audioRolagem;
+        function tocarAudiosRolagem(quantidade) {
+            const camadas = [];
+            if (audioRolagem)                            camadas.push([audioRolagem,       VOLUMES.rolagem]);
+            if (quantidade >= 2 && audioRolagemMulti)    camadas.push([audioRolagemMulti,  VOLUMES.multipla]);
+            if (quantidade >= 5 && audioRolagemMuitos)   camadas.push([audioRolagemMuitos, VOLUMES.muitos]);
 
-            if (!alvo) return null;
-            try {
-                alvo.pause();
-                alvo.currentTime = 0;
-                alvo.volume = 0.55;
-                alvo.play().catch(() => { /* autoplay bloqueado, ignora */ });
-            } catch (e) { /* navegador antigo */ }
-            return alvo;
+            const ativos = [];
+            camadas.forEach(([audio, volume]) => {
+                try {
+                    audio.pause();
+                    audio.currentTime = 0;
+                    audio.volume = volume;
+                    audio.play().catch(() => { /* autoplay bloqueado, ignora */ });
+                    ativos.push(audio);
+                } catch (e) { /* navegador antigo */ }
+            });
+            return ativos;
         }
 
         form.addEventListener('submit', async (evt) => {
@@ -179,12 +215,13 @@
                 }, COOLDOWN_MS);
             }
 
-            // SFX: escolha o som apropriado para a quantidade.
-            //   1 dado     → som padrão da rolagem
-            //   2-4 dados  → som de rolagem múltipla (vários dados batendo)
-            //   5+ dados   → som de rolagem com muitos dados (cascata)
-            // Para d20 com atributo=0 (desastre), são 2 dados → múltipla.
-            audioAtivo = tocarAudioRolagem(quantidade === 0 ? 2 : quantidade);
+            // SFX em CAMADAS — os sons disparam juntos para dar a sensacao
+            // de varios dados rolando em coro:
+            //   1 dado     → 1 som
+            //   2-4 dados  → 2 sons sobrepostos
+            //   5+ dados   → 3 sons sobrepostos
+            // Para d20 atributo=0 (desastre, 2 dados) cai em "2-4".
+            audiosAtivos = tocarAudiosRolagem(quantidade === 0 ? 2 : quantidade);
 
             // Animacao de "girando"
             elSvg?.classList.add('is-rolando');
@@ -213,11 +250,14 @@
             elRotulo.textContent = textoRotulo(tipo, modo, ehCritico, ehDesastre, rolagens, resultadoFinal);
             renderizarMiniDados(elDados, rolagens, resultadoFinal, modo);
 
-            // Sincroniza o audio com a duracao visual: se ainda estiver tocando
-            // alem do tempo da animacao, faz fadeOut suave (sem corte abrupto).
-            if (audioAtivo && !audioAtivo.paused) {
-                fadeOutAudio(audioAtivo, 450);
-            }
+            // Cortar TODOS os audios ativos no INSTANTE em que o numero
+            // aparece — fadeOut bem rapido (FADE_OUT_MS) evita "click"
+            // ao parar abruptamente, mas mantem o efeito de "som acaba
+            // junto com o resultado".
+            audiosAtivos.forEach((a) => {
+                if (a && !a.paused) fadeOutAudio(a, FADE_OUT_MS);
+            });
+            audiosAtivos = [];
 
             // Persistencia server-side
             try {
