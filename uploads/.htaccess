@@ -1,9 +1,9 @@
 # =====================================================================
 # TERMINAL DA ORDEM - Politica de seguranca para a pasta /uploads
 #
-# Esta pasta serve apenas como repositorio de imagens (campanhas, agentes,
-# NPCs, criaturas). NUNCA executar PHP/CGI a partir daqui — qualquer arquivo
-# malicioso enviado disfarcado nao vira RCE.
+# Esta pasta serve apenas como repositorio de imagens. NUNCA executar
+# PHP/CGI a partir daqui. Imagens validas (jpg/png/webp) sao servidas
+# normalmente. Tudo o mais e bloqueado.
 # =====================================================================
 
 # 1) Bloquear execucao de codigo: PHP, CGI, JSP, etc.
@@ -11,11 +11,20 @@
     Require all denied
 </FilesMatch>
 
-# 2) Forcar tipo de arquivo correto (sem auto-deteccao perigosa)
-<FilesMatch "\.(jpg|jpeg)$">  ForceType image/jpeg  </FilesMatch>
-<FilesMatch "\.png$">          ForceType image/png   </FilesMatch>
-<FilesMatch "\.gif$">          ForceType image/gif   </FilesMatch>
-<FilesMatch "\.webp$">         ForceType image/webp  </FilesMatch>
+# 2) Forcar tipo de arquivo correto (cada bloco em LINHAS SEPARADAS —
+#    Apache nao tolera <FilesMatch> e </FilesMatch> na mesma linha).
+<FilesMatch "\.(jpg|jpeg)$">
+    ForceType image/jpeg
+</FilesMatch>
+<FilesMatch "\.png$">
+    ForceType image/png
+</FilesMatch>
+<FilesMatch "\.gif$">
+    ForceType image/gif
+</FilesMatch>
+<FilesMatch "\.webp$">
+    ForceType image/webp
+</FilesMatch>
 
 # 3) Desativar engines de script ainda que ativas no servidor pai
 <IfModule mod_php.c>
@@ -28,10 +37,10 @@
     php_flag engine off
 </IfModule>
 
-# 4) Negar listagem de diretorio (informacao desnecessaria a clientes)
+# 4) Negar listagem de diretorio
 Options -Indexes
 
-# 5) Servir arquivos com Cache forte (sao imutaveis depois de upload)
+# 5) Cache forte para imagens (sao imutaveis depois do upload — nome e aleatorio)
 <IfModule mod_headers.c>
     Header set Cache-Control "public, max-age=2592000, immutable"
 </IfModule>

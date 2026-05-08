@@ -3339,53 +3339,41 @@ pre, code {
  * primeiro filho de [data-cropper]; o resto é construído via JS.
  * ==================================================================== */
 
+/* Cropper v2 — TUDO no canvas, sem <img> flutuante. Robusto. */
 [data-cropper] {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
     padding: 14px;
     background: var(--surface-2);
     border: 1px dashed var(--border-strong);
     border-radius: var(--r);
+    align-items: center;
 }
 
 .cropper__palco {
-    position: relative;
     width: 320px;
     height: 320px;
     max-width: 100%;
-    overflow: hidden;
-    background: #000;
-    border: 1px solid var(--border);
+    border: 2px dashed rgba(255, 214, 10, 0.55);
     border-radius: var(--r);
+    background: #000;
+    box-shadow:
+        inset 0 0 0 1px rgba(0, 0, 0, 0.5),
+        0 0 18px -8px rgba(255, 214, 10, 0.4);
+    /* O canvas dentro tem dimensões fixas; nada vaza para fora. */
+}
+
+.cropper__canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
     cursor: grab;
     user-select: none;
     touch-action: none;
-    align-self: center;
+    border-radius: calc(var(--r) - 2px);
 }
-.cropper__palco:active { cursor: grabbing; }
-
-.cropper__img {
-    position: absolute;
-    top: 0;
-    left: 0;
-    pointer-events: none;
-    transform-origin: 0 0;
-    will-change: transform;
-}
-
-/* Máscara: quadrado central revelado, escuro nas bordas */
-.cropper__mascara {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    /* Anel escuro com furo central — usa box-shadow inset combinado */
-    border: 2px dashed rgba(255, 214, 10, 0.55);
-    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.55);
-    /* O furo é o próprio palco (320x320). Como a mascara cobre 100% e tem
-       9999px de sombra, o resultado visual é uma "moldura escura" externa.
-       Como o palco tem overflow:hidden, só a parte de dentro é visível. */
-}
+.cropper__canvas:active { cursor: grabbing; }
 
 .cropper__controles {
     display: flex;
@@ -3393,35 +3381,52 @@ pre, code {
     justify-content: center;
     gap: 10px;
     flex-wrap: wrap;
+    width: 100%;
+    max-width: 320px;
 }
 .cropper__btn {
-    width: 36px;
-    height: 36px;
+    width: 40px;
+    height: 40px;
     background: var(--surface-3);
     border: 1px solid var(--border-strong);
     color: var(--ink);
     border-radius: var(--r);
     font-family: var(--mono);
     font-weight: 700;
+    font-size: 1.1rem;
     cursor: pointer;
     transition: all 150ms ease;
+    line-height: 1;
 }
-.cropper__btn:hover {
+.cropper__btn:hover,
+.cropper__btn:focus-visible {
     border-color: var(--el-conhecimento);
     color: var(--el-conhecimento);
+    outline: none;
+    box-shadow: 0 0 12px -4px rgba(255, 214, 10, 0.5);
 }
-.cropper__btn--reset { font-size: 1.1rem; }
+.cropper__btn--reset { font-size: 1.2rem; }
+
 .cropper__slider {
-    flex: 1 1 200px;
-    max-width: 240px;
+    flex: 1 1 140px;
+    max-width: 200px;
+    height: 6px;
     accent-color: var(--el-conhecimento);
+    cursor: pointer;
 }
+
 .cropper__dica {
     margin: 0;
     color: var(--ink-faint);
     font-size: 0.75rem;
     text-align: center;
     letter-spacing: 0.04em;
+    max-width: 320px;
+}
+
+[data-cropper] input[type="file"] {
+    width: 100%;
+    max-width: 320px;
 }
 
 /* Esconder palco/controles quando ainda não há imagem (apenas o file input visível) */
@@ -3432,7 +3437,8 @@ pre, code {
 }
 
 @media (max-width: 540px) {
-    .cropper__palco { width: 240px; height: 240px; }
+    .cropper__palco { width: 260px; height: 260px; }
+    [data-cropper] input[type="file"] { max-width: 260px; }
 }
 
 /* Badge do tipo de dado na tabela do Historico */
