@@ -1,18 +1,27 @@
 # Painel de Investigação e Gestão de Entidades: Clarividência Paranormal
 
+> **Nota (08/05/2026):** este brief reflete o estado **atual** do produto.
+> A evolução desde o MVP v0.1 está documentada em `decisoes.md` e `logs.md`.
+> Algumas funcionalidades antes listadas como "limitações" do MVP já foram
+> entregues nas fases 2-4 (campanhas, ficha de agente, áudio).
+
 
 ##  Visão Geral do Projeto
-**Clarividência Paranormal** é uma aplicação web de suporte para Mestres e Jogadores do sistema de RPG Ordem Paranormal.
-A proposta central é funcionar como um artefato digital de investigação, ajudando mestres a:
-Gerenciar fichas de NPCs e Criaturas de forma ágil
-Automatizar rolagens de dados com regras complexas do sistema
-Manter um registro histórico da narrativa (logs de eventos)
-Visualizar ameaças de acordo com seus elementos do "Outro Lado"
+**Clarividência Paranormal** é uma plataforma web (VTT — Virtual Tabletop)
+para o sistema de RPG **Ordem Paranormal**. Funciona como um artefato
+digital de investigação, ajudando mestres a:
+
+- Gerenciar **campanhas** com capa, descrição e entidades vinculadas
+- Manter fichas de **agentes** (PJs), **NPCs** e **criaturas** com fotos
+- Automatizar rolagens de dados (d4..d100) com regras canônicas
+- Manter um histórico cronológico da narrativa
+- Visualizar ameaças de acordo com seus elementos do "Outro Lado"
+
 O sistema cruza:
-Dados de atributos de agentes e monstros
-Mecânicas específicas de dados (escolha do maior valor)
-Persistência em banco de dados para continuidade da campanha
-Identidade visual imersiva para o clima de horror e investigação
+- Dados de atributos de agentes e monstros
+- Mecânicas específicas de dados (vantagem/desastre/multi-dado)
+- Persistência em banco de dados para continuidade da campanha
+- Identidade visual imersiva para o clima de horror e investigação
 
 
 ##  Problemas que o Produto Resolve
@@ -59,77 +68,129 @@ O sistema processa a lógica de dados e exibe o resultado com impacto visual
 Cada ação relevante é registrada no "Log de Clarividência" para consulta futura
 
 
-## Funcionalidades do MVP
-**1. Dashboard (O Terminal)**
-Visão geral da sessão
-Atalhos para rolagens rápidas de dados
-Exibição dos últimos registros do log
+## Funcionalidades (estado atual — v0.2)
+
+**0. Hero / Splash Screen**
+- d20 SVG 3D com 11 faces visíveis sombreadas, gira 1.8s e assenta no 20
+- 3 ondas de choque concêntricas (dourado + sangue + flash radial)
+- Áudio sincronizado com a animação (`som_para_a_hero.mp3`)
+- Roda apenas na **primeira visita** ou em **F5** (não em cliques internos)
 
 
-**2. Gerenciador de NPCs**
-Cadastro completo (Nome, ocupação, localização, história)
-Classificação por Atitude (Amigável, Neutro, Hostil)
-Busca e filtragem rápida
+**1. Dashboard (O Painel do Mestre)**
+- 4 indicadores numéricos (campanhas, agentes, dossiês, ameaças, rolagens)
+- Grade de 6 módulos com status operacional
+- Lista lateral das 5 últimas rolagens registradas
 
 
-**3. Bestiário Paranormal**
-Cadastro de Criaturas (Nome, VD, PV, Habilidades)
-Vinculação Elemental: Definição do elemento (Sangue, Morte, Energia ou Conhecimento)
-Interface dinâmica: o card da criatura muda de cor e estilo com base no elemento selecionado
+**2. Gerenciador de Campanhas**
+- CRUD completo com upload de capa (cropper 1:1 vanilla canvas)
+- Subqueries de contagem mostram agentes/NPCs/criaturas vinculados
+- Descrição livre, sistema (default "Ordem Paranormal"), capa opcional
 
 
-**4. Lançador de Dados "Clarividente"**
-Lógica customizada: Rola n dados e destaca automaticamente o maior resultado
-Suporte a Atributo 0 (rola 2 dados e pega o menor)
-Animação SVG/CSS: Feedback visual do dado em movimento
+**3. Ficha de Agente (PJ) Completa**
+- 9 seções colapsáveis em `<details>` HTML5: Identidade, Barras
+  (PV/SAN/PE), Atributos (FOR/AGI/INT/VIG/PRE), Defesa, Narrativa,
+  Perícias (26 canônicas com 4 graus), Combate (ataques calculados
+  em tempo real), Inventário (com tracking de espaços), Rituais
+- Salvamento transacional (BEGIN/COMMIT/ROLLBACK) com tabelas filhas
+- Foto recortada em 1:1 via cropper canvas
 
 
-**5. Histórico de Missão (Logs)**
-Persistência de todas as rolagens no banco de dados
-Lista cronológica de eventos com carimbo de tempo
-Possibilidade de deletar ou editar registros antigos
+**4. Gerenciador de NPCs**
+- Cadastro completo (Nome, ocupação, localização, história, foto)
+- Classificação por Atitude (Amigável, Neutro, Hostil)
+- Busca textual em nome/ocupação/história + filtros por atitude/localização
+- Vinculação opcional a uma campanha
+- Dossiê individual (visualizar.php) com layout de "arquivo da Ordem"
+
+
+**5. Bestiário Paranormal**
+- Cadastro de Criaturas (Nome, VD, PV, Habilidades, foto)
+- Vinculação Elemental: Sangue, Morte, Conhecimento ou Energia
+- Interface dinâmica: card pulsa/glita por elemento, glow específico
+- Vinculação opcional a uma campanha
+- Perfil individual (visualizar.php) por criatura
+
+
+**6. Lançador de Dados (Ritual de Clarividência)**
+- 7 tipos de dado com **ícones geométricos SVG canônicos**:
+  d4 (pirâmide), d6 (cubo), d8 (octaedro), d10 (pentágono duplo),
+  d12 (dodecaedro), d20 (icosaedro), d100 (esfera facetada)
+- **d20**: regra Ordem Paranormal — N≥1 pega o MAIOR (vantagem),
+  N=0 rola 2 e pega o MENOR (desastre); brilho em 1 (falha) e 20 (crítico)
+- **d4..d100**: rola N dados independentes, **TODOS exibidos**, soma
+  registrada como resultado
+- **Áudio em camadas** sincronizado (1 dado = 1 som; 2-4 = 2 sons
+  empilhados; 5+ = 3 sons), com calibragem de volume por arquivo
+- Cooldown de 1.3s no botão para impedir spam
+
+
+**7. Histórico de Missão (Diário de Campanha)**
+- Persistência de todas as rolagens no banco com tipo, quantidade,
+  brutos (JSON), resultado final, flags de crítico/desastre
+- Lista cronológica em tabela; vira **cards** no mobile via `data-label`
 
 
 ##  Design e Experiência
-**Paleta de cores (Elementos do Medo):**
-Sangue: Vermelho vivo e sombras pulsantes
-Morte: Tons de cinza, preto e espirais
-Conhecimento: Dourado/Amarelo e papel antigo
-Energia: Roxo neon e efeitos de glitch
+**Paleta dos 5 Elementos do Outro Lado (canônica Ordem Paranormal):**
+- **Sangue** (`#c8102e`) — vermelho profundo, pulsa em ameaças hostis
+- **Morte** (`#d8d8d8`) — branco pálido, usado em títulos e silêncio
+- **Conhecimento** (`#ffd60a`) — dourado, accent principal da UI
+- **Energia** (`#9d4edd`) — roxo neon, glitch em criaturas anômalas
+- **Medo** (`#5a1d8a`) — púrpura escuro, atmosfera de fundo (gradiente
+  radial sutil no `body`)
+
+
+**Tipografia em 3 camadas:**
+- **Cinzel** (Google Fonts) — títulos majores, vibe ritualística
+- **Montserrat** — UI, botões, labels, navegação
+- **Helvetica/Arial** — corpo de texto longo
+- **JetBrains Mono** — IDs, timestamps, prompts (`>`)
 
 
 **Princípios de UX:**
-Interface "Dark Mode" para não cansar a vista em sessões noturnas
-Mensagens de sistema temáticas (Ex: "Manifestando resultado...")
-Navegação fluida entre fichas de monstros e o lançador de dados
+- Interface "Dark Mode" obsidiana para sessões noturnas
+- Mensagens temáticas ("Consultando o Outro Lado...", "Manifestação")
+- Menu hambúrguer pure-CSS com glassmorphism (sempre visível)
+- Responsividade em 4 breakpoints (1024 / 768 / 540 / 380)
+- Tabela do histórico vira cards no mobile
 
 
 ##  Stack Tecnológica
-Linguagem: PHP 8.4+ (Back-end robusto e seguro)
-Banco de Dados: MySQL (Persistência via PDO)
-Interface: HTML5 / CSS3 (Design Responsivo e Temático)
-Lógica: JavaScript Vanilla (Interações em tempo real)
-IA de Apoio: Claude Code (Opus 4.7) + Open Agent Skills (UI/UX Taste)
+- **Back-end**: PHP 8.4+ com `declare(strict_types=1)` em todos os arquivos
+- **Banco**: MySQL/MariaDB (XAMPP) acessado via PDO com prepared
+  statements reais (`ATTR_EMULATE_PREPARES=false`)
+- **Front-end**: HTML5 + CSS3 + JavaScript Vanilla — **zero dependências
+  de runtime** (sem jQuery, sem React, sem Tailwind, sem libs de cropper)
+- **IA de Apoio**: Claude Code (Opus 4.7) para pair programming
 
 
 ## Fluxo do Usuário
-Acessa o Clarividência Paranormal
-Cadastra os NPCs e Monstros da sessão atual
-Inicia o combate ou investigação
-Clica nos botões de rolagem conforme a necessidade narrativa
-O sistema salva o histórico e exibe o resultado animado
-O mestre consulta o Log ao final para resumir a sessão
+1. Acessa o Clarividência Paranormal pela primeira vez (Hero anima)
+2. Cria a campanha em `/campanhas/` com capa
+3. Cadastra agentes (PJs), NPCs e criaturas vinculados à campanha
+4. Durante a sessão, usa o lançador de dados (`/rolagem/`) para testes
+5. Sistema salva tudo no histórico com timestamp
+6. Mestre consulta o Diário de Campanha ao final para resumir
 
 
-##  Limitações do MVP
-Não inclui ficha completa de jogadores (foco em NPC/Criatura)
-Sem suporte a áudio/trilha sonora (foco em dados e texto)
-Banco de dados local para o trabalho acadêmico (localhost)
+##  Limitações conhecidas
+- Banco local (XAMPP) — apropriado para uso acadêmico/single-master
+- Sem autenticação multi-usuário (todos veem todos)
+- Sem modo "público" para jogadores acessarem suas próprias fichas
 
 
 ##  Objetivo do Produto
-Fornecer ao mestre de Ordem Paranormal uma ferramenta que não pareça um "software de escritório", mas sim um componente da própria história.
+Fornecer ao mestre de Ordem Paranormal uma ferramenta que não pareça um
+"software de escritório", mas sim um componente da própria história —
+um *terminal investigativo* que vira parte da mesa.
 
 
 ##  Resumo Final
-Clarividência Paranormal transforma a matemática complexa do RPG em uma interface intuitiva e mística, garantindo que o medo e a investigação sejam os únicos focos da mesa, enquanto o PHP e o JavaScript cuidam das regras por trás do véu.
+Clarividência Paranormal transforma a matemática complexa do RPG em uma
+interface intuitiva e mística. O PHP e o JavaScript cuidam das regras
+por trás do véu enquanto o medo e a investigação tomam o palco — com
+campanhas, agentes, NPCs, criaturas, rolagens com áudio em camadas e
+fichas completas de personagem em uma única plataforma.

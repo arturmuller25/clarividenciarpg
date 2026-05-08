@@ -10,7 +10,6 @@ require_once __DIR__ . '/../src/sessao.php';
 require_once __DIR__ . '/../src/CriaturaRepositorio.php';
 require_once __DIR__ . '/../src/CriaturaValidador.php';
 require_once __DIR__ . '/../src/CampanhaRepositorio.php';
-require_once __DIR__ . '/../src/UploadHelper.php';
 
 iniciarSessao();
 

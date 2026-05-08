@@ -92,7 +92,8 @@ clarividencia rpg/
 | **2** | Hero 2.0 (d20 3D + onda de choque), CRUD de Campanhas com upload | ✅ |
 | **3** | Vínculos NPC↔Campanha e Criatura↔Campanha, marca renomeada para "Clarividência Paranormal", paleta refinada (5 elementos com Medo), responsividade mobile (4 breakpoints) | ✅ |
 | **4** | Ficha completa de Agente (9 seções modulares, salvamento transacional, JS dinâmico para barras/ataques/listas) | ✅ |
-| **5** | Pendente. Veja "Backlog" abaixo. | ⏳ |
+| **5** | Polimento: cropper 1:1 vanilla canvas, fotos em todos os perfis, multi-dado liberado para todos os tipos com soma, áudio em 3 camadas com calibragem manual, Hero apenas em primeira-visita/F5, auditoria de acentos | ✅ |
+| **6** | Pendente. Veja "Backlog" abaixo. | ⏳ |
 
 ## 5. Backlog (próximas sessões)
 
@@ -100,12 +101,12 @@ Ordem sugerida:
 
 1. **AJAX para barras de PV/SAN/PE** — endpoint que persiste mudança de uma coluna isoladamente, sem ter que dar submit no formulário inteiro. Útil durante combate.
 2. **Página de visualização da Campanha** com gestão bidirecional de vínculos (assign/remove agentes/NPCs/criaturas pelo lado da campanha).
-3. **Upload de foto para NPCs e Criaturas** — schema já suporta (`foto_arquivo`), só falta input + handler nos formulários.
-4. **Cálculo automático de bônus de perícia** conforme regras canônicas: Treinado = +metade do NEX, Veterano = +metade do NEX + 2, Especialista = +metade do NEX + 4. Hoje o usuário escreve `bonus_extra` à mão.
-5. **Sistema de iniciativa em combate** (mencionado no brief original, ainda não atacado).
-6. **Endpoint de rolagem de perícia/ataque** que use os valores da ficha ao invés do form de rolagem genérico.
-7. **Importar/Exportar ficha como JSON** (para salvar/recuperar entre campanhas).
-8. **Modo público de campanha** (URL com slug que jogadores podem visitar para ver as próprias fichas).
+3. **Cálculo automático de bônus de perícia** conforme regras canônicas: Treinado = +metade do NEX, Veterano = +metade do NEX + 2, Especialista = +metade do NEX + 4. Hoje o usuário escreve `bonus_extra` à mão.
+4. **Sistema de iniciativa em combate** (mencionado no brief original, ainda não atacado).
+5. **Endpoint de rolagem de perícia/ataque** que use os valores da ficha ao invés do form de rolagem genérico.
+6. **Importar/Exportar ficha como JSON** (para salvar/recuperar entre campanhas).
+7. **Modo público de campanha** (URL com slug que jogadores podem visitar para ver as próprias fichas).
+8. **Normalização real dos MP3 via ffmpeg** (`-af loudnorm`) para parar de depender da calibragem manual em JS.
 
 ## 6. Ambiente local (XAMPP)
 
@@ -231,8 +232,13 @@ Git instalado em `C:\Program Files\Git\cmd\git.exe` (versão 2.54).
 | Quero entender... | Olhe primeiro... |
 |---|---|
 | Como a hero d20 funciona | `index.php` (HTML), `assets/css/terminal.css` (procurar `hero-rolar-3d`), `assets/js/hero.js` |
-| Como o áudio é tocado | `assets/js/hero.js` (autoplay + fallback), `assets/js/dados.js` (som da rolagem) |
-| Por que tem 3 atributos `hidden`/`display`/`is-oculta` no SVG | Decisão 008+ em `decisoes.md`. Resumo: `hidden` em `<g>` SVG é unreliable. |
+| Por que a Hero não roda em todo navegação | Decisão 019. `hero.js::deveRodarHero()` usa Performance Navigation API + sessionStorage |
+| Como o áudio é tocado | `assets/js/hero.js` (autoplay + fallback), `assets/js/dados.js` (som da rolagem em camadas) |
+| Por que sons da rolagem soam balanceados | Decisão 021. Calibragem manual via `VOLUMES.*` no topo do `dados.js` (não reencodamos os MP3) |
+| Por que multi-dado d20 e d6 funcionam diferente | Decisão 020. d20 mantém regra OP (vantagem); demais somam todos os valores |
+| Por que tem 3 atributos `hidden`/`display`/`is-oculta` no SVG | Decisão 011. Resumo: `hidden` em `<g>` SVG é unreliable em alguns browsers |
+| Como o cropper 1:1 funciona | `assets/js/cropper.js`. Decisão 016: vanilla canvas, sem libs externas |
+| Por que `<FilesMatch>` em `/uploads/.htaccess` está em 3 linhas | Decisão 017. Apache 2.4 não tolera abrir e fechar na mesma linha |
 | Como CSRF funciona | `src/sessao.php` |
 | Como upload é seguro | `src/UploadHelper.php` + `uploads/.htaccess` |
 | Como salvamento da ficha é transacional | `src/AgenteRepositorio.php::criar()` e `atualizar()` |

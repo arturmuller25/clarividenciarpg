@@ -152,3 +152,92 @@
 - **Notas**:
   - Git Credential Manager autenticou via OAuth no navegador na primeira tentativa de push, sem necessidade de Personal Access Token manual.
   - Dois arquivos MP3 extras foram versionados acidentalmente (`freesound_community-rpg-dice-rolling-95182.mp3`, `u_qpfzpydtro-dice-142528.mp3`) — provavelmente sobras de testes. Limpeza para próximo commit.
+
+---
+
+## Decisão 015: Auditoria de acentos no UI (todos os textos visíveis)
+- **Contexto**: Os textos visíveis estavam sem acento (`HISTORICO`, `BESTIARIO`, `DOSSIE`, `LOCALIZACAO`, `AMEACA`, `INVOCACAO`, etc.) — provavelmente herança de tempos onde caracteres não-ASCII em arquivos PHP davam dor de cabeça com encoding. Hoje (UTF-8 estável em todos os arquivos + `header Content-Type: charset=UTF-8`), isso é desnecessário e prejudica leitura.
+- **Decisão**: Auditar `Grep` em palavras-alvo e corrigir todos os textos *visíveis ao usuário* — títulos, subtítulos, labels, mensagens de erro, ajudas, badges. **Não** mexer em: nomes de classe CSS, IDs, valores de ENUM no banco, nomes de constante PHP (esses são identificadores, não UI).
+- **Status**: Implementado. Cobertura: index.php, npcs/*, criaturas/*, rolagem/*, historico/*, NpcValidador, CriaturaValidador, views/*.
+- **Consequências**: Leitura natural em português. Risco zero — strings literais não afetam comportamento. Próximas adições devem seguir o mesmo padrão.
+
+---
+
+## Decisão 016: Cropper de imagem 1:1 — vanilla canvas (sem libs)
+- **Contexto**: Brief pediu "ver a previsualização da foto e recortar a imagem em proporção de 1:1". O projeto tem disciplina de zero dependências de runtime — não usar Cropper.js, Croppie ou similar.
+- **Primeira tentativa (descartada)**: `<img>` com `position: absolute` + `transform: translate()` + máscara via `box-shadow: 0 0 0 9999px`. Bug: a sombra é cortada pelo `overflow: hidden` do palco, então o efeito visual de "moldura escura" não existia. Pior: os transforms acumulados deixavam a imagem flutuar fora do palco. Reportado pelo usuário como "imagem solta na tela, podendo ser mexida pra qualquer lugar".
+- **Decisão**: Reescrita **canvas-only**. A imagem nunca existe como elemento DOM — vive apenas como pixels desenhados num `<canvas 320×320>` via `ctx.drawImage()`. Estado simples: `{ img, scale, offsetX, offsetY }`. Drag move o offset, slider/wheel altera scale, redesenha. Ao submeter, desenha em canvas off-screen 800×800 e substitui `input.files` por File JPEG via `DataTransfer`.
+- **Status**: Implementado em `assets/js/cropper.js`. Aplicado em campanhas, agentes, NPCs e criaturas.
+- **Consequências**:
+  - Impossível imagem "vazar" — canvas tem dimensão fixa e pixels fora são descartados pelo próprio canvas.
+  - `clampOffsets()` impede mostrar bordas pretas além da imagem.
+  - Saída padronizada: JPEG 800×800 q=0.9 (~50-150 KB).
+  - Componente reutilizável: `<div data-cropper data-cropper-input="foto" [data-cropper-existing="..."]>` envolvendo o `<input type="file">`.
+
+---
+
+## Decisão 017: `.htaccess` de uploads — bug de sintaxe Apache
+- **Contexto**: Após implementar upload de fotos, *todas* as URLs `/uploads/...` retornavam **HTTP 500**. As fotos eram salvas no disco e os nomes no banco corretamente — só o Apache se recusava a servir.
+- **Diagnóstico**: log de erros do Apache (`C:\xampp\apache\logs\error.log`) reportou `<FilesMatch> was not closed at /uploads/.htaccess:18`. O arquivo tinha 4 linhas no formato compacto: `<FilesMatch "\.png$"> ForceType image/png </FilesMatch>` na mesma linha. **Apache 2.4 não aceita** abrir e fechar `<FilesMatch>` na mesma linha — o parser fica perdido.
+- **Decisão**: Reescrever cada `<FilesMatch>` em três linhas (abrir / diretivas / fechar). Manter as outras políticas (`Require all denied` em `.php`, `php_flag engine off`, `Options -Indexes`).
+- **Status**: Corrigido. URLs voltaram a HTTP 200 com `Content-Type` correto.
+- **Consequências**: Aprendizado registrado — `<FilesMatch>` e `</FilesMatch>` precisam estar em linhas separadas SEMPRE.
+
+---
+
+## Decisão 018: Fotos exibidas em todos os perfis
+- **Contexto**: O brief original previa fotos em campanhas, agentes, NPCs e criaturas. Estava implementado parcialmente: campanha (capa) e agente (formulário) tinham upload, mas NPCs e criaturas não. Visualizações de NPC/Criatura também não exibiam foto.
+- **Decisão**: Universalizar:
+  - Adicionar upload + cropper em `npcs/formulario.php` e `criaturas/formulario.php`.
+  - Atualizar `NpcRepositorio` e `CriaturaRepositorio` para aceitar `foto_arquivo` (preservando coluna se a chave não estiver presente em `$dados` — protege contra apagar foto numa edição que não envia novo arquivo).
+  - Criar `criaturas/visualizar.php` (não existia).
+  - Adicionar foto no header do dossiê em `npcs/visualizar.php` e nos cards de listagem (`cartao-npc__foto`, `cartao-criatura__foto`).
+- **Status**: Implementado. Schema já suportava (`foto_arquivo VARCHAR(160)` desde a migration_003).
+- **Consequências**: Fotos aparecem em listagens (thumbnail 1:1) e perfis (foto grande). UploadHelper genérico cobre as 4 subpastas (campanhas/agentes/npcs/criaturas).
+
+---
+
+## Decisão 019: Hero exibida apenas na primeira visita ou em F5
+- **Contexto**: A Hero rodava a cada navegação para `/index.php`, incluindo cliques em "VOLTAR AO PAINEL". Para uso real do site, isso virou ruído.
+- **Decisão**: Gatear a Hero por **tipo de navegação** + flag em `sessionStorage`:
+  - Primeira visita (sessionStorage vazio) → roda
+  - F5/Ctrl+R (`navType === 'reload'` via Performance Navigation API) → roda **mesmo se a flag estiver setada**
+  - Link interno (`navType === 'navigate'`, flag setada) → pula
+  - Botão voltar/avançar (`navType === 'back_forward'`) → pula
+- **Status**: Implementado em `assets/js/hero.js` na função `deveRodarHero()` com fallback para a API legada `performance.navigation`.
+- **Consequências**: Animação memorável na entrada e ao recarregar (debugging), mas não atrapalha navegação cotidiana. `sessionStorage` zera ao fechar a aba — abrir nova aba conta como primeira visita.
+
+---
+
+## Decisão 020: Multi-dado liberado para todos os tipos
+- **Contexto**: Apenas o d20 suportava NdX (regra Ordem Paranormal). d4, d6, d8, d10, d12 e d100 estavam travados em 1 dado. Brief solicitou: "quero que o usuário também possa selecionar mais de um 1d4, 1d6 ... deve apresentar todos os números".
+- **Decisão**:
+  - **d20** mantém regra OP (vantagem/desastre, escolhe um valor)
+  - **d4..d100** com quantidade > 1: rola N dados independentes, **resultadoFinal = SOMA**, todos os valores aparecem na UI
+  - Crítico/Desastre permanecem **exclusivos do d20** — sum aleatória que cair em 20 NÃO é "crítico"
+  - Migration 004 sobe `resultado_final` de `TINYINT UNSIGNED CHECK 1..100` para `SMALLINT UNSIGNED CHECK 1..2000` (10d100 = 1000)
+  - Form: campo "quantidade" sempre visível; ajuda contextual via `[data-ajuda-d20]` / `[data-ajuda-outros]`; min=0 só para d20, demais min=1
+- **Status**: Implementado em `dados.js`, `rolagem/api.php`, `rolagem/index.php`, `historico/listar.php` + migration_004.
+- **Consequências**: Sistema agora atende rolagens de RPG comuns (4d6 para atributos, 8d10 para dano, etc.). resultadoFinal armazenado é a soma; brutos individuais permanecem em JSON.
+
+---
+
+## Decisão 021: Áudio em camadas para multi-dado + corte preciso no resultado
+- **Contexto**: Inicialmente o sistema escolhia 1 dos 3 sons baseado na quantidade. Usuário pediu: "se mais de 1 dado for rolado, todos os sons devem disparar juntos, dando a ideia de vários dados rolando". Adicionalmente: "som deve começar no clique e acabar quando o número aparece".
+- **Decisão**:
+  - Sons agora **empilham** em camadas (não substituem):
+    - 1 dado → `[som_para_as_rolagens]`
+    - 2-4 dados → `[som_para_as_rolagens, som_para_rolagem_multipla]`
+    - 5+ dados → `[som_para_as_rolagens, som_para_rolagem_multipla, som_para_rolagem_com_muitos_dados]`
+  - **Calibragem manual de volume por arquivo** via constante `VOLUMES.*` (rolagem 0.55 / multipla 0.50 / muitos 0.50). Os 3 .mp3 têm peak/RMS diferentes e reencodar é invasivo — calibragem em JS resolve sem tocar nos arquivos.
+  - **FadeOut encurtado de 450ms para 80ms**: o som termina exatamente no instante em que o número aparece. Fade rápido evita "click" digital de corte seco.
+- **Status**: Implementado. `tocarAudioRolagem` virou `tocarAudiosRolagem` (plural) que retorna array. Estado `audioAtivo` virou `audiosAtivos` (array). Loop sobre o array para tocar/fadear todos.
+- **Consequências**: Sensação cinematográfica de coro de dados batendo. Volumes ajustáveis pelo usuário sem touch nos MP3.
+
+---
+
+## Decisão 022: Bug de closure em `tocarAudioRolagem` — funções stateful precisam estar dentro do escopo
+- **Contexto**: Após a refatoração para 3 áudios, o submit handler começou a falhar silenciosamente — sem ticker, sem animação, sem fetch. A causa: `tocarAudioRolagem` foi definida no escopo da IIFE (fora do `DOMContentLoaded`), mas referenciava `audioRolagemMulti` etc. — variáveis declaradas DENTRO do callback. ReferenceError em handler async é particularmente cruel: vira promise rejection silenciosa, código depois da chamada nunca executa.
+- **Decisão**: Funções **stateful** que precisam ler closures locais devem ser declaradas dentro do `DOMContentLoaded`. Funções **stateless** (que recebem tudo por parâmetro) podem ficar no escopo da IIFE.
+- **Status**: `tocarAudioRolagem` movida para dentro do `DOMContentLoaded`. `criarAudio` e `fadeOutAudio` ficam fora (são puras).
+- **Consequências**: Lição registrada para futuros refactors. Padrão a seguir: se a função usa variáveis do escopo do handler, ela mora ali junto.

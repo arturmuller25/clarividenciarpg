@@ -87,6 +87,54 @@
 - `logs.md` (este arquivo) atualizado com cronologia completa de todos os sprints.
 - Decisões 010, 011, 012 adicionadas a `decisoes.md`.
 
+##### Sprint 11 — Polimento estético + acentos + fotos universais
+- **Bug crítico do SVG `<g hidden>`**: identificado que browsers não respeitam o atributo HTML `hidden` em elementos SVG `<g>` de forma confiável. Tripla camada de defesa: atributo `hidden` + atributo SVG `display="none"` + classe CSS `.is-oculta` com `!important`. Forma errada não vaza mais.
+- **Marca renomeada**: `TERMINAL_DA_ORDEM` → "Clarividência **Paranormal**" (com "Paranormal" em dourado + glow). Footer atualizado para v0.2.
+- **Decisão 015**: auditoria de acentos em todos os textos visíveis (HISTÓRICO, BESTIÁRIO, DOSSIÊ, AMEAÇA, LOCALIZAÇÃO, PERCEPÇÃO, INVOCAÇÃO, etc.). Validadores também tiveram suas mensagens de erro corrigidas.
+- **Críticos somente no d20** (gate em dados.js E rolagem/api.php) — para outros tipos, mesmo se cair 20 ou 1, não há flag de crítico/desastre.
+- **Adicionado elemento "Medo"** (`#5a1d8a`) à paleta como gradiente sutil no fundo do site.
+- **Fotos universalizadas**: NPCs e Criaturas agora têm upload de foto + exibição em listagem (thumbnail 1:1) e perfil (foto 140×140). Criada `criaturas/visualizar.php` (não existia). Repositórios atualizados para preservar `foto_arquivo` quando a chave não vem no payload (proteção contra apagar foto numa edição).
+- **Cropper 1:1 v1** (`assets/js/cropper.js`): primeira tentativa baseada em `<img>` + `transform`. **Tinha bugs** — imagem flutuava fora do palco, máscara não escurecia bordas.
+
+##### Sprint 12 — Cropper canvas + fix .htaccess (HTTP 500)
+- Usuário reportou: "imagem fica solta na tela, podendo ser mexida pra qualquer lugar do site" + "fotos não aparecem mesmo após upload".
+- **Diagnóstico**: `.htaccess` da pasta `/uploads/` retornava **HTTP 500 em todas as URLs**. Log do Apache (`C:\xampp\apache\logs\error.log`) mostrou `<FilesMatch> was not closed at line 18` — o arquivo tinha as 4 linhas de `ForceType` no formato compacto (abrir e fechar `<FilesMatch>` na mesma linha), o que Apache 2.4 não tolera. Os arquivos físicos e os `foto_arquivo` no banco sempre estiveram corretos — o Apache só recusava servir.
+- **Decisão 017**: reescrever `.htaccess` com cada `<FilesMatch>` em três linhas. Confirmação: URLs voltaram a HTTP 200 com Content-Type correto.
+- **Decisão 016**: reescrever cropper de zero em **canvas-only**. A imagem agora não existe como elemento DOM — só como pixels desenhados num `<canvas 320×320>`. Estado simples: `{ img, scale, offsetX, offsetY }`. Drag move offset, slider/wheel altera escala, redesenha. `clampOffsets()` impede mostrar bordas pretas além da imagem. Submit gera File JPEG 800×800 q=0.9 via `toBlob` e substitui `input.files` via `DataTransfer`.
+
+##### Sprint 13 — Hero respeitando navegação interna
+- Usuário reportou que clicar em "VOLTAR AO PAINEL" disparava a Hero novamente — irritante em uso real.
+- **Decisão 019**: gate via Performance Navigation API + sessionStorage:
+  - Primeira visita → roda
+  - F5/Ctrl+R → roda (mesmo com flag setada)
+  - Link interno → pula
+  - Botão voltar/avançar → pula
+- Implementado em `hero.js` com fallback para a API legada (`performance.navigation.type`). Flag `terminalHeroVisto` em sessionStorage (zera ao fechar aba).
+
+##### Sprint 14 — Multi-dado liberado + áudio em 3 níveis
+- Brief: liberar multi-dado para todos os tipos (não só d20), exibir TODOS os valores em multi-não-d20, e tocar sons diferentes conforme a quantidade. 2 novos MP3s entregues pelo usuário: `som_para_rolagem_multipla.mp3` e `som_para_rolagem_com_muitos_dados.mp3`.
+- **Decisão 020**: regra dual:
+  - d20 mantém regra OP (vantagem/desastre)
+  - d4..d100 com N>1 rola N independentes, todos exibidos, **resultadoFinal = SOMA**
+- **Migration 004**: `resultado_final` de `TINYINT UNSIGNED CHECK 1..100` para `SMALLINT UNSIGNED CHECK 1..2000` — 10d100 cabe.
+- Form `rolagem/index.php`: campo quantidade sempre visível; ajuda contextual via `[data-ajuda-d20]` vs `[data-ajuda-outros]`; min=0 só para d20.
+- 1ª implementação de áudio escalonado: 1 som único escolhido por quantidade (1 dado / 2-4 / 5+).
+- **Bug pós-refactor**: rolagem parou de executar — sem ticker, sem animação, sem fetch. **Decisão 022**: identificado bug de closure — `tocarAudioRolagem` definida no escopo da IIFE não enxergava `audioRolagemMulti` etc. declaradas dentro do `DOMContentLoaded`. ReferenceError silencioso em async handler engolia tudo. Fix: mover funções stateful para dentro do callback.
+
+##### Sprint 15 — Áudio em camadas + calibragem + corte preciso
+- Usuário pediu refinamento: (1) equalizar volumes dos 3 MP3, (2) som começar no clique e terminar exatamente quando o número aparece, (3) sons devem **disparar juntos** quando há multi-dado (sensação de coro).
+- **Decisão 021**:
+  - **Calibragem em JS** (não reencodar arquivos): constante `VOLUMES.*` no topo do `dados.js` (`rolagem: 0.55, multipla: 0.50, muitos: 0.50`). Ajustável a qualquer momento.
+  - **Sons em camadas** (não substituem-se): 1 dado = som1; 2-4 dados = som1+som2; 5+ dados = som1+som2+som3. Função `tocarAudioRolagem` virou `tocarAudiosRolagem` (plural) que retorna array; estado `audioAtivo` virou `audiosAtivos` (array); fadeOut em loop sobre todos.
+  - **FadeOut encurtado** de 450ms para 80ms: o som termina junto com o número aparecendo, sem arrastar. Fade rápido (em vez de corte seco) evita "click" digital de buffer cortado.
+
+##### Sprint 16 — Documentação atualizada
+- Auditoria geral dos `.md` para garantir que toda evolução desde a última doc-pass está registrada:
+  - `context.md`: removidas limitações obsoletas (sem áudio, sem ficha de jogador) — agora ambas existem. Funcionalidades expandidas para refletir o estado v0.2 com 7 módulos. Adicionado elemento Medo na paleta. Stack atualizada com nota explícita de "zero dependências de runtime".
+  - `decisoes.md`: 8 ADRs novos (015 a 022) cobrindo: auditoria de acentos, cropper canvas-only, bug do `.htaccess`, fotos universais, gate da Hero, multi-dado liberado, áudio em camadas, bug de closure.
+  - `logs.md` (este arquivo): sprints 11-16 documentados.
+  - `claude.md`: já estava atualizado, sem mudanças significativas necessárias.
+
 ---
 
 ## Como retomar em uma nova sessão
