@@ -89,6 +89,13 @@ require __DIR__ . '/../views/cabecalho.php';
         </div>
         <div class="dossie__selo dossie__selo--elem-<?= escapar($elemSlug) ?>">
             <span class="dossie__selo-rotulo">ELEMENTO</span>
+            <svg class="tag-elemento tag-elemento--<?= escapar($elemSlug) ?> dossie__selo-icone"
+                 role="img"
+                 aria-label="Elemento <?= escapar((string) $c['elemento']) ?>"
+                 focusable="false">
+                <title><?= escapar((string) $c['elemento']) ?></title>
+                <use href="#el-<?= escapar($elemSlug) ?>"></use>
+            </svg>
             <span class="dossie__selo-valor"><?= escapar(strtoupper((string) $c['elemento'])) ?></span>
         </div>
     </header>

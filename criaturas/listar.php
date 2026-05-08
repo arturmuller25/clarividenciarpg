@@ -87,10 +87,14 @@ require __DIR__ . '/../views/cabecalho.php';
         ?>
             <article class="cartao-criatura cartao-criatura--<?= escapar($slug) ?>" role="listitem">
                 <header class="cartao-criatura__topo">
-                    <span>#<?= str_pad((string) $criatura['id'], 4, '0', STR_PAD_LEFT) ?></span>
-                    <span class="cartao-criatura__elemento">
-                        <?= escapar(strtoupper((string) $criatura['elemento'])) ?>
-                    </span>
+                    <span>// VD <?= str_pad((string) (int) $criatura['vd'], 2, '0', STR_PAD_LEFT) ?></span>
+                    <svg class="tag-elemento tag-elemento--<?= escapar($slug) ?> cartao-criatura__elemento"
+                         role="img"
+                         aria-label="Elemento <?= escapar((string) $criatura['elemento']) ?>"
+                         focusable="false">
+                        <title><?= escapar((string) $criatura['elemento']) ?></title>
+                        <use href="#el-<?= escapar($slug) ?>"></use>
+                    </svg>
                 </header>
 
                 <?php if ($fotoUrl): ?>

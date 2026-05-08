@@ -29,6 +29,8 @@ $mensagens   = consumirFlash();
     <link rel="stylesheet" href="<?= escapar(url('/assets/css/terminal.css')) ?>">
 </head>
 <body>
+    <?php /* SVG sprite global: 5 elementos do Outro Lado (style="display:none" no <svg> raiz). */ ?>
+    <?php readfile(__DIR__ . '/../assets/img/elementos-icons.svg'); ?>
     <div class="terminal">
         <header class="terminal__topo" role="banner">
             <a href="<?= escapar(url('/index.php')) ?>" class="terminal__marca" aria-label="Clarividência Paranormal - início">

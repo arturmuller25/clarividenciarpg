@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+  
+
+  
+  <symbol id="el-sangue" viewBox="0 0 24 24">
+    <path d="M12 3 C12 3 5 11 5 15.5 A7 7 0 0 0 19 15.5 C19 11 12 3 12 3 Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+    <path d="M9 14 Q9.5 17 11.5 17.5" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity="0.55"></path>
+  </symbol>
+
+  
+  <symbol id="el-morte" viewBox="0 0 24 24">
+    <path d="M5 11 C5 6.5 8 4 12 4 C16 4 19 6.5 19 11 C19 13.5 18 14.8 17 15.5 L17 18 L14.5 18 L14.5 16.5 L13 16.5 L13 18 L11 18 L11 16.5 L9.5 16.5 L9.5 18 L7 18 L7 15.5 C6 14.8 5 13.5 5 11 Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+    <circle cx="9.5" cy="11" r="1.5" fill="currentColor"></circle>
+    <circle cx="14.5" cy="11" r="1.5" fill="currentColor"></circle>
+  </symbol>
+
+  
+  <symbol id="el-conhecimento" viewBox="0 0 24 24">
+    <polygon points="12,3 21,19 3,19" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"></polygon>
+    <path d="M6.5 14.5 Q12 10 17.5 14.5 Q12 17.5 6.5 14.5 Z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"></path>
+    <circle cx="12" cy="14.5" r="1.5" fill="currentColor"></circle>
+  </symbol>
+
+  
+  <symbol id="el-energia" viewBox="0 0 24 24">
+    <path d="M14 2 L5 13 L11 13 L10 22 L19 11 L13 11 L14 2 Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+  </symbol>
+
+  
+  <symbol id="el-medo" viewBox="0 0 24 24">
+    <path d="M12 12 m-1 0 a1 1 0 1 1 2 0 a1 1 0 1 1 -2 0&#xA;             M12 12 m-3 0 a3 3 0 1 0 3 -3&#xA;             M12 12 m-5.5 0 a5.5 5.5 0 1 1 5.5 5.5&#xA;             M12 12 m-8 0 a8 8 0 1 0 8 -8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+  </symbol>
+</svg>
