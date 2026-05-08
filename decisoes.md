@@ -90,3 +90,65 @@
 - **Decisão**: Manter Cinzel como `--titulo` e remover do roadmap a "troca futura para Clarkson real". Se algum dia surgir orçamento para Clarkson, basta trocar a variável.
 - **Status**: Confirmado pelo uso.
 - **Consequências**: Sem custo de licenciamento. Carregamento via Google Fonts já está configurado.
+
+---
+
+## Decisão 010: Adicionar Medo como 5º elemento da paleta (background sutil)
+- **Contexto**: O brief de "Reforma Estrutural" pediu para basear a paleta nos elementos canônicos de Ordem Paranormal. Os 4 elementos clássicos (Sangue, Morte, Conhecimento, Energia) já estavam mapeados, mas faltava o "elemento mestre" Medo — referido na lore como o vazio primordial do Outro Lado.
+- **Decisão**: Adicionar `--el-medo: #5a1d8a` (púrpura escuro) e seu glow correspondente. **Não** usar como cor de fill ou border permanente — apenas como gradiente radial sutil no `body` (canto superior esquerdo) e na Hero (centro), invocando atmosfera. Rationale: Medo não é um "elemento que se aprende", é o pano de fundo cosmológico.
+- **Status**: Implementado.
+- **Consequências**: Background do site deixou de ser preto puro e ganhou textura sem sacrificar legibilidade. Variável também usa-se na 2ª onda de choque da Hero (combinação Conhecimento → Sangue → flash).
+
+---
+
+## Decisão 011: Bug do `<g hidden>` em SVG resolvido com tripla defesa
+- **Contexto**: O atributo HTML5 `hidden` deveria aplicar `display: none` em qualquer elemento. Entretanto, em alguns navegadores (e contextos de inline SVG dentro de `<details>` colapsáveis), o atributo é ignorado em elementos `<g>`, causando renderização sobreposta de múltiplas formas de dado simultaneamente.
+- **Decisão**: Triplicar a sinalização de "oculto" para garantir que pelo menos um caminho funcione em todos os ambientes:
+  1. Atributo HTML `hidden` (semântico — primeira linha de defesa).
+  2. Atributo SVG nativo `display="none"` (presentation attribute — segunda linha).
+  3. Classe CSS `.is-oculta` com `!important` aplicada via JS (terceira linha).
+  Adicionalmente, regra CSS combinada `[hidden], [display="none"], .is-oculta { display: none !important }` em `.dado-svg__forma`.
+- **Status**: Implementado e validado em Chrome/Edge no XAMPP local.
+- **Consequências**: Robustez contra implementações inconsistentes de SVG. Custo: 3x trabalho no `dados.js` ao alternar formas; impacto de performance desprezível.
+
+---
+
+## Decisão 012: Layout da ficha de Agente em página única (não tabs)
+- **Contexto**: A ficha tem 9 seções (Identidade, Barras, Atributos, Defesa, Narrativa, Perícias, Ataques, Inventário, Rituais) com cerca de 30 campos diretos + 4 listas dinâmicas. Tabs (abas horizontais) seriam mais compactas, mas exigem JS para navegação e quebram impressão.
+- **Decisão**: Página única longa com cada seção em `<details>`/`<summary>` HTML5 nativo. Cada seção pode ser aberta ou recolhida individualmente. Carregamento inicial: Identidade, Barras e Atributos abertas; demais recolhidas.
+- **Status**: Implementado.
+- **Consequências**:
+  - Zero JS para navegação entre seções.
+  - Impressão funciona automaticamente (todas as seções abertas no print).
+  - Form único submete tudo de uma vez (transação ACID no banco).
+  - Trade-off: scroll mais longo em telas pequenas. Aceito porque a ficha é referência completa, não consulta rápida.
+
+---
+
+## Decisão 013: Salvamento transacional da ficha (DELETE + INSERT para filhas)
+- **Contexto**: A ficha de Agente tem 4 tabelas filhas (perícias, ataques, inventário, rituais) com cardinalidade 1:N. Cada save pode adicionar, remover ou modificar dezenas de linhas. Estratégias possíveis: (a) diff/upsert por ID, (b) DELETE total + INSERT.
+- **Decisão**: DELETE + INSERT dentro de uma `BEGIN TRANSACTION` única que cobre o `UPDATE` em `agentes` e os 4 ciclos delete-insert. ROLLBACK em qualquer erro.
+- **Status**: Implementado em `AgenteRepositorio::criar()` e `atualizar()`.
+- **Consequências**:
+  - Implementação trivial — não precisa rastrear IDs no front-end.
+  - Atômico: ficha nunca fica em estado parcial.
+  - IDs das filhas mudam a cada save. Aceitável porque nada referencia esses IDs externamente.
+  - Volume comportável: uma ficha tem dezenas de itens, não milhares. Performance é não-questão.
+
+---
+
+## Decisão 014: Publicação no GitHub preservando histórico do remoto
+- **Contexto**: O repo remoto `arturmuller25/clarividenciarpg` tinha 1 commit inicial (importação manual). A pasta de trabalho local foi extraída de um ZIP e modificada extensivamente — sem histórico git. Como publicar mudanças sem perder o commit inicial?
+- **Opções consideradas**:
+  - **A**: `git init` local + `git push --force` → perde o commit inicial do remoto.
+  - **B**: Clonar remoto para pasta temporária + copiar arquivos atuais por cima + commitar normalmente. ✅
+  - **C**: `git init` local + adicionar remote + fetch + merge `--allow-unrelated-histories` → operacionalmente complexo.
+- **Decisão**: Opção B. Clone para `$env:TEMP\clarividenciarpg-deploy\`, sobrescrita preservando `.git`, commit + push.
+- **Status**: Executado. Commit `9ec0fe7` adicionado a `main` (anterior: `f3cc300`).
+- **Consequências**:
+  - Histórico do remoto preservado (2 commits no `main` agora).
+  - `.gitignore` atualizado para ignorar conteúdo de `uploads/*` mas preservar estrutura via `.gitkeep`.
+  - Pasta de trabalho `c:\Users\Usuario\Downloads\clarividencia rpg\` continua **sem** `.git/` — operações git acontecem no clone temporário. Para uso permanente, pode-se clonar para `c:\Users\Usuario\repos\clarividenciarpg\` e trabalhar diretamente lá (decisão deixada para sessão futura).
+- **Notas**:
+  - Git Credential Manager autenticou via OAuth no navegador na primeira tentativa de push, sem necessidade de Personal Access Token manual.
+  - Dois arquivos MP3 extras foram versionados acidentalmente (`freesound_community-rpg-dice-rolling-95182.mp3`, `u_qpfzpydtro-dice-142528.mp3`) — provavelmente sobras de testes. Limpeza para próximo commit.
