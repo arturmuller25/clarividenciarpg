@@ -103,7 +103,7 @@ require __DIR__ . '/../views/cabecalho.php';
 
                 <h2 class="cartao-criatura__nome">
                     <a href="<?= escapar(url('/criaturas/visualizar.php?id=' . (int) $criatura['id'])) ?>"
-                       class="cartao-npc__nome-link"><?= escapar($criatura['nome']) ?></a>
+                       class="cartao-criatura__nome-link"><?= escapar($criatura['nome']) ?></a>
                 </h2>
 
                 <dl class="cartao-criatura__stats">

@@ -1045,29 +1045,51 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .cartao-criatura {
     display: flex;
     flex-direction: column;
-    padding: 18px 20px;
-    background: var(--surface-1);
-    border: 1px solid var(--border);
-    border-left: 3px solid;
+    padding: 20px 22px 18px 22px;
+    background: var(--metalico);
+    border: 1px solid var(--border-metal);
+    border-left: 4px solid var(--ink-faint);    /* default; sobrescrito por elemento */
     border-radius: var(--r);
     position: relative;
-    transition: transform 200ms ease;
+    box-shadow: var(--shadow-card, 0 8px 24px -16px rgba(0,0,0,0.8));
+    transition: transform var(--t-base, 220ms) ease, box-shadow var(--t-base, 220ms) ease;
+    overflow-wrap: anywhere;     /* nomes longos quebram no card em vez de transbordar */
 }
-.cartao-criatura:hover { transform: translateY(-2px); }
+.cartao-criatura:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lift, 0 12px 32px -12px rgba(224,181,61,0.20));
+}
 .cartao-criatura__topo {
-    display: flex; justify-content: space-between; align-items: baseline;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
     color: var(--ink-faint);
+    font: var(--t-mono);
     font-size: 0.72rem;
-    letter-spacing: 0.1em;
-    margin-bottom: 8px;
+    letter-spacing: var(--ls-label, 0.10em);
+    text-transform: uppercase;
+    margin-bottom: 12px;
 }
 .cartao-criatura__nome {
-    margin: 0 0 10px;
-    color: var(--el-morte);
+    margin: 0 0 6px;
+    font-family: var(--titulo);
+    font-weight: 700;
     font-size: 1.15rem;
-    letter-spacing: 0.04em;
+    line-height: 1.2;
+    letter-spacing: var(--ls-base, 0.04em);
+    color: var(--el-morte);
 }
-.cartao-criatura__elemento {
+.cartao-criatura__nome a {
+    color: inherit;
+    text-decoration: none;
+    border-bottom: 1px dashed transparent;
+    transition: border-color var(--t-fast, 150ms) ease;
+}
+.cartao-criatura__nome a:hover { border-bottom-color: currentColor; }
+/* tag-elemento (SVG) usa as regras gerais; .cartao-criatura__elemento aplica
+   apenas quando o markup ainda for textual (legado) */
+.cartao-criatura__elemento:not(svg) {
     display: inline-block;
     padding: 2px 8px;
     border: 1px solid currentColor;
@@ -1079,30 +1101,34 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .cartao-criatura__stats {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
-    margin: 8px 0 12px;
-    padding: 10px 12px;
-    background: var(--surface-2);
-    border: 1px solid var(--border);
+    gap: 10px;
+    margin: 12px 0 14px;
+    padding: 10px 14px;
+    background: rgba(8, 8, 12, 0.55);
+    border: 1px dashed var(--border);
     border-radius: var(--r);
 }
 .cartao-criatura__stat { display: flex; flex-direction: column; gap: 2px; }
 .cartao-criatura__stat dt {
     color: var(--ink-faint);
+    font: var(--t-mono);
     font-size: 0.7rem;
-    letter-spacing: 0.1em;
+    letter-spacing: var(--ls-label, 0.10em);
+    text-transform: uppercase;
 }
 .cartao-criatura__stat dd {
     margin: 0;
     color: var(--el-conhecimento);
-    font-size: 1.05rem;
+    font-family: var(--titulo);
+    font-size: 1.1rem;
     font-weight: 700;
+    letter-spacing: var(--ls-base, 0.04em);
 }
 .cartao-criatura__habilidades {
     flex: 1;
     margin: 0 0 14px;
     color: var(--ink-dim);
-    font-size: 0.82rem;
+    font-size: 0.85rem;
     line-height: 1.55;
 }
 .cartao-criatura__acoes { display: flex; gap: 8px; margin-top: auto; }
