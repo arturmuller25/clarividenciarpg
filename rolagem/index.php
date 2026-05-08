@@ -64,56 +64,10 @@ require __DIR__ . '/../views/cabecalho.php';
                 <span class="campo__obrigatorio" aria-hidden="true">*</span>
             </label>
 
-            <!-- Sprite SVG: cada <symbol> e a projeção 2D canônica do poliedro.
-                 Reusada via <use href="#geo-dN"/> em cada radio button. -->
-            <svg width="0" height="0" style="position:absolute" aria-hidden="true">
-                <defs>
-                    <!-- d4: pirâmide (triângulo) -->
-                    <symbol id="geo-d4" viewBox="0 0 80 80">
-                        <polygon points="40,10 72,68 8,68" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-                        <line x1="40" y1="10" x2="40" y2="68" stroke="currentColor" stroke-width="1" opacity="0.35"/>
-                    </symbol>
-                    <!-- d6: cubo (quadrado com bevel sutil) -->
-                    <symbol id="geo-d6" viewBox="0 0 80 80">
-                        <rect x="14" y="14" width="52" height="52" rx="3" fill="none" stroke="currentColor" stroke-width="2"/>
-                        <line x1="14" y1="14" x2="22" y2="6" stroke="currentColor" stroke-width="1" opacity="0.35"/>
-                        <line x1="66" y1="14" x2="58" y2="6" stroke="currentColor" stroke-width="1" opacity="0.35"/>
-                        <line x1="22" y1="6"  x2="58" y2="6" stroke="currentColor" stroke-width="1" opacity="0.35"/>
-                    </symbol>
-                    <!-- d8: octaedro (losango) -->
-                    <symbol id="geo-d8" viewBox="0 0 80 80">
-                        <polygon points="40,8 72,40 40,72 8,40" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-                        <line x1="8"  y1="40" x2="72" y2="40" stroke="currentColor" stroke-width="1" opacity="0.35"/>
-                        <line x1="40" y1="8"  x2="40" y2="72" stroke="currentColor" stroke-width="1" opacity="0.35"/>
-                    </symbol>
-                    <!-- d10: pentágono duplo (kite vertical com divisor) -->
-                    <symbol id="geo-d10" viewBox="0 0 80 80">
-                        <polygon points="40,8 68,32 56,72 24,72 12,32" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-                        <line x1="12" y1="32" x2="68" y2="32" stroke="currentColor" stroke-width="1" opacity="0.35"/>
-                        <line x1="40" y1="8"  x2="40" y2="32" stroke="currentColor" stroke-width="1" opacity="0.35"/>
-                    </symbol>
-                    <!-- d12: dodecaedro (pentágono regular com pentágono interno) -->
-                    <symbol id="geo-d12" viewBox="0 0 80 80">
-                        <polygon points="40,6 70,30 58,68 22,68 10,30" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-                        <polygon points="40,28 56,40 50,58 30,58 24,40" fill="none" stroke="currentColor" stroke-width="1" opacity="0.4"/>
-                    </symbol>
-                    <!-- d20: icosaedro (hexágono com triângulos internos) -->
-                    <symbol id="geo-d20" viewBox="0 0 80 80">
-                        <polygon points="40,6 70,24 70,56 40,74 10,56 10,24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-                        <line x1="40" y1="6"  x2="40" y2="74" stroke="currentColor" stroke-width="1" opacity="0.4"/>
-                        <line x1="10" y1="24" x2="70" y2="56" stroke="currentColor" stroke-width="1" opacity="0.4"/>
-                        <line x1="70" y1="24" x2="10" y2="56" stroke="currentColor" stroke-width="1" opacity="0.4"/>
-                    </symbol>
-                    <!-- d100: esfera facetada -->
-                    <symbol id="geo-d100" viewBox="0 0 80 80">
-                        <circle cx="40" cy="40" r="32" fill="none" stroke="currentColor" stroke-width="2"/>
-                        <ellipse cx="40" cy="40" rx="32" ry="14" fill="none" stroke="currentColor" stroke-width="1" opacity="0.4"/>
-                        <ellipse cx="40" cy="40" rx="14" ry="32" fill="none" stroke="currentColor" stroke-width="1" opacity="0.4"/>
-                        <line x1="8"  y1="40" x2="72" y2="40" stroke="currentColor" stroke-width="1" opacity="0.25"/>
-                        <line x1="40" y1="8"  x2="40" y2="72" stroke="currentColor" stroke-width="1" opacity="0.25"/>
-                    </symbol>
-                </defs>
-            </svg>
+            <?php /* Sprite SVG dos 7 dados (so contorno externo, sem linhas internas).
+                     Origem: assets/img/dice-icons.svg (Passo 3 — refit do design system,
+                     IDs renomeados de dN para geo-dN para preservar compat com dados.js). */ ?>
+            <?php readfile(__DIR__ . '/../assets/img/dice-icons.svg'); ?>
 
             <div class="seletor-dado" role="radiogroup" aria-label="Tipo de dado">
                 <?php foreach (['d4','d6','d8','d10','d12','d20','d100'] as $tipo): ?>
@@ -121,13 +75,8 @@ require __DIR__ . '/../views/cabecalho.php';
                         <input type="radio" name="tipo_dado" value="<?= $tipo ?>"
                                <?= $tipo === 'd20' ? 'checked' : '' ?>>
                         <span class="seletor-dado__forma" aria-hidden="true">
-                            <svg class="seletor-dado__svg" viewBox="0 0 80 80" focusable="false">
+                            <svg class="seletor-dado__svg" viewBox="0 0 64 64" focusable="false">
                                 <use href="#geo-<?= $tipo ?>"/>
-                                <text x="40" y="48" text-anchor="middle"
-                                      class="seletor-dado__num"
-                                      font-family="JetBrains Mono, monospace"
-                                      font-size="17" font-weight="700"
-                                      fill="currentColor"><?= strtoupper($tipo) ?></text>
                             </svg>
                         </span>
                     </label>

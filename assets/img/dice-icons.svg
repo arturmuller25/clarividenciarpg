@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+  
+  <symbol id="geo-d4" viewBox="0 0 64 64">
+    <polygon fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" points="32,8 56,54 8,54"></polygon>
+    <text x="32" y="46" text-anchor="middle" font-family="JetBrains Mono, monospace" font-weight="700" font-size="13" fill="currentColor">D4</text>
+  </symbol>
+  <symbol id="geo-d6" viewBox="0 0 64 64">
+    <rect fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" x="11" y="11" width="42" height="42" rx="2"></rect>
+    <text x="32" y="38" text-anchor="middle" font-family="JetBrains Mono, monospace" font-weight="700" font-size="14" fill="currentColor">D6</text>
+  </symbol>
+  <symbol id="geo-d8" viewBox="0 0 64 64">
+    <polygon fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" points="32,6 56,32 32,58 8,32"></polygon>
+    <text x="32" y="38" text-anchor="middle" font-family="JetBrains Mono, monospace" font-weight="700" font-size="13" fill="currentColor">D8</text>
+  </symbol>
+  <symbol id="geo-d10" viewBox="0 0 64 64">
+    <polygon fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" points="32,6 56,24 47,55 17,55 8,24"></polygon>
+    <text x="32" y="40" text-anchor="middle" font-family="JetBrains Mono, monospace" font-weight="700" font-size="12" fill="currentColor">D10</text>
+  </symbol>
+  <symbol id="geo-d12" viewBox="0 0 64 64">
+    <polygon fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" points="32,6 52,16 57,40 42,57 22,57 7,40 12,16"></polygon>
+    <text x="32" y="40" text-anchor="middle" font-family="JetBrains Mono, monospace" font-weight="700" font-size="12" fill="currentColor">D12</text>
+  </symbol>
+  <symbol id="geo-d20" viewBox="0 0 64 64">
+    <polygon fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" points="32,6 56,19 56,45 32,58 8,45 8,19"></polygon>
+    <text x="32" y="38" text-anchor="middle" font-family="JetBrains Mono, monospace" font-weight="700" font-size="12" fill="currentColor">D20</text>
+  </symbol>
+  <symbol id="geo-d100" viewBox="0 0 64 64">
+    <circle fill="none" stroke="currentColor" stroke-width="1.8" cx="32" cy="32" r="25"></circle>
+    <text x="32" y="38" text-anchor="middle" font-family="JetBrains Mono, monospace" font-weight="700" font-size="11" fill="currentColor">D100</text>
+  </symbol>
+  <symbol id="geo-sigil" viewBox="0 0 64 64"><circle fill="none" stroke="currentColor" stroke-width="2" cx="32" cy="32" r="26"></circle><circle fill="currentColor" cx="32" cy="32" r="6"></circle></symbol>
+</svg>
