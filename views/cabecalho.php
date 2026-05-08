@@ -50,6 +50,25 @@ $mensagens   = consumirFlash();
             <label for="menu-toggle" class="menu-hamburger__overlay" aria-hidden="true"></label>
 
             <nav class="menu-hamburger__painel" aria-label="Navegação principal">
+                <div class="menu-hamburger__logo">
+                    <span class="menu-hamburger__logo-titulo">Clarivid&ecirc;ncia</span>
+                    <span class="menu-hamburger__logo-destaque">Paranormal</span>
+                    <svg class="menu-hamburger__logo-sigilo" viewBox="0 0 48 48"
+                         fill="none" stroke="currentColor"
+                         stroke-linejoin="round" stroke-linecap="round"
+                         aria-hidden="true">
+                        <polygon points="24,4 42,14 42,34 24,44 6,34 6,14" stroke-width="1.8"/>
+                        <polyline points="6,14 24,18 42,14" stroke-width="1.2" opacity="0.85"/>
+                        <polyline points="24,4 24,18"       stroke-width="1.2" opacity="0.85"/>
+                        <polyline points="6,34 24,30 42,34" stroke-width="1.2" opacity="0.85"/>
+                        <polyline points="24,30 24,44"      stroke-width="1.2" opacity="0.85"/>
+                        <line x1="24" y1="18" x2="24" y2="30" stroke-width="1.2" opacity="0.55"/>
+                        <circle cx="24" cy="24" r="1.4" fill="currentColor" stroke="none"/>
+                    </svg>
+                </div>
+                <div class="menu-hamburger__divisoria" aria-hidden="true">
+                    <span>//</span><i></i><span>//</span>
+                </div>
                 <span class="menu-hamburger__cabecalho">
                     <span class="menu-hamburger__sigilo" aria-hidden="true">&#9678;</span>
                     ARQUIVOS_DA_ORDEM
