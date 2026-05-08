@@ -10,6 +10,8 @@ require_once __DIR__ . '/../config.php';
  */
 final class LogRepositorio
 {
+    public const TIPOS_DADO = ['d4', 'd6', 'd8', 'd10', 'd12', 'd20', 'd100'];
+
     private PDO $pdo;
 
     public function __construct(?PDO $pdo = null)
@@ -23,6 +25,7 @@ final class LogRepositorio
      * @param array{
      *     quem_rolou: string,
      *     descricao: string,
+     *     tipo_dado: string,
      *     quantidade_dados: int,
      *     resultados_brutos: array<int, int>,
      *     resultado_final: int,
@@ -34,14 +37,15 @@ final class LogRepositorio
     {
         $stmt = $this->pdo->prepare(
             'INSERT INTO log_rolagens
-                (quem_rolou, descricao, quantidade_dados, resultados_brutos,
+                (quem_rolou, descricao, tipo_dado, quantidade_dados, resultados_brutos,
                  resultado_final, eh_critico, eh_desastre)
              VALUES
-                (:quem_rolou, :descricao, :quantidade_dados, :resultados_brutos,
+                (:quem_rolou, :descricao, :tipo_dado, :quantidade_dados, :resultados_brutos,
                  :resultado_final, :eh_critico, :eh_desastre)'
         );
         $stmt->bindValue(':quem_rolou',        $registro['quem_rolou']);
         $stmt->bindValue(':descricao',         $registro['descricao']);
+        $stmt->bindValue(':tipo_dado',         $registro['tipo_dado']);
         $stmt->bindValue(':quantidade_dados',  $registro['quantidade_dados'], PDO::PARAM_INT);
         $stmt->bindValue(':resultados_brutos',
             json_encode(array_values($registro['resultados_brutos']), JSON_THROW_ON_ERROR));
@@ -61,7 +65,7 @@ final class LogRepositorio
     {
         $limite = max(1, min(500, $limite));
         $stmt = $this->pdo->prepare(
-            'SELECT id, quem_rolou, descricao, quantidade_dados, resultados_brutos,
+            'SELECT id, quem_rolou, descricao, tipo_dado, quantidade_dados, resultados_brutos,
                     resultado_final, eh_critico, eh_desastre, rolado_em
              FROM log_rolagens
              ORDER BY rolado_em DESC, id DESC
@@ -70,5 +74,14 @@ final class LogRepositorio
         $stmt->bindValue(':limite', $limite, PDO::PARAM_INT);
         $stmt->execute();
         return $stmt->fetchAll();
+    }
+
+    /**
+     * Conta rolagens registradas (usado no Dashboard).
+     */
+    public function contar(): int
+    {
+        $stmt = $this->pdo->query('SELECT COUNT(*) FROM log_rolagens');
+        return $stmt === false ? 0 : (int) $stmt->fetchColumn();
     }
 }

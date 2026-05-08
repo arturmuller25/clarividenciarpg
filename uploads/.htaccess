@@ -1,0 +1,37 @@
+# =====================================================================
+# TERMINAL DA ORDEM - Politica de seguranca para a pasta /uploads
+#
+# Esta pasta serve apenas como repositorio de imagens (campanhas, agentes,
+# NPCs, criaturas). NUNCA executar PHP/CGI a partir daqui — qualquer arquivo
+# malicioso enviado disfarcado nao vira RCE.
+# =====================================================================
+
+# 1) Bloquear execucao de codigo: PHP, CGI, JSP, etc.
+<FilesMatch "\.(php|php3|php4|php5|phtml|cgi|pl|py|jsp|asp|aspx|sh|exe)$">
+    Require all denied
+</FilesMatch>
+
+# 2) Forcar tipo de arquivo correto (sem auto-deteccao perigosa)
+<FilesMatch "\.(jpg|jpeg)$">  ForceType image/jpeg  </FilesMatch>
+<FilesMatch "\.png$">          ForceType image/png   </FilesMatch>
+<FilesMatch "\.gif$">          ForceType image/gif   </FilesMatch>
+<FilesMatch "\.webp$">         ForceType image/webp  </FilesMatch>
+
+# 3) Desativar engines de script ainda que ativas no servidor pai
+<IfModule mod_php.c>
+    php_flag engine off
+</IfModule>
+<IfModule mod_php7.c>
+    php_flag engine off
+</IfModule>
+<IfModule mod_php8.c>
+    php_flag engine off
+</IfModule>
+
+# 4) Negar listagem de diretorio (informacao desnecessaria a clientes)
+Options -Indexes
+
+# 5) Servir arquivos com Cache forte (sao imutaveis depois de upload)
+<IfModule mod_headers.c>
+    Header set Cache-Control "public, max-age=2592000, immutable"
+</IfModule>

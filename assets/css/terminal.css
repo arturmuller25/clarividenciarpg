@@ -5,7 +5,7 @@
  * Paleta     : Sangue (vermelho), Morte (branco), Conhecimento (amarelo), Energia (roxo)
  * ==================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=JetBrains+Mono:wght@300;400;500;700&family=Montserrat:wght@300;400;500;600;700&display=swap');
 
 *,
 *::before,
@@ -16,34 +16,52 @@
 }
 
 :root {
-    /* Canvas / superfícies */
-    --canvas: #000000;
-    --surface-1: #0a0a0a;
-    --surface-2: #121212;
-    --surface-3: #1a1a1a;
+    /* Canvas / superfícies (obsidiana) */
+    --canvas:    #0a0a0a;
+    --surface-1: #0e0e0e;
+    --surface-2: #141414;
+    --surface-3: #1c1c1c;
+
+    /* Cinza metálico — gradientes para detalhes (bordas, painéis) */
+    --metalico:        linear-gradient(135deg, #2a2a2a 0%, #161616 60%, #1a1a1a 100%);
+    --metalico-claro:  linear-gradient(135deg, #3a3a3a 0%, #1c1c1c 60%, #232323 100%);
+    --metalico-borda:  linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.04));
 
     /* Bordas */
-    --border: rgba(232, 232, 232, 0.10);
+    --border:        rgba(232, 232, 232, 0.10);
     --border-strong: rgba(232, 232, 232, 0.28);
+    --border-metal:  rgba(232, 232, 232, 0.16);
 
     /* Tipografia */
     --ink: #e8e8e8;
     --ink-dim: #8a8a8a;
     --ink-faint: #4a4a4a;
 
-    /* Elementos do RPG (canon Ordem Paranormal) */
-    --el-sangue: #c8102e;
-    --el-morte: #f5f5f5;
-    --el-conhecimento: #ffd60a;
-    --el-energia: #9d4edd;
+    /* Elementos do RPG (canon Ordem Paranormal — wiki/Elementos_do_Outro_Lado) */
+    /* Os 4 elementos clássicos + Medo (o "elemento mestre" / vazio primordial) */
+    --el-sangue:       #c8102e;  /* Sangue - vermelho profundo (combate, violência) */
+    --el-morte:        #d8d8d8;  /* Morte - branco pálido (silêncio, decadência) */
+    --el-conhecimento: #ffd60a;  /* Conhecimento - dourado (saber proibido) */
+    --el-energia:      #9d4edd;  /* Energia - roxo neon (caos, anomalia) */
+    --el-medo:         #5a1d8a;  /* Medo - púrpura escuro (vazio primordial) */
+
+    /* Glows pré-calculados (usados como acento de destaque) */
+    --glow-sangue:       0 0 18px rgba(200, 16, 46, 0.55);
+    --glow-morte:        0 0 18px rgba(245, 245, 245, 0.30);
+    --glow-conhecimento: 0 0 18px rgba(255, 214, 10, 0.55);
+    --glow-energia:      0 0 18px rgba(157, 78, 221, 0.55);
+    --glow-medo:         0 0 22px rgba(90, 29, 138, 0.45);
 
     /* Estados */
     --critico: #00ff66;
     --falha: #ff3838;
     --aviso: #ffd60a;
 
-    /* Tipos */
-    --mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', Consolas, 'Courier New', monospace;
+    /* Tipografia em três camadas */
+    --titulo: 'Cinzel', 'Trajan Pro', 'Times New Roman', serif;
+    --ui:     'Montserrat', 'Segoe UI', system-ui, sans-serif;
+    --corpo:  'Helvetica Neue', Helvetica, Arial, sans-serif;
+    --mono:   'JetBrains Mono', 'Fira Code', Consolas, 'Courier New', monospace;
 
     /* Métricas */
     --r: 2px;
@@ -54,14 +72,22 @@ html { scroll-behavior: smooth; }
 html, body { height: 100%; }
 
 body {
-    font-family: var(--mono);
-    background: var(--canvas);
+    font-family: var(--corpo);
+    /* Canvas Medo: obsidiana com sutil tinta púrpura no canto superior esquerdo
+       e um pulso de sangue no inferior direito — invocando o "vazio primordial" */
+    background:
+        radial-gradient(ellipse at 12% -8%,  rgba(90, 29, 138, 0.16),  transparent 55%),
+        radial-gradient(ellipse at 92% 110%, rgba(200, 16, 46, 0.08), transparent 55%),
+        var(--canvas);
+    background-attachment: fixed;
     color: var(--ink);
-    font-size: 14px;
-    line-height: 1.6;
+    font-size: 15px;
+    line-height: 1.65;
     min-height: 100vh;
     overflow-x: hidden;
     position: relative;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 /* Scanlines decorativas */
@@ -139,20 +165,37 @@ button { font: inherit; color: inherit; cursor: pointer; }
     justify-content: space-between;
     gap: 24px;
     padding: 16px 20px;
-    background: var(--surface-1);
-    border: 1px solid var(--border);
+    background:
+        linear-gradient(180deg, rgba(255,255,255,0.04), transparent 70%),
+        var(--metalico);
+    border: 1px solid var(--border-metal);
     border-radius: var(--r);
     flex-wrap: wrap;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.06),
+        0 8px 24px -16px rgba(0, 0, 0, 0.8);
 }
 
 .terminal__marca {
     display: inline-flex;
     align-items: baseline;
-    gap: 8px;
+    gap: 10px;
     color: var(--ink);
+    font-family: var(--titulo);
     font-weight: 700;
-    letter-spacing: 0.04em;
-    font-size: 1rem;
+    letter-spacing: 0.06em;
+    font-size: 1.1rem;
+    text-transform: uppercase;
+}
+.terminal__marca-nome {
+    display: inline-flex;
+    gap: 6px;
+    align-items: baseline;
+    flex-wrap: wrap;
+}
+.terminal__marca-realce {
+    color: var(--el-conhecimento);
+    text-shadow: 0 0 12px rgba(255, 214, 10, 0.35);
 }
 
 .terminal__prompt { color: var(--el-conhecimento); }
@@ -414,6 +457,38 @@ button { font: inherit; color: inherit; cursor: pointer; }
     font-size: 0.72rem;
 }
 
+/* Cooldown / disabled — botao volta apos a animacao + audio terminarem */
+.botao:disabled,
+.botao.is-cooldown {
+    opacity: 0.45;
+    cursor: not-allowed;
+    pointer-events: none;
+    box-shadow: none;
+    color: var(--ink-faint);
+    border-color: var(--border);
+    background: transparent;
+}
+/* Barra de progresso sutil indicando o cooldown */
+.botao.is-cooldown {
+    position: relative;
+    overflow: hidden;
+}
+.botao.is-cooldown::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 2px;
+    width: 100%;
+    background: var(--el-conhecimento);
+    transform-origin: left center;
+    animation: botao-cooldown 1.3s linear forwards;
+}
+@keyframes botao-cooldown {
+    from { transform: scaleX(0); }
+    to   { transform: scaleX(1); }
+}
+
 /* ====================================================================
  * TABELAS
  * ==================================================================== */
@@ -628,15 +703,150 @@ button { font: inherit; color: inherit; cursor: pointer; }
  * RESPONSIVIDADE
  * ==================================================================== */
 
+/* ====================================================================
+ * RESPONSIVIDADE — 4 breakpoints (1024 / 768 / 540 / 380)
+ *
+ * 1024px: laptops pequenos / tablets em paisagem
+ *  768px: tablets em retrato — galerias 2 col, formulários full-width
+ *  540px: smartphones grandes — galerias 1 col, fontes menores
+ *  380px: smartphones pequenos — paddings mínimos, esconder rótulos opcionais
+ * ==================================================================== */
+
+@media (max-width: 1024px) {
+    .galeria,
+    .galeria-campanhas {
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    }
+    .indicadores {
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    }
+    .rolador { grid-template-columns: 1fr 1fr; }
+}
+
 @media (max-width: 768px) {
-    .terminal { padding: 16px; }
-    .terminal__topo { flex-direction: column; align-items: stretch; }
-    .terminal__nav { justify-content: flex-start; }
-    .cabecalho-pagina__titulo { font-size: 1.2rem; }
-    .formulario { padding: 20px; }
-    .tabela__truncar { max-width: 160px; }
-    .tabela thead th,
-    .tabela tbody td { padding: 10px 12px; }
+    .terminal { padding: 16px 12px; }
+    .terminal__topo {
+        gap: 12px;
+        padding: 12px 14px;
+    }
+    .terminal__marca { font-size: 0.95rem; gap: 6px; }
+    .cabecalho-pagina__titulo { font-size: 1.25rem; }
+    .formulario { padding: 18px; max-width: 100%; }
+    .formulario__linha { grid-template-columns: 1fr; gap: 16px; }
+
+    /* Tabela do histórico: stack como cards no mobile */
+    .tabela thead { display: none; }
+    .tabela, .tabela tbody, .tabela tr, .tabela td { display: block; width: 100%; }
+    .tabela tbody tr {
+        margin-bottom: 12px;
+        border: 1px solid var(--border);
+        border-radius: var(--r);
+        padding: 6px 0;
+    }
+    .tabela tbody td {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 8px 14px;
+        border-bottom: 1px dashed var(--border);
+    }
+    .tabela tbody td:last-child { border-bottom: 0; }
+    .tabela tbody td::before {
+        content: attr(data-label);
+        color: var(--ink-faint);
+        font-family: var(--ui);
+        font-size: 0.7rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+    }
+    .tabela__truncar { max-width: 100%; white-space: normal; }
+
+    /* Indicadores: 2 colunas */
+    .indicadores { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .indicador { padding: 14px; }
+    .indicador__valor { font-size: 2rem; }
+
+    /* Painel secundário: empilhar */
+    .painel-secundario { grid-template-columns: 1fr; gap: 16px; }
+    .grade-modulos { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+    .cartao-modulo { padding: 18px; }
+
+    /* Galerias: 1 coluna */
+    .galeria, .galeria-campanhas { grid-template-columns: 1fr; }
+
+    /* Rolador: empilhar painel + resultado */
+    .rolador { grid-template-columns: 1fr; }
+    .rolador__resultado { min-height: 280px; }
+
+    /* Hero menor */
+    .hero__palco { width: 220px; height: 220px; }
+    .hero__titulo { letter-spacing: 0.14em; }
+
+    /* Menu hamburger: painel cobre 90% */
+    .menu-hamburger__painel { width: min(320px, 92vw); padding-left: 22px; padding-right: 22px; }
+
+    /* Botão de cooldown menos visual no mobile */
+    .botao { padding: 10px 16px; }
+    .botao--pequeno { padding: 6px 12px; font-size: 0.7rem; }
+
+    /* Filtros: empilhar grupos */
+    .filtros { gap: 10px; }
+    .filtros__grupo { min-width: 100%; flex-basis: 100%; }
+    .filtros__grupo--busca { flex: 1 1 100%; }
+}
+
+@media (max-width: 540px) {
+    .terminal { padding: 12px 10px; }
+    .cabecalho-pagina { margin-bottom: 20px; padding-bottom: 12px; }
+    .cabecalho-pagina__titulo { font-size: 1.1rem; }
+    .cabecalho-pagina__subtitulo { font-size: 0.78rem; }
+    .cabecalho-pagina__acoes { gap: 8px; }
+    .cabecalho-pagina__acoes .botao { flex: 1 1 100%; justify-content: center; text-align: center; }
+
+    .indicadores { grid-template-columns: 1fr; }
+    .indicador__valor { font-size: 2.4rem; }
+
+    .formulario { padding: 14px; }
+    .campo__entrada { padding: 10px 12px; }
+    .campo__rotulo { font-size: 0.72rem; }
+
+    /* Seletor de dado: ícones menores em mobile */
+    .seletor-dado__forma { width: 60px; height: 60px; }
+    .seletor-dado { gap: 8px; }
+
+    /* Hero: ainda menor */
+    .hero__palco { width: 180px; height: 180px; }
+    .hero__titulo { font-size: 1.4rem; }
+    .hero__subtitulo { font-size: 0.7rem; letter-spacing: 0.18em; }
+    .hero__iniciar { padding: 12px 18px; font-size: 0.78rem; }
+
+    /* Cartões compactos */
+    .cartao-npc, .cartao-criatura, .cartao-agente {
+        padding: 14px 16px;
+    }
+    .cartao-campanha__corpo { padding: 14px 16px 10px; }
+    .cartao-campanha__acoes { padding: 10px 16px 12px; }
+    .cartao-campanha__stats { gap: 4px; }
+    .cartao-campanha__stat dd { font-size: 1rem; }
+
+    /* Footer: empilhar info de sessão */
+    .terminal__rodape { flex-direction: column; gap: 4px; padding: 12px; font-size: 0.7rem; }
+
+    /* Dossiê: padding menor + selo full-width */
+    .dossie { padding: 20px 16px; }
+    .dossie__cabecalho { gap: 14px; }
+    .dossie__selo { min-width: 100%; }
+    .dossie__historia { padding: 14px; }
+    .dossie__metadados { grid-template-columns: 1fr; gap: 10px; }
+}
+
+@media (max-width: 380px) {
+    .terminal__marca-realce { display: none; }     /* só "Clarividência" cabe */
+    .terminal__cursor { display: none; }
+    .menu-hamburger__rotulo { display: none; }
+    .seletor-dado__forma { width: 54px; height: 54px; }
+    .hero__palco { width: 150px; height: 150px; }
+    .indicador__rotulo { font-size: 0.65rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -999,3 +1209,2095 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 .tabela__tag.is-critico  { color: var(--critico); }
 .tabela__tag.is-desastre { color: var(--falha); }
+
+/* ====================================================================
+ * FILTROS - busca textual
+ * ==================================================================== */
+
+.filtros__grupo--busca { flex: 2 1 280px; }
+
+.filtros__entrada {
+    padding: 8px 10px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    color: var(--ink);
+    font: inherit;
+    border-radius: var(--r);
+    width: 100%;
+}
+.filtros__entrada::placeholder { color: var(--ink-faint); }
+.filtros__entrada:focus {
+    outline: none;
+    border-color: var(--el-conhecimento);
+    box-shadow: 0 0 0 3px rgba(255, 214, 10, 0.12);
+}
+
+/* ====================================================================
+ * CARTAO NPC - link no nome
+ * ==================================================================== */
+
+.cartao-npc__nome-link {
+    color: inherit;
+    border-bottom: 1px dashed transparent;
+    transition: color 150ms ease, border-color 150ms ease;
+}
+.cartao-npc__nome-link:hover,
+.cartao-npc__nome-link:focus-visible {
+    color: var(--el-conhecimento);
+    border-bottom-color: var(--el-conhecimento);
+    outline: none;
+}
+
+/* ====================================================================
+ * DOSSIE INDIVIDUAL DE NPC
+ * ==================================================================== */
+
+.dossie {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--ink-faint);
+    border-radius: var(--r);
+    padding: 32px;
+    max-width: 920px;
+    position: relative;
+    overflow: hidden;
+}
+
+.dossie::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+        repeating-linear-gradient(
+            0deg,
+            rgba(255, 255, 255, 0.012) 0 1px,
+            transparent 1px 4px
+        );
+}
+
+.dossie--amigavel {
+    border-left-color: var(--critico);
+    box-shadow: 0 0 36px -16px rgba(0, 255, 102, 0.45);
+}
+.dossie--neutro   { border-left-color: var(--ink-dim); }
+.dossie--hostil {
+    border-left-color: var(--el-sangue);
+    box-shadow: 0 0 36px -16px rgba(200, 16, 46, 0.55);
+}
+
+.dossie__cabecalho {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 24px;
+    flex-wrap: wrap;
+    padding-bottom: 20px;
+    border-bottom: 1px dashed var(--border-strong);
+    position: relative;
+}
+
+.dossie__codigo {
+    color: var(--ink-faint);
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.dossie__nome {
+    margin: 0 0 6px;
+    color: var(--el-morte);
+    font-size: 1.7rem;
+    letter-spacing: 0.04em;
+}
+
+.dossie__ocupacao {
+    color: var(--el-conhecimento);
+    font-size: 0.95rem;
+    letter-spacing: 0.05em;
+}
+
+.dossie__selo {
+    text-align: center;
+    padding: 12px 18px;
+    border: 1px solid currentColor;
+    border-radius: var(--r);
+    min-width: 140px;
+    color: var(--ink-dim);
+}
+.dossie__selo--amigavel { color: var(--critico); }
+.dossie__selo--hostil   { color: var(--el-sangue); }
+.dossie__selo--neutro   { color: var(--ink-dim); }
+
+.dossie__selo-rotulo {
+    display: block;
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    color: var(--ink-faint);
+    margin-bottom: 4px;
+}
+.dossie__selo-valor {
+    display: block;
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+}
+
+.dossie__metadados {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin: 24px 0;
+}
+.dossie__campo dt {
+    color: var(--ink-faint);
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    margin-bottom: 4px;
+}
+.dossie__campo dd {
+    margin: 0;
+    color: var(--ink);
+    font-size: 0.95rem;
+}
+
+.dossie__historia {
+    margin-top: 16px;
+    padding: 20px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+}
+.dossie__historia-titulo {
+    color: var(--el-conhecimento);
+    font-size: 0.78rem;
+    letter-spacing: 0.12em;
+    margin: 0 0 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px dashed var(--border);
+}
+.dossie__historia-corpo {
+    color: var(--ink);
+    font-size: 0.92rem;
+    line-height: 1.75;
+    white-space: pre-wrap;
+}
+
+.dossie__rodape {
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px dashed var(--border);
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    color: var(--ink-faint);
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+}
+
+/* ====================================================================
+ * DASHBOARD - INDICADORES + ULTIMOS REGISTROS
+ * ==================================================================== */
+
+.indicadores {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+}
+
+.indicador {
+    padding: 20px;
+    background: var(--metalico);
+    border: 1px solid var(--border-metal);
+    border-top: 1px solid var(--el-conhecimento);
+    border-radius: var(--r);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    position: relative;
+    overflow: hidden;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.05),
+        0 0 0 1px rgba(0, 0, 0, 0.3);
+}
+.indicador::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 1px;
+    background: var(--metalico-borda);
+    pointer-events: none;
+}
+.indicador::after {
+    content: '';
+    position: absolute;
+    inset: auto -40px -40px auto;
+    width: 100px;
+    height: 100px;
+    background: radial-gradient(circle, rgba(255, 214, 10, 0.07), transparent 70%);
+    pointer-events: none;
+}
+.indicador__rotulo {
+    color: var(--ink-faint);
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+}
+.indicador__valor {
+    color: var(--el-conhecimento);
+    font-size: 2.6rem;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    text-shadow: 0 0 16px rgba(255, 214, 10, 0.25);
+}
+.indicador__link {
+    margin-top: 4px;
+    color: var(--ink-dim);
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    border-bottom: 1px dashed transparent;
+    align-self: flex-start;
+    transition: color 150ms ease, border-color 150ms ease;
+}
+.indicador__link:hover,
+.indicador__link:focus-visible {
+    color: var(--el-conhecimento);
+    border-bottom-color: var(--el-conhecimento);
+    outline: none;
+}
+
+.painel-secundario {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+    gap: 24px;
+    align-items: start;
+}
+@media (max-width: 900px) {
+    .painel-secundario { grid-template-columns: 1fr; }
+}
+
+.painel-secundario__titulo {
+    margin: 0 0 16px;
+    color: var(--el-conhecimento);
+    font-size: 0.85rem;
+    letter-spacing: 0.12em;
+    padding-bottom: 8px;
+    border-bottom: 1px dashed var(--border-strong);
+}
+
+.painel-secundario__bloco--lateral {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    padding: 20px;
+    border-radius: var(--r);
+}
+.painel-secundario__vazio {
+    color: var(--ink-dim);
+    font-size: 0.85rem;
+    text-align: center;
+    padding: 16px 0;
+}
+.painel-secundario__link {
+    display: inline-block;
+    margin-top: 12px;
+    color: var(--ink-dim);
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    border-bottom: 1px dashed transparent;
+    transition: color 150ms ease, border-color 150ms ease;
+}
+.painel-secundario__link:hover,
+.painel-secundario__link:focus-visible {
+    color: var(--el-conhecimento);
+    border-bottom-color: var(--el-conhecimento);
+    outline: none;
+}
+
+.lista-eventos {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.lista-eventos__item {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 10px;
+    align-items: center;
+    padding: 8px 10px;
+    background: var(--surface-2);
+    border-left: 2px solid var(--ink-faint);
+    border-radius: var(--r);
+    font-size: 0.8rem;
+}
+.lista-eventos__quando {
+    color: var(--ink-faint);
+    font-size: 0.72rem;
+    white-space: nowrap;
+}
+.lista-eventos__motivo {
+    color: var(--ink-dim);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.lista-eventos__motivo strong { color: var(--ink); }
+.lista-eventos__resultado {
+    color: var(--el-morte);
+    font-weight: 700;
+    font-size: 1rem;
+    min-width: 2ch;
+    text-align: right;
+}
+.lista-eventos__resultado.is-critico  { color: var(--critico); }
+.lista-eventos__resultado.is-desastre { color: var(--falha); }
+
+/* ====================================================================
+ * CAMADA TIPOGRAFICA - Cinzel (titulos) + Montserrat (UI) + Helvetica (corpo)
+ * ==================================================================== */
+
+/* Titulos majores em Cinzel — vibe ritualistica/ocultista */
+.cabecalho-pagina__titulo,
+.dossie__nome,
+.cartao-modulo__nome,
+.painel-secundario__titulo,
+.cartao-criatura__nome,
+.cartao-npc__nome,
+h1, h2 {
+    font-family: var(--titulo);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+}
+
+/* Subtitulos em Cinzel mais leve */
+.dossie__historia-titulo,
+h3 {
+    font-family: var(--titulo);
+    font-weight: 600;
+}
+
+/* UI: navegacao, botoes, labels — Montserrat */
+.botao,
+.terminal__link,
+.menu-hamburger__link,
+.campo__rotulo,
+.filtros__rotulo,
+.indicador__rotulo,
+.cartao-modulo__codigo,
+.cartao-modulo__status,
+.tabela thead th,
+.dossie__selo-rotulo,
+.dossie__campo dt {
+    font-family: var(--ui);
+    font-weight: 500;
+}
+
+/* Estado vazio mensagens em Cinzel para impacto */
+.estado-vazio__texto {
+    font-family: var(--corpo);
+}
+
+/* Mono permanece para: prompts, IDs, codigos, timestamps, dados crus */
+.terminal__marca,
+.terminal__prompt,
+.cabecalho-pagina__prompt,
+.cabecalho-pagina__bracket,
+.terminal__rodape,
+.tabela__data,
+.tabela__id,
+.lista-eventos__quando,
+.dado-mini,
+.estado-vazio__arte,
+.dossie__historia-corpo,
+.cartao-criatura__elemento,
+.cartao-npc__atitude,
+.flash__rotulo,
+.indicador__valor,
+.campo__indice,
+.tabela__tag,
+.cartao-modulo__codigo,
+pre, code {
+    font-family: var(--mono);
+}
+
+/* Cinzel grande para o numero do dossie */
+.dossie__nome { font-size: 2rem; line-height: 1.15; }
+.cabecalho-pagina__titulo { font-size: 1.8rem; line-height: 1.2; }
+@media (max-width: 768px) {
+    .dossie__nome { font-size: 1.5rem; }
+    .cabecalho-pagina__titulo { font-size: 1.3rem; }
+}
+
+/* ====================================================================
+ * MENU HAMBURGER - Pure CSS (checkbox toggle + glassmorphism)
+ *
+ * Estrutura:
+ *   #menu-toggle (checkbox invisivel)
+ *   .menu-hamburger__botao (label clicavel: 3 linhas)
+ *   .menu-hamburger__overlay (fundo escuro clicavel para fechar)
+ *   .menu-hamburger__painel  (drawer lateral com glassmorphism)
+ * ==================================================================== */
+
+/* Esconde o checkbox sem perder acessibilidade (focavel via teclado) */
+.menu-hamburger__toggle {
+    position: absolute;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0,0,0,0);
+    white-space: nowrap; border: 0;
+}
+
+/* Substitui a antiga .terminal__nav (mantida para retrocompatibilidade ja zerada) */
+.terminal__nav { display: none !important; }
+
+/* Botao com 3 linhas */
+.menu-hamburger__botao {
+    position: relative;
+    z-index: 60;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 5px;
+    width: 56px;
+    height: 44px;
+    padding: 8px 10px 8px 14px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--r);
+    background: var(--surface-1);
+    cursor: pointer;
+    transition: border-color 200ms ease, background 200ms ease, box-shadow 200ms ease;
+    user-select: none;
+}
+.menu-hamburger__botao:hover,
+.menu-hamburger__toggle:focus-visible + .menu-hamburger__botao {
+    border-color: var(--el-conhecimento);
+    box-shadow: 0 0 0 2px rgba(255, 214, 10, 0.18);
+    outline: none;
+}
+
+.menu-hamburger__rotulo {
+    position: absolute;
+    left: -56px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--ink-faint);
+    font-family: var(--ui);
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    pointer-events: none;
+    transition: color 200ms ease;
+}
+.menu-hamburger__botao:hover .menu-hamburger__rotulo {
+    color: var(--el-conhecimento);
+}
+@media (max-width: 540px) {
+    .menu-hamburger__rotulo { display: none; }
+}
+
+.menu-hamburger__linha {
+    display: block;
+    height: 2px;
+    width: 28px;
+    background: var(--ink);
+    border-radius: 1px;
+    transform-origin: 50% 50%;
+    transition:
+        transform 320ms cubic-bezier(0.65, 0, 0.35, 1),
+        width 320ms cubic-bezier(0.65, 0, 0.35, 1),
+        background 200ms ease,
+        opacity 200ms ease;
+}
+.menu-hamburger__linha:nth-child(2) { width: 22px; }
+.menu-hamburger__linha:nth-child(3) { width: 16px; }
+
+/* Estado aberto: 3 linhas viram X — apenas a 1a e a 3a, do meio some */
+.menu-hamburger__toggle:checked ~ .terminal__topo .menu-hamburger__botao .menu-hamburger__linha:nth-child(1),
+.menu-hamburger__toggle:checked + .menu-hamburger__botao .menu-hamburger__linha:nth-child(1) {
+    width: 28px;
+    transform: translateY(7px) rotate(45deg);
+    background: var(--el-conhecimento);
+}
+.menu-hamburger__toggle:checked + .menu-hamburger__botao .menu-hamburger__linha:nth-child(2) {
+    opacity: 0;
+    transform: scaleX(0);
+}
+.menu-hamburger__toggle:checked + .menu-hamburger__botao .menu-hamburger__linha:nth-child(3) {
+    width: 28px;
+    transform: translateY(-7px) rotate(-45deg);
+    background: var(--el-conhecimento);
+}
+
+/* Overlay (escurece o resto da tela) */
+.menu-hamburger__overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 280ms ease, visibility 280ms ease;
+    z-index: 40;
+    cursor: pointer;
+}
+.menu-hamburger__toggle:checked ~ .menu-hamburger__overlay,
+.menu-hamburger__toggle:checked + .menu-hamburger__botao + .menu-hamburger__overlay {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Painel lateral (drawer) com glassmorphism */
+.menu-hamburger__painel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: min(360px, 88vw);
+    height: 100vh;
+    padding: 80px 28px 40px;
+    background: rgba(10, 10, 10, 0.72);
+    backdrop-filter: blur(18px) saturate(120%);
+    -webkit-backdrop-filter: blur(18px) saturate(120%);
+    border-left: 1px solid rgba(255, 214, 10, 0.25);
+    box-shadow: -24px 0 60px -16px rgba(0, 0, 0, 0.7);
+    transform: translateX(100%);
+    transition: transform 380ms cubic-bezier(0.65, 0, 0.35, 1);
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    overflow-y: auto;
+}
+.menu-hamburger__toggle:checked ~ .menu-hamburger__painel,
+.menu-hamburger__toggle:checked + .menu-hamburger__botao + .menu-hamburger__overlay + .menu-hamburger__painel {
+    transform: translateX(0);
+}
+
+/* Detalhe ritualistico no canto */
+.menu-hamburger__painel::before {
+    content: '';
+    position: absolute;
+    top: 24px;
+    left: 28px;
+    width: 32px;
+    height: 32px;
+    border: 1px solid rgba(255, 214, 10, 0.4);
+    border-radius: 50%;
+    box-shadow: inset 0 0 14px rgba(255, 214, 10, 0.15);
+}
+.menu-hamburger__painel::after {
+    content: '';
+    position: absolute;
+    top: 39px;
+    left: 43px;
+    width: 2px;
+    height: 2px;
+    background: var(--el-conhecimento);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--el-conhecimento);
+}
+
+.menu-hamburger__cabecalho {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 0 18px;
+    margin: 8px 0 16px;
+    border-bottom: 1px dashed rgba(255, 255, 255, 0.12);
+    color: var(--el-conhecimento);
+    font-family: var(--ui);
+    font-size: 0.75rem;
+    letter-spacing: 0.18em;
+}
+.menu-hamburger__sigilo {
+    color: var(--el-conhecimento);
+    font-size: 1.1rem;
+    text-shadow: 0 0 8px rgba(255, 214, 10, 0.6);
+}
+
+.menu-hamburger__link {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    padding: 14px 16px;
+    color: var(--ink-dim);
+    font-family: var(--titulo);
+    font-size: 1.05rem;
+    letter-spacing: 0.08em;
+    border: 1px solid transparent;
+    border-radius: var(--r);
+    background: rgba(255, 255, 255, 0.02);
+    transition:
+        color 220ms ease,
+        background 220ms ease,
+        border-color 220ms ease,
+        transform 220ms ease,
+        box-shadow 220ms ease;
+}
+.menu-hamburger__link:hover,
+.menu-hamburger__link:focus-visible {
+    color: var(--el-conhecimento);
+    border-color: rgba(255, 214, 10, 0.3);
+    background: rgba(255, 214, 10, 0.06);
+    transform: translateX(-4px);
+    box-shadow: -4px 0 12px -4px rgba(255, 214, 10, 0.4);
+    outline: none;
+}
+.menu-hamburger__link.is-ativo {
+    color: var(--el-conhecimento);
+    border-color: var(--el-conhecimento);
+    background: rgba(255, 214, 10, 0.08);
+}
+
+.menu-hamburger__num {
+    font-family: var(--mono);
+    color: var(--ink-faint);
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    min-width: 3.6em;
+}
+
+.menu-hamburger__rodape {
+    margin-top: auto;
+    padding-top: 16px;
+    border-top: 1px dashed rgba(255, 255, 255, 0.12);
+    color: var(--ink-faint);
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    text-align: center;
+}
+
+/* Quando aberto, prevenir scroll do body NAO eh possivel sem JS,
+   mas o overlay impede interacao - aceitamos esse trade-off para Pure CSS. */
+
+/* Animacoes escalonadas dos links ao abrir */
+.menu-hamburger__painel .menu-hamburger__link {
+    opacity: 0;
+    transform: translateX(20px);
+}
+.menu-hamburger__toggle:checked ~ .menu-hamburger__painel .menu-hamburger__link,
+.menu-hamburger__toggle:checked + .menu-hamburger__botao + .menu-hamburger__overlay + .menu-hamburger__painel .menu-hamburger__link {
+    opacity: 1;
+    transform: translateX(0);
+    transition:
+        opacity 380ms ease,
+        transform 380ms cubic-bezier(0.65, 0, 0.35, 1),
+        color 220ms ease,
+        background 220ms ease,
+        border-color 220ms ease,
+        box-shadow 220ms ease;
+}
+.menu-hamburger__toggle:checked ~ .menu-hamburger__painel .menu-hamburger__link:nth-child(2),
+.menu-hamburger__toggle:checked + .menu-hamburger__botao + .menu-hamburger__overlay + .menu-hamburger__painel .menu-hamburger__link:nth-child(2) { transition-delay: 80ms; }
+.menu-hamburger__toggle:checked ~ .menu-hamburger__painel .menu-hamburger__link:nth-child(3),
+.menu-hamburger__toggle:checked + .menu-hamburger__botao + .menu-hamburger__overlay + .menu-hamburger__painel .menu-hamburger__link:nth-child(3) { transition-delay: 130ms; }
+.menu-hamburger__toggle:checked ~ .menu-hamburger__painel .menu-hamburger__link:nth-child(4),
+.menu-hamburger__toggle:checked + .menu-hamburger__botao + .menu-hamburger__overlay + .menu-hamburger__painel .menu-hamburger__link:nth-child(4) { transition-delay: 180ms; }
+.menu-hamburger__toggle:checked ~ .menu-hamburger__painel .menu-hamburger__link:nth-child(5),
+.menu-hamburger__toggle:checked + .menu-hamburger__botao + .menu-hamburger__overlay + .menu-hamburger__painel .menu-hamburger__link:nth-child(5) { transition-delay: 230ms; }
+.menu-hamburger__toggle:checked ~ .menu-hamburger__painel .menu-hamburger__link:nth-child(6),
+.menu-hamburger__toggle:checked + .menu-hamburger__botao + .menu-hamburger__overlay + .menu-hamburger__painel .menu-hamburger__link:nth-child(6) { transition-delay: 280ms; }
+
+/* ====================================================================
+ * HERO / SPLASH SCREEN
+ *   - SVG d20 rolando ferozmente
+ *   - Numero piscante mudando rapidamente
+ *   - Apos ~2.4s: dado para na face 20 com brilho dourado
+ *   - Titulo desliza da direita para a esquerda
+ *   - Hero faz fade-out e revela o dashboard
+ * ==================================================================== */
+
+.hero {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    /* Fundo de Medo: gradiente do centro para fora, com tinta púrpura
+       sutil sugerindo o Outro Lado pulsando atrás */
+    background:
+        radial-gradient(circle at 50% 45%, rgba(90, 29, 138, 0.18), transparent 55%),
+        radial-gradient(ellipse at center, #0a0a0a 0%, #000 70%, #000 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 32px;
+    padding: 24px;
+    overflow: hidden;
+}
+.hero.is-saindo {
+    animation: hero-saida 900ms cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+
+/* Scanlines decorativas */
+.hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+        0deg,
+        rgba(255, 255, 255, 0.02) 0 1px,
+        transparent 1px 4px
+    );
+    pointer-events: none;
+}
+.hero::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+        circle at center,
+        transparent 30%,
+        rgba(0, 0, 0, 0.7) 100%
+    );
+    pointer-events: none;
+}
+
+@keyframes hero-saida {
+    0%   { opacity: 1; visibility: visible; }
+    99%  { opacity: 0; visibility: visible; }
+    100% { opacity: 0; visibility: hidden;  pointer-events: none; }
+}
+
+/* Hero 2.0 — palco com perspective real para a rotação 3D do d20 */
+.hero__palco {
+    position: relative;
+    width: 280px;
+    height: 280px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    filter: drop-shadow(0 0 24px rgba(255, 214, 10, 0.3));
+    perspective: 1200px;
+    perspective-origin: 50% 50%;
+}
+@media (max-width: 540px) {
+    .hero__palco { width: 220px; height: 220px; }
+}
+
+/* Wrapper 3D — recebe os transforms; SVG e faces ficam dentro */
+.hero__d20-3d {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    will-change: transform;
+}
+
+.hero__d20 {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+/* Animação 3D ativa quando JS adiciona .is-rodando */
+.hero.is-rodando .hero__d20-3d {
+    animation:
+        hero-rolar-3d 1.8s 0s 1 forwards,
+        hero-assentar-3d 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 1.8s 1 forwards;
+}
+
+/* Hero d20 v2: borda externa + 11 faces individuais com sombreamento + arestas finas */
+
+.hero__d20-borda {
+    fill: none;
+    stroke: #ffd60a;
+    stroke-width: 3;
+    stroke-linejoin: round;
+}
+
+.hero__d20-face {
+    stroke: rgba(255, 214, 10, 0.45);
+    stroke-width: 1;
+    stroke-linejoin: round;
+}
+.hero__d20-face--claro  { fill: url(#hero-face-claro); }
+.hero__d20-face--medio  { fill: url(#hero-face-medio); }
+.hero__d20-face--escuro { fill: url(#hero-face-escuro); }
+
+.hero__d20-arestas line {
+    stroke: rgba(255, 214, 10, 0.55);
+    stroke-width: 1.2;
+}
+
+/* Camada especular (highlight) que dá noção de face refletindo luz */
+.hero__d20-spec {
+    fill: url(#hero-spec);
+    pointer-events: none;
+}
+
+/*
+ * Rolagem 3D — três fases controladas por animation-timing-function
+ * declarado dentro de cada keyframe (afeta a TRANSIÇÃO até o próximo).
+ *   0% → 50%   : aceleração rápida (cubic-bezier "ease-in-out" agressivo)
+ *   50% → 80%  : rotação contínua (linear)
+ *   80% → 100% : desaceleração com leve overshoot (settle)
+ */
+@keyframes hero-rolar-3d {
+    0% {
+        transform: rotateX(0) rotateY(0) rotateZ(0) scale(0.7) translate3d(0, 0, 0);
+        animation-timing-function: cubic-bezier(0.55, 0, 0.45, 1);
+    }
+    25% {
+        transform: rotateX(180deg) rotateY(140deg) rotateZ(60deg) scale(1.12) translate3d(-22px, -34px, 40px);
+        animation-timing-function: linear;
+    }
+    50% {
+        transform: rotateX(360deg) rotateY(280deg) rotateZ(140deg) scale(0.95) translate3d(28px, 18px, -30px);
+        animation-timing-function: linear;
+    }
+    75% {
+        transform: rotateX(560deg) rotateY(450deg) rotateZ(240deg) scale(1.08) translate3d(-14px, -10px, 20px);
+        animation-timing-function: cubic-bezier(0.33, 0, 0.45, 1);
+    }
+    100% {
+        transform: rotateX(720deg) rotateY(720deg) rotateZ(360deg) scale(1.02) translate3d(0, 0, 0);
+    }
+}
+
+@keyframes hero-assentar-3d {
+    0%   { transform: rotateX(720deg) rotateY(720deg) rotateZ(360deg) scale(1.02); }
+    40%  { transform: rotateX(720deg) rotateY(720deg) rotateZ(360deg) scale(1.22); }
+    100% { transform: rotateX(720deg) rotateY(720deg) rotateZ(360deg) scale(1.10); }
+}
+
+/*
+ * Ondas de choque — disparam no instante em que o d20 assenta (1.8s).
+ * Duas ondas concêntricas com pequena defasagem + um flash radial.
+ */
+.hero__shockwave {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 80px;
+    height: 80px;
+    border: 4px solid var(--el-conhecimento);
+    border-radius: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
+    pointer-events: none;
+    box-shadow: 0 0 0 0 rgba(255, 214, 10, 0);
+}
+
+.hero__shockwave--flash {
+    border: none;
+    background: radial-gradient(circle, rgba(255, 214, 10, 0.55), transparent 70%);
+    width: 240px;
+    height: 240px;
+}
+
+.hero.is-rodando .hero__shockwave--1 {
+    animation: hero-shockwave 1.0s cubic-bezier(0, 0.55, 0.45, 1) 1.78s 1 forwards;
+}
+.hero.is-rodando .hero__shockwave--2 {
+    /* Segunda onda em SANGUE — combina com o impacto cinematográfico */
+    border-color: var(--el-sangue);
+    animation: hero-shockwave 1.3s cubic-bezier(0, 0.55, 0.45, 1) 1.95s 1 forwards;
+}
+.hero.is-rodando .hero__shockwave--flash {
+    animation: hero-shockwave-flash 0.5s ease-out 1.78s 1 forwards;
+}
+
+@keyframes hero-shockwave {
+    0%   {
+        transform: translate(-50%, -50%) scale(0);
+        opacity: 0.95;
+        border-width: 6px;
+    }
+    50%  {
+        transform: translate(-50%, -50%) scale(7);
+        opacity: 0.45;
+        border-width: 2px;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(15);
+        opacity: 0;
+        border-width: 0;
+    }
+}
+
+@keyframes hero-shockwave-flash {
+    0%   { transform: translate(-50%, -50%) scale(0.4); opacity: 0; }
+    30%  { transform: translate(-50%, -50%) scale(1.0); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(2.5); opacity: 0; }
+}
+
+/* O numero central muda rapidamente durante a rolagem.
+   Cada elemento ".hero__face-N" fica visivel em uma fatia do tempo,
+   e apenas a face "20" persiste no final. */
+.hero__face {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--titulo);
+    font-weight: 900;
+    font-size: clamp(3.4rem, 9vw, 5rem);
+    color: var(--ink);
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Faces piscam apenas quando a Hero esta rodando */
+.hero.is-rodando .hero__face-7  { animation: hero-piscar-face 0.15s ease 0.00s 1; }
+.hero.is-rodando .hero__face-13 { animation: hero-piscar-face 0.15s ease 0.15s 1; }
+.hero.is-rodando .hero__face-2  { animation: hero-piscar-face 0.15s ease 0.30s 1; }
+.hero.is-rodando .hero__face-18 { animation: hero-piscar-face 0.15s ease 0.45s 1; }
+.hero.is-rodando .hero__face-5  { animation: hero-piscar-face 0.15s ease 0.60s 1; }
+.hero.is-rodando .hero__face-11 { animation: hero-piscar-face 0.15s ease 0.75s 1; }
+.hero.is-rodando .hero__face-9  { animation: hero-piscar-face 0.15s ease 0.90s 1; }
+.hero.is-rodando .hero__face-16 { animation: hero-piscar-face 0.15s ease 1.05s 1; }
+.hero.is-rodando .hero__face-3  { animation: hero-piscar-face 0.15s ease 1.20s 1; }
+.hero.is-rodando .hero__face-14 { animation: hero-piscar-face 0.15s ease 1.35s 1; }
+.hero.is-rodando .hero__face-8  { animation: hero-piscar-face 0.15s ease 1.50s 1; }
+.hero.is-rodando .hero__face-19 { animation: hero-piscar-face 0.15s ease 1.65s 1; }
+
+/* O 20 entra em 1.8s e fica para sempre (fade-in com brilho) */
+.hero.is-rodando .hero__face-20 {
+    animation: hero-revelar-20 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 1.8s 1 forwards;
+}
+
+@keyframes hero-piscar-face {
+    0%, 100% { opacity: 0; }
+    50%      { opacity: 1; }
+}
+
+@keyframes hero-revelar-20 {
+    0%   { opacity: 0; transform: scale(0.6); color: var(--ink); text-shadow: none; }
+    60%  { opacity: 1; transform: scale(1.25); color: var(--el-conhecimento);
+           text-shadow: 0 0 32px var(--el-conhecimento), 0 0 64px rgba(255, 214, 10, 0.5); }
+    100% { opacity: 1; transform: scale(1); color: var(--el-conhecimento);
+           text-shadow: 0 0 24px var(--el-conhecimento), 0 0 48px rgba(255, 214, 10, 0.4); }
+}
+
+/* Aura pulsante por tras do dado quando ele assenta */
+.hero__aura {
+    position: absolute;
+    inset: -20%;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 214, 10, 0.18), transparent 60%);
+    opacity: 0;
+    pointer-events: none;
+}
+.hero.is-rodando .hero__aura {
+    animation: hero-aura 2.4s ease 1.8s infinite;
+}
+@keyframes hero-aura {
+    0%, 100% { opacity: 0; transform: scale(0.95); }
+    50%      { opacity: 1; transform: scale(1.05); }
+}
+
+/* Titulo: estado padrao escondido fora da tela, anima quando .is-rodando */
+.hero__titulo {
+    font-family: var(--titulo);
+    font-weight: 700;
+    font-size: clamp(1.6rem, 5vw, 2.8rem);
+    letter-spacing: 0.4em;
+    color: var(--ink);
+    text-align: center;
+    text-transform: uppercase;
+    transform: translateX(120vw);
+    opacity: 0;
+    filter: blur(12px);
+    text-shadow: 0 0 18px rgba(255, 214, 10, 0.25);
+    will-change: transform, opacity, filter, letter-spacing;
+}
+.hero.is-rodando .hero__titulo {
+    /* Entrada cinematografica: 1.4s, ease-in-out, fantasmagorica */
+    animation: hero-titulo 1.4s ease-in-out 2.4s forwards;
+}
+.hero__titulo-realce {
+    color: var(--el-conhecimento);
+    text-shadow: 0 0 18px rgba(255, 214, 10, 0.6);
+}
+
+@keyframes hero-titulo {
+    0%   {
+        transform: translateX(120vw);
+        opacity: 0;
+        filter: blur(14px);
+        letter-spacing: 0.5em;
+    }
+    35%  {
+        transform: translateX(28vw);
+        opacity: 0.35;
+        filter: blur(8px);
+        letter-spacing: 0.36em;
+    }
+    65%  {
+        transform: translateX(-1.5vw);
+        opacity: 0.85;
+        filter: blur(2px);
+        letter-spacing: 0.22em;
+    }
+    85%  {
+        transform: translateX(0.5vw);
+        opacity: 0.97;
+        filter: blur(0.4px);
+        letter-spacing: 0.19em;
+    }
+    100% {
+        transform: translateX(0);
+        opacity: 1;
+        filter: blur(0);
+        letter-spacing: 0.18em;
+    }
+}
+
+.hero__subtitulo {
+    font-family: var(--ui);
+    font-weight: 400;
+    font-size: 0.85rem;
+    letter-spacing: 0.3em;
+    color: var(--ink-faint);
+    text-align: center;
+    opacity: 0;
+}
+.hero.is-rodando .hero__subtitulo {
+    animation: hero-subtitulo 0.8s ease-in-out 3.6s forwards;
+}
+@keyframes hero-subtitulo {
+    0%   { opacity: 0; transform: translateY(10px); filter: blur(4px); }
+    100% { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+
+/* Botao "Iniciar Ritual" — aparece apenas se autoplay foi bloqueado */
+.hero__iniciar {
+    position: relative;
+    z-index: 2;
+    padding: 14px 28px;
+    background: rgba(255, 214, 10, 0.04);
+    border: 1px solid var(--el-conhecimento);
+    color: var(--el-conhecimento);
+    font-family: var(--ui);
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    border-radius: var(--r);
+    cursor: pointer;
+    transition: all 220ms ease;
+    animation: hero-iniciar-pulse 2.6s ease-in-out infinite;
+}
+.hero__iniciar:hover,
+.hero__iniciar:focus-visible {
+    background: var(--el-conhecimento);
+    color: #000;
+    box-shadow: 0 0 32px -4px rgba(255, 214, 10, 0.7);
+    outline: none;
+    transform: translateY(-2px);
+}
+.hero.is-rodando .hero__iniciar { display: none; }
+
+@keyframes hero-iniciar-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255, 214, 10, 0); }
+    50%      { box-shadow: 0 0 28px -4px rgba(255, 214, 10, 0.55); }
+}
+
+/* Respeita usuarios com motion reduzido — exibe estado final imediatamente */
+@media (prefers-reduced-motion: reduce) {
+    .hero.is-rodando .hero__d20-3d { animation: none; transform: scale(1.1); }
+    .hero.is-rodando .hero__face-20 { opacity: 1; color: var(--el-conhecimento);
+                                      text-shadow: 0 0 24px var(--el-conhecimento); }
+    .hero.is-rodando .hero__titulo  { animation: none; opacity: 1; transform: none; filter: none; letter-spacing: 0.18em; }
+    .hero.is-rodando .hero__subtitulo { animation: none; opacity: 1; transform: none; filter: none; }
+    .hero.is-rodando .hero__aura { animation: none; opacity: 0.5; }
+    .hero.is-rodando .hero__shockwave { animation: none; opacity: 0; }
+}
+
+/* ====================================================================
+ * SELETOR DE TIPO DE DADO (icones geometricos)
+ *
+ * Cada radio button vira um SVG com a projecao 2D do poliedro:
+ *   d4 piramide, d6 cubo, d8 octaedro, d10 pentagono duplo,
+ *   d12 dodecaedro, d20 icosaedro, d100 esfera facetada.
+ * O numero ("D20" etc.) fica centralizado dentro da forma.
+ * Glow dourado aparece no estado :checked (acento — nao no idle).
+ * ==================================================================== */
+
+.seletor-dado {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.seletor-dado__opcao {
+    cursor: pointer;
+    display: inline-block;
+}
+.seletor-dado__opcao input {
+    position: absolute;
+    width: 1px; height: 1px;
+    overflow: hidden; clip: rect(0,0,0,0);
+}
+
+/* Container: 72x72 — a forma SVG ocupa o quadro inteiro. */
+.seletor-dado__forma {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 72px;
+    height: 72px;
+    color: var(--ink-dim);
+    transition:
+        color 220ms ease,
+        filter 220ms ease,
+        transform 220ms ease;
+    user-select: none;
+}
+.seletor-dado__svg {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+}
+
+.seletor-dado__opcao:hover .seletor-dado__forma {
+    color: var(--ink);
+    transform: translateY(-2px);
+}
+
+.seletor-dado__opcao input:focus-visible + .seletor-dado__forma {
+    outline: 2px solid var(--el-conhecimento);
+    outline-offset: 4px;
+    border-radius: var(--r);
+}
+
+/* Estado selecionado: stroke dourado + glow */
+.seletor-dado__opcao input:checked + .seletor-dado__forma {
+    color: var(--el-conhecimento);
+    filter: drop-shadow(0 0 10px rgba(255, 214, 10, 0.55));
+    transform: translateY(-2px) scale(1.04);
+}
+
+/* Numero dentro da forma — renderizado em SVG com font-family controlada */
+.seletor-dado__num {
+    /* Atributos SVG sao aplicados inline (font-size etc.).
+       Aqui apenas garantimos a transicao suave de cor via currentColor. */
+    transition: opacity 200ms ease;
+}
+
+/* Quando o usuario escolhe d != 20, escondemos o campo "atributo" via JS
+   adicionando .is-oculto */
+.is-oculto { display: none !important; }
+
+/* Esconder formas inativas no SVG grande de rolagem.
+   Atributo `hidden` em <g> SVG nao e respeitado universalmente — forçamos
+   via classe E [hidden] E [display=none] para cobrir todos os browsers. */
+.dado-svg__forma[hidden],
+.dado-svg__forma[display="none"],
+.dado-svg__forma.is-oculta {
+    display: none !important;
+}
+
+/* ====================================================================
+ * UTILITARIOS DE BRILHO (glow como acento)
+ * Aplicar em destaques pontuais. Cores dos elementos vivem aqui, nao
+ * em fills/borders permanentes — mantem o painel sobrio.
+ * ==================================================================== */
+.glow-sangue       { text-shadow: var(--glow-sangue); }
+.glow-morte        { text-shadow: var(--glow-morte); }
+.glow-conhecimento { text-shadow: var(--glow-conhecimento); }
+.glow-energia      { text-shadow: var(--glow-energia); }
+
+.glow-box-sangue       { box-shadow: var(--glow-sangue); }
+.glow-box-conhecimento { box-shadow: var(--glow-conhecimento); }
+.glow-box-energia      { box-shadow: var(--glow-energia); }
+
+/* ====================================================================
+ * GALERIA DE CAMPANHAS
+ * ==================================================================== */
+
+.galeria-campanhas {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 20px;
+}
+
+.cartao-campanha {
+    display: flex;
+    flex-direction: column;
+    background: var(--metalico);
+    border: 1px solid var(--border-metal);
+    border-radius: var(--r);
+    overflow: hidden;
+    transition:
+        transform 220ms ease,
+        border-color 220ms ease,
+        box-shadow 220ms ease;
+}
+.cartao-campanha:hover {
+    transform: translateY(-3px);
+    border-color: rgba(255, 214, 10, 0.35);
+    box-shadow:
+        0 12px 32px -16px rgba(0, 0, 0, 0.8),
+        0 0 24px -8px rgba(255, 214, 10, 0.25);
+}
+
+/* Capa: aspect-ratio fixo para cards homogêneos. Imagem via background. */
+.cartao-campanha__capa {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    background-color: var(--surface-2);
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    padding: 8px 10px;
+}
+/* Sigilo dourado quando não há capa */
+.cartao-campanha__capa-vazia {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 214, 10, 0.18);
+    font-size: 4rem;
+}
+/* Camada escura por cima da capa para dar contraste ao badge do sistema */
+.cartao-campanha__capa::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, transparent 50%, rgba(0,0,0,0.7) 100%);
+    pointer-events: none;
+}
+.cartao-campanha__sistema {
+    position: relative;
+    z-index: 1;
+    padding: 3px 10px;
+    background: rgba(10, 10, 10, 0.75);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--r);
+    color: var(--ink);
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    margin-left: auto;
+}
+
+.cartao-campanha__corpo {
+    padding: 18px 20px 12px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.cartao-campanha__nome {
+    margin: 0;
+    color: var(--el-morte);
+    font-size: 1.25rem;
+    line-height: 1.25;
+    letter-spacing: 0.04em;
+}
+.cartao-campanha__descricao {
+    margin: 0;
+    color: var(--ink-dim);
+    font-size: 0.88rem;
+    line-height: 1.55;
+    flex: 1;
+}
+.cartao-campanha__stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-top: 8px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--border);
+}
+.cartao-campanha__stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+.cartao-campanha__stat dt {
+    color: var(--ink-faint);
+    font-family: var(--ui);
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+}
+.cartao-campanha__stat dd {
+    margin: 0;
+    color: var(--el-conhecimento);
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+.cartao-campanha__acoes {
+    display: flex;
+    gap: 8px;
+    padding: 12px 20px 16px;
+    border-top: 1px solid var(--border);
+    background: rgba(0, 0, 0, 0.25);
+}
+
+/* ====================================================================
+ * UPLOAD DE IMAGEM (formulário de campanha e futuros)
+ * ==================================================================== */
+
+.upload-preview {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 12px;
+    border: 1px dashed var(--border-strong);
+    background: var(--surface-2);
+    border-radius: var(--r);
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+}
+.upload-preview__img {
+    width: 160px;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+}
+.upload-preview__remover {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--ink-dim);
+    font-size: 0.8rem;
+    cursor: pointer;
+    user-select: none;
+}
+.upload-preview__remover input { accent-color: var(--el-sangue); }
+
+.campo__entrada--arquivo {
+    padding: 8px 10px;
+    cursor: pointer;
+}
+.campo__entrada--arquivo::file-selector-button {
+    margin-right: 12px;
+    padding: 6px 14px;
+    background: var(--surface-3);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--r);
+    color: var(--ink);
+    font: inherit;
+    font-family: var(--ui);
+    cursor: pointer;
+    transition: all 150ms ease;
+}
+.campo__entrada--arquivo::file-selector-button:hover {
+    border-color: var(--el-conhecimento);
+    color: var(--el-conhecimento);
+}
+
+/* ====================================================================
+ * AGENTES (cards de PJs com barras dinâmicas PV/SAN/PE)
+ * ==================================================================== */
+
+.cartao-agente {
+    display: flex;
+    flex-direction: column;
+    padding: 18px 20px;
+    background: var(--metalico);
+    border: 1px solid var(--border-metal);
+    border-left: 3px solid var(--el-conhecimento);
+    border-radius: var(--r);
+    transition: transform 200ms ease, border-color 200ms ease, box-shadow 220ms ease;
+}
+.cartao-agente:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 22px -10px rgba(255, 214, 10, 0.35);
+}
+
+.cartao-agente__topo {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--ink-faint);
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    margin-bottom: 10px;
+}
+.cartao-agente__classe {
+    color: var(--el-conhecimento);
+}
+.cartao-agente__nome {
+    margin: 0 0 4px;
+    color: var(--el-morte);
+    font-family: var(--titulo);
+    font-size: 1.2rem;
+    letter-spacing: 0.04em;
+}
+.cartao-agente__jogador,
+.cartao-agente__campanha {
+    margin: 0 0 4px;
+    color: var(--ink-dim);
+    font-size: 0.78rem;
+}
+.cartao-agente__campanha {
+    color: var(--el-energia);
+    font-family: var(--mono);
+    margin-bottom: 12px;
+}
+
+.barras-agente {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: auto;
+    padding-top: 12px;
+    border-top: 1px dashed var(--border);
+}
+
+.barra-agente {
+    display: grid;
+    grid-template-columns: 38px 1fr auto;
+    align-items: center;
+    gap: 8px;
+}
+.barra-agente__rotulo {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--ink-faint);
+    letter-spacing: 0.1em;
+    text-align: right;
+}
+.barra-agente__trilho {
+    height: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+}
+.barra-agente__preenchimento {
+    height: 100%;
+    transition: width 380ms cubic-bezier(0.65, 0, 0.35, 1);
+    border-radius: 3px;
+}
+.barra-agente__valor {
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    color: var(--ink);
+    min-width: 56px;
+    text-align: right;
+}
+/* Cores por elemento (canônicas Ordem Paranormal) */
+.barra-agente--pv  .barra-agente__preenchimento { background: linear-gradient(90deg, var(--el-sangue), #ff5566); }
+.barra-agente--san .barra-agente__preenchimento { background: linear-gradient(90deg, var(--el-energia), #c08aff); }
+.barra-agente--pe  .barra-agente__preenchimento { background: linear-gradient(90deg, var(--el-conhecimento), #fff09a); }
+
+.cartao-agente__acoes {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--border);
+    flex-wrap: wrap;
+}
+
+/* ====================================================================
+ * FICHA DE AGENTE — Fase 4
+ * Layout: <details>/<summary> nativos como seções colapsáveis.
+ * Cada seção é um partial em /agentes/partials/_*.php
+ * ==================================================================== */
+
+.formulario--ficha {
+    max-width: 980px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    gap: 14px;
+}
+
+.ficha-secao {
+    background: var(--metalico);
+    border: 1px solid var(--border-metal);
+    border-radius: var(--r);
+    overflow: hidden;
+    transition: border-color 200ms ease;
+}
+.ficha-secao[open] {
+    border-color: rgba(255, 214, 10, 0.25);
+}
+
+.ficha-secao__titulo {
+    padding: 14px 20px;
+    font-family: var(--titulo);
+    font-size: 1rem;
+    letter-spacing: 0.1em;
+    color: var(--ink);
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    user-select: none;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent);
+    transition: background 180ms ease;
+}
+.ficha-secao__titulo::-webkit-details-marker { display: none; }
+.ficha-secao__titulo::before {
+    content: '▸';
+    color: var(--el-conhecimento);
+    transition: transform 220ms ease;
+    display: inline-block;
+}
+.ficha-secao[open] .ficha-secao__titulo::before {
+    transform: rotate(90deg);
+}
+.ficha-secao__titulo:hover {
+    background: linear-gradient(180deg, rgba(255, 214, 10, 0.06), transparent);
+}
+.ficha-secao__indice {
+    color: var(--ink-faint);
+    font-family: var(--mono);
+    font-size: 0.85rem;
+}
+.ficha-secao__corpo {
+    padding: 20px;
+    border-top: 1px dashed var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+.ficha-secao__ajuda {
+    color: var(--ink-dim);
+    font-size: 0.85rem;
+    margin: 0;
+}
+.ficha-secao__ajuda code {
+    background: var(--surface-2);
+    padding: 1px 6px;
+    border-radius: 3px;
+    color: var(--el-conhecimento);
+    font-size: 0.85em;
+}
+
+/* ----------------------------------------------------------- IDENTIDADE */
+.ficha-identidade {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 24px;
+    align-items: flex-start;
+}
+@media (max-width: 720px) {
+    .ficha-identidade { grid-template-columns: 1fr; }
+}
+.ficha-identidade__foto {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.ficha-identidade__img {
+    width: 100%;
+    aspect-ratio: 3 / 4;
+    object-fit: cover;
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+}
+.ficha-identidade__semfoto {
+    width: 100%;
+    aspect-ratio: 3 / 4;
+    background: var(--surface-2);
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--r);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 214, 10, 0.18);
+    font-size: 5rem;
+}
+.ficha-identidade__campos {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+/* ----------------------------------------------------------- BARRAS */
+.barra-ficha {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 6px;
+    padding: 14px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--ink-faint);
+    border-radius: var(--r);
+}
+.barra-ficha--pv  { border-left-color: var(--el-sangue); }
+.barra-ficha--san { border-left-color: var(--el-energia); }
+.barra-ficha--pe  { border-left-color: var(--el-conhecimento); }
+
+.barra-ficha__cabecalho {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+}
+.barra-ficha__rotulo {
+    font-family: var(--titulo);
+    font-size: 1.1rem;
+    letter-spacing: 0.08em;
+}
+.barra-ficha__desc {
+    color: var(--ink-faint);
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+}
+.barra-ficha__trilho {
+    height: 14px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+    position: relative;
+}
+.barra-ficha__preenchimento {
+    height: 100%;
+    transition: width 380ms cubic-bezier(0.65, 0, 0.35, 1);
+    border-radius: 2px;
+}
+.barra-ficha--pv  .barra-ficha__preenchimento {
+    background: linear-gradient(90deg, var(--el-sangue), #ff5566);
+    box-shadow: 0 0 12px rgba(200, 16, 46, 0.4);
+}
+.barra-ficha--san .barra-ficha__preenchimento {
+    background: linear-gradient(90deg, var(--el-energia), #c08aff);
+    box-shadow: 0 0 12px rgba(157, 78, 221, 0.4);
+}
+.barra-ficha--pe  .barra-ficha__preenchimento {
+    background: linear-gradient(90deg, var(--el-conhecimento), #fff09a);
+    box-shadow: 0 0 12px rgba(255, 214, 10, 0.4);
+}
+.barra-ficha__inputs {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.barra-ficha__inputs .campo__rotulo {
+    margin: 0;
+    font-size: 0.7rem;
+}
+.barra-ficha__input {
+    width: 70px;
+    padding: 6px 10px;
+}
+.barra-ficha__separador {
+    color: var(--ink-faint);
+    font-weight: 700;
+}
+
+/* ----------------------------------------------------------- ATRIBUTOS */
+.grade-atributos {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+}
+.atributo {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto auto auto;
+    gap: 4px 10px;
+    padding: 14px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-top: 1px solid var(--el-conhecimento);
+    border-radius: var(--r);
+}
+.atributo__sigla {
+    grid-row: 1 / 4;
+    font-family: var(--mono);
+    color: var(--ink-faint);
+    font-size: 0.85rem;
+    letter-spacing: 0.1em;
+    align-self: center;
+}
+.atributo__valor {
+    font-family: var(--titulo);
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: var(--el-conhecimento);
+    line-height: 1;
+}
+.atributo input.atributo__valor {
+    width: 100%;
+    background: transparent;
+    border: none;
+    border-bottom: 1px dashed var(--border-strong);
+    color: var(--el-conhecimento);
+    text-align: left;
+    padding: 4px 0;
+    font: inherit;
+}
+.atributo input.atributo__valor:focus {
+    outline: none;
+    border-bottom-color: var(--el-conhecimento);
+    box-shadow: 0 2px 0 0 rgba(255, 214, 10, 0.5);
+}
+.atributo__nome {
+    font-family: var(--ui);
+    font-weight: 600;
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    color: var(--ink);
+}
+.atributo__desc {
+    grid-column: 1 / 3;
+    color: var(--ink-faint);
+    font-size: 0.7rem;
+}
+
+/* ----------------------------------------------------------- PERÍCIAS */
+.lista-pericias {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 6px;
+}
+.pericia {
+    display: grid;
+    grid-template-columns: 1fr auto auto 70px;
+    gap: 8px;
+    align-items: center;
+    padding: 8px 12px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--ink-faint);
+    border-radius: var(--r);
+    font-size: 0.85rem;
+    transition: border-color 200ms ease, box-shadow 200ms ease;
+}
+.pericia--grau-treinado     { border-left-color: rgba(255, 214, 10, 0.6); }
+.pericia--grau-veterano     { border-left-color: var(--el-conhecimento); }
+.pericia--grau-especialista {
+    border-left-color: var(--el-conhecimento);
+    box-shadow: 0 0 12px -4px rgba(255, 214, 10, 0.45);
+    background: linear-gradient(90deg, rgba(255, 214, 10, 0.05), var(--surface-2) 50%);
+}
+.pericia__nome {
+    color: var(--ink);
+    font-family: var(--ui);
+    font-weight: 500;
+}
+.pericia__atributo {
+    font-family: var(--mono);
+    color: var(--ink-faint);
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+}
+.pericia__grau {
+    padding: 4px 8px;
+    background: var(--surface-3);
+    border: 1px solid var(--border);
+    color: var(--ink);
+    font-family: var(--ui);
+    font-size: 0.78rem;
+    border-radius: var(--r);
+}
+.pericia__bonus {
+    width: 60px;
+    padding: 4px 8px;
+    background: var(--surface-3);
+    border: 1px solid var(--border);
+    color: var(--ink);
+    font-family: var(--mono);
+    text-align: center;
+    border-radius: var(--r);
+}
+
+/* ----------------------------------------------------------- LISTAS DINÂMICAS */
+.lista-dinamica {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+.lista-dinamica__item {
+    padding: 14px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.lista-dinamica__resumo {
+    margin-bottom: 12px;
+    padding: 10px 14px;
+    background: var(--surface-1);
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--r);
+    color: var(--ink-dim);
+    font-size: 0.85rem;
+}
+.lista-dinamica__resumo strong {
+    color: var(--el-conhecimento);
+    font-family: var(--mono);
+    font-size: 1.05rem;
+    margin: 0 4px;
+}
+
+/* Topo de cada linha (nome + remover) */
+.ataque-linha__topo {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+.ataque-linha__nome,
+.ataque-linha__topo input[type="text"] {
+    flex: 1;
+}
+
+/* Grade interna para campos do ataque */
+.ataque-linha__grade {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: 10px;
+}
+.ataque-linha__grade .campo__rotulo {
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+}
+.ataque-linha__total {
+    display: inline-block;
+    padding: 8px 10px;
+    background: var(--surface-3);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--r);
+    font-family: var(--mono);
+    font-weight: 700;
+    color: var(--ink);
+    text-align: center;
+    min-width: 60px;
+}
+.ataque-linha__total.is-positivo { color: var(--critico); border-color: var(--critico); }
+.ataque-linha__total.is-negativo { color: var(--falha);   border-color: var(--falha);   }
+
+/* Inventário */
+.inventario-linha__grade {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr auto;
+    gap: 10px;
+    align-items: end;
+}
+.campo--check {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+}
+.campo--check input { transform: scale(1.4); }
+
+/* Rituais */
+.ritual-linha {
+    border-left: 3px solid var(--ink-faint);
+}
+.ritual-linha--sangue       { border-left-color: var(--el-sangue); }
+.ritual-linha--morte        { border-left-color: var(--el-morte); }
+.ritual-linha--conhecimento { border-left-color: var(--el-conhecimento); }
+.ritual-linha--energia      { border-left-color: var(--el-energia); }
+.ritual-linha__grade {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+/* Ações finais da ficha */
+.ficha-acoes {
+    margin-top: 12px;
+    padding: 18px 20px;
+    background: var(--metalico);
+    border: 1px solid var(--border-metal);
+    border-radius: var(--r);
+}
+
+/* ====================================================================
+ * FICHA EM LEITURA (visualizar.php)
+ * ==================================================================== */
+
+.ficha-leitura {
+    max-width: 920px;
+    background: var(--metalico);
+    border: 1px solid var(--border-metal);
+    border-radius: var(--r);
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.ficha-leitura__cabecalho {
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    gap: 22px;
+    align-items: flex-start;
+    padding-bottom: 16px;
+    border-bottom: 1px dashed var(--border-strong);
+}
+@media (max-width: 540px) {
+    .ficha-leitura__cabecalho { grid-template-columns: 1fr; }
+}
+.ficha-leitura__foto {
+    width: 100%;
+    aspect-ratio: 3 / 4;
+    object-fit: cover;
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+}
+.ficha-leitura__foto--vazia {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface-2);
+    color: rgba(255, 214, 10, 0.16);
+    font-size: 4rem;
+}
+.ficha-leitura__nome {
+    margin: 0 0 4px;
+    color: var(--el-morte);
+    font-family: var(--titulo);
+    font-size: 1.8rem;
+    letter-spacing: 0.04em;
+}
+.ficha-leitura__sub {
+    margin: 0 0 4px;
+    color: var(--ink-dim);
+    font-size: 0.88rem;
+}
+.ficha-leitura__campanha {
+    color: var(--el-energia);
+    font-family: var(--mono);
+}
+.ficha-leitura__bloco {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.ficha-leitura__bloco h3 {
+    margin: 0;
+    color: var(--el-conhecimento);
+    font-family: var(--titulo);
+    font-size: 0.95rem;
+    letter-spacing: 0.12em;
+    padding-bottom: 6px;
+    border-bottom: 1px dashed var(--border);
+}
+.ficha-leitura__bloco h3 small {
+    color: var(--ink-faint);
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    margin-left: 8px;
+    letter-spacing: 0.08em;
+}
+.ficha-leitura__bloco h4 {
+    margin: 12px 0 4px;
+    color: var(--ink);
+    font-family: var(--ui);
+    font-size: 0.78rem;
+    letter-spacing: 0.1em;
+}
+.ficha-leitura__texto {
+    margin: 0;
+    color: var(--ink);
+    font-size: 0.92rem;
+    line-height: 1.6;
+}
+.ficha-leitura__defesa {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+    margin: 0;
+}
+.ficha-leitura__defesa div {
+    padding: 10px 14px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-top: 1px solid var(--el-conhecimento);
+    border-radius: var(--r);
+    text-align: center;
+}
+.ficha-leitura__defesa dt {
+    color: var(--ink-faint);
+    font-family: var(--ui);
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+}
+.ficha-leitura__defesa dd {
+    margin: 4px 0 0;
+    color: var(--el-conhecimento);
+    font-family: var(--mono);
+    font-size: 1.4rem;
+    font-weight: 700;
+}
+
+.ficha-leitura__pericias,
+.ficha-leitura__ataques,
+.ficha-leitura__inventario,
+.ficha-leitura__rituais {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.ficha-leitura__pericias li,
+.ficha-leitura__ataques li,
+.ficha-leitura__inventario li {
+    padding: 8px 12px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    font-size: 0.88rem;
+}
+.tag-equipado {
+    color: var(--critico);
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    margin-left: 6px;
+}
+.ritual-leitura {
+    padding: 12px 14px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--ink-faint);
+    border-radius: var(--r);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.ritual-leitura strong { color: var(--el-morte); }
+.ritual-leitura span {
+    color: var(--ink-dim);
+    font-size: 0.78rem;
+}
+.ritual-leitura p { margin: 4px 0 0; color: var(--ink); font-size: 0.86rem; }
+.ritual-leitura--sangue       { border-left-color: var(--el-sangue); }
+.ritual-leitura--morte        { border-left-color: var(--el-morte); }
+.ritual-leitura--conhecimento { border-left-color: var(--el-conhecimento); }
+.ritual-leitura--energia      { border-left-color: var(--el-energia); }
+
+.grade-atributos--leitura .atributo { padding: 10px; }
+.grade-atributos--leitura .atributo__valor { font-size: 1.6rem; }
+
+.barras-agente--leitura .barra-agente__valor { color: var(--ink); }
+
+/* Badge do tipo de dado na tabela do Historico */
+.tabela__tipo-dado {
+    display: inline-block;
+    padding: 2px 8px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--r);
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    color: var(--ink);
+    background: var(--surface-2);
+}

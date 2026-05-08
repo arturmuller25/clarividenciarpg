@@ -34,6 +34,12 @@ final class NpcValidador
         $atitude     = trim((string) ($entrada['atitude'] ?? ''));
         $historia    = trim((string) ($entrada['historia'] ?? ''));
 
+        // campanha_id: opcional (NULL = NPC sem campanha vinculada)
+        $campanhaIdBruto = $entrada['campanha_id'] ?? '';
+        $campanhaId = (is_string($campanhaIdBruto) && ctype_digit($campanhaIdBruto) && (int) $campanhaIdBruto > 0)
+            ? (int) $campanhaIdBruto
+            : null;
+
         $erros = [];
 
         if ($nome === '') {
@@ -68,6 +74,7 @@ final class NpcValidador
 
         return [
             'dados' => [
+                'campanha_id' => $campanhaId,
                 'nome'        => $nome,
                 'ocupacao'    => $ocupacao,
                 'localizacao' => $localizacao,

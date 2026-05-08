@@ -35,10 +35,10 @@ require __DIR__ . '/../views/cabecalho.php';
         AMEACAS CATALOGADAS: <strong><?= count($criaturas) ?></strong>
     </p>
     <div class="cabecalho-pagina__acoes">
-        <a href="/criaturas/formulario.php" class="botao botao--primario">
+        <a href="<?= escapar(url('/criaturas/formulario.php')) ?>" class="botao botao--primario">
             <span aria-hidden="true">+</span> NOVA CRIATURA
         </a>
-        <a href="/index.php" class="botao botao--secundario">VOLTAR AO PAINEL</a>
+        <a href="<?= escapar(url('/index.php')) ?>" class="botao botao--secundario">VOLTAR AO PAINEL</a>
     </div>
 </section>
 
@@ -57,7 +57,7 @@ require __DIR__ . '/../views/cabecalho.php';
     </div>
     <div class="filtros__acoes">
         <button type="submit" class="botao botao--pequeno">APLICAR</button>
-        <a href="/criaturas/listar.php" class="botao botao--pequeno botao--secundario">LIMPAR</a>
+        <a href="<?= escapar(url('/criaturas/listar.php')) ?>" class="botao botao--pequeno botao--secundario">LIMPAR</a>
     </div>
 </form>
 
@@ -74,7 +74,7 @@ require __DIR__ . '/../views/cabecalho.php';
         </pre>
         <p class="estado-vazio__texto">
             Os arquivos do Bestiario estao silenciosos. Clique em
-            <a href="/criaturas/formulario.php" class="link">[NOVA CRIATURA]</a>
+            <a href="<?= escapar(url('/criaturas/formulario.php')) ?>" class="link">[NOVA CRIATURA]</a>
             para registrar a primeira ameaca.
         </p>
     </div>
@@ -111,9 +111,9 @@ require __DIR__ . '/../views/cabecalho.php';
                 </p>
 
                 <footer class="cartao-criatura__acoes">
-                    <a href="/criaturas/formulario.php?id=<?= (int) $criatura['id'] ?>"
+                    <a href="<?= escapar(url('/criaturas/formulario.php?id=' . (int) $criatura['id'])) ?>"
                        class="botao botao--pequeno">EDITAR</a>
-                    <form action="/criaturas/excluir.php" method="POST"
+                    <form action="<?= escapar(url('/criaturas/excluir.php')) ?>" method="POST"
                           data-confirmar="Confirma a exclusao da criatura <?= escapar($criatura['nome']) ?>?"
                           class="formulario-inline">
                         <input type="hidden" name="csrf_token" value="<?= escapar(gerarTokenCsrf()) ?>">

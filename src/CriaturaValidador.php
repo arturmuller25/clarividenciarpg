@@ -34,6 +34,12 @@ final class CriaturaValidador
         $pvAtualBruto  = (string) ($entrada['pv_atual']  ?? '');
         $pvMaximoBruto = (string) ($entrada['pv_maximo'] ?? '');
 
+        // campanha_id: opcional (NULL = criatura sem campanha vinculada)
+        $campanhaIdBruto = $entrada['campanha_id'] ?? '';
+        $campanhaId = (is_string($campanhaIdBruto) && ctype_digit($campanhaIdBruto) && (int) $campanhaIdBruto > 0)
+            ? (int) $campanhaIdBruto
+            : null;
+
         $vd        = is_numeric($vdBruto)       ? (float) $vdBruto       : -1.0;
         $pvAtual   = is_numeric($pvAtualBruto)  ? (int)   $pvAtualBruto  : -1;
         $pvMaximo  = is_numeric($pvMaximoBruto) ? (int)   $pvMaximoBruto : -1;
@@ -74,6 +80,7 @@ final class CriaturaValidador
 
         return [
             'dados' => [
+                'campanha_id' => $campanhaId,
                 'nome'        => $nome,
                 'elemento'    => $elemento,
                 'vd'          => max(0.0, $vd),

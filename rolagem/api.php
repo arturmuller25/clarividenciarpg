@@ -5,8 +5,9 @@ declare(strict_types=1);
  * Endpoint POST: persiste uma rolagem feita pelo cliente em log_rolagens.
  *
  * Aceita apenas POST. Exige CSRF válido. Revalida tudo no servidor:
- * recalcula resultado_final, eh_critico e eh_desastre a partir dos dados crus,
- * para impedir adulteração via DevTools.
+ *   - tipo_dado deve estar em {d4,d6,d8,d10,d12,d20,d100}
+ *   - Recalcula resultado_final, eh_critico (=20) e eh_desastre (=1) no servidor
+ *     a partir dos dados crus, para impedir adulteração via DevTools.
  */
 
 require_once __DIR__ . '/../config.php';
@@ -30,8 +31,15 @@ if (!validarTokenCsrf($_POST['csrf_token'] ?? null)) {
     exit;
 }
 
+/** Lados de cada tipo de dado suportado. */
+const DADOS_LADOS = [
+    'd4' => 4, 'd6' => 6, 'd8' => 8, 'd10' => 10,
+    'd12' => 12, 'd20' => 20, 'd100' => 100,
+];
+
 $quemRolou       = trim((string) ($_POST['quem_rolou']        ?? ''));
 $descricao       = trim((string) ($_POST['descricao']         ?? ''));
+$tipoDado        = (string)        ($_POST['tipo_dado']        ?? 'd20');
 $quantidadeBruta = (string)        ($_POST['quantidade_dados'] ?? '');
 $brutosBruto     = (string)        ($_POST['resultados_brutos']?? '');
 
@@ -43,6 +51,9 @@ if ($quemRolou === '' || mb_strlen($quemRolou) > 120) {
 if ($descricao === '' || mb_strlen($descricao) > 160) {
     $erros[] = 'descricao invalida';
 }
+if (!isset(DADOS_LADOS[$tipoDado])) {
+    $erros[] = 'tipo_dado invalido (esperado um de: ' . implode(', ', array_keys(DADOS_LADOS)) . ')';
+}
 if (!ctype_digit($quantidadeBruta)) {
     $erros[] = 'quantidade invalida';
 }
@@ -51,6 +62,8 @@ if ($quantidade < 0 || $quantidade > 10) {
     $erros[] = 'quantidade fora do intervalo permitido (0-10)';
 }
 
+$lados = DADOS_LADOS[$tipoDado] ?? 20;
+
 $brutos = [];
 try {
     $decod = json_decode($brutosBruto, true, 4, JSON_THROW_ON_ERROR);
@@ -58,8 +71,8 @@ try {
         throw new RuntimeException('lista de resultados invalida');
     }
     foreach ($decod as $valor) {
-        if (!is_int($valor) || $valor < 1 || $valor > 20) {
-            throw new RuntimeException('um dos dados esta fora de 1-20');
+        if (!is_int($valor) || $valor < 1 || $valor > $lados) {
+            throw new RuntimeException(sprintf('valor fora de 1-%d para %s', $lados, $tipoDado));
         }
         $brutos[] = $valor;
     }
@@ -68,12 +81,20 @@ try {
 }
 
 // Coerência: quantidade de dados rolados deve casar com a regra
-$quantidadeEsperada = $quantidade === 0 ? 2 : $quantidade;
+//   d20: quantidade=0 -> esperado 2; quantidade>=1 -> esperado N
+//   outros tipos: sempre 1 dado
+$quantidadeEsperada = match (true) {
+    $tipoDado === 'd20' && $quantidade === 0 => 2,
+    $tipoDado === 'd20'                      => $quantidade,
+    default                                  => 1,
+};
 if (!$erros && count($brutos) !== $quantidadeEsperada) {
     $erros[] = sprintf(
-        'esperado %d dados, recebidos %d',
+        'esperado %d dados, recebidos %d (tipo %s, atributo %d)',
         $quantidadeEsperada,
-        count($brutos)
+        count($brutos),
+        $tipoDado,
+        $quantidade
     );
 }
 
@@ -84,15 +105,22 @@ if ($erros) {
 }
 
 // Recalcula sempre no servidor — nunca confie em valores derivados do cliente.
-$resultadoFinal = $quantidade === 0 ? min($brutos) : max($brutos);
-$ehCritico      = $resultadoFinal === 20;
-$ehDesastre     = $quantidade === 0;
+$resultadoFinal = match (true) {
+    $tipoDado === 'd20' && $quantidade === 0 => min($brutos),
+    $tipoDado === 'd20'                      => max($brutos),
+    default                                  => $brutos[0],
+};
+
+// Brilho APENAS em 1 e 20, conforme regra do sistema.
+$ehCritico  = $resultadoFinal === 20;
+$ehDesastre = $resultadoFinal === 1;
 
 try {
     $repo = new LogRepositorio();
     $idGerado = $repo->registrar([
         'quem_rolou'        => $quemRolou,
         'descricao'         => $descricao,
+        'tipo_dado'         => $tipoDado,
         'quantidade_dados'  => $quantidade,
         'resultados_brutos' => $brutos,
         'resultado_final'   => $resultadoFinal,
@@ -111,6 +139,7 @@ try {
 echo json_encode([
     'ok'              => true,
     'id'              => $idGerado,
+    'tipo_dado'       => $tipoDado,
     'resultado_final' => $resultadoFinal,
     'eh_critico'      => $ehCritico,
     'eh_desastre'     => $ehDesastre,

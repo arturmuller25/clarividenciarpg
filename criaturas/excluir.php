@@ -15,20 +15,20 @@ iniciarSessao();
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
     header('Allow: POST');
-    header('Location: /criaturas/listar.php');
+    header('Location: ' . url('/criaturas/listar.php'));
     exit;
 }
 
 if (!validarTokenCsrf($_POST['csrf_token'] ?? null)) {
     definirFlash('erro', 'Token de seguranca invalido. Operacao abortada.');
-    header('Location: /criaturas/listar.php');
+    header('Location: ' . url('/criaturas/listar.php'));
     exit;
 }
 
 $id = isset($_POST['id']) ? (int) $_POST['id'] : 0;
 if ($id <= 0) {
     definirFlash('erro', 'Identificador de criatura invalido.');
-    header('Location: /criaturas/listar.php');
+    header('Location: ' . url('/criaturas/listar.php'));
     exit;
 }
 
@@ -48,5 +48,5 @@ try {
     definirFlash('erro', 'Falha ao excluir criatura: ' . $e->getMessage());
 }
 
-header('Location: /criaturas/listar.php');
+header('Location: ' . url('/criaturas/listar.php'));
 exit;

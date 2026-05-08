@@ -9,14 +9,18 @@ require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../src/sessao.php';
 require_once __DIR__ . '/../src/CriaturaRepositorio.php';
 require_once __DIR__ . '/../src/CriaturaValidador.php';
+require_once __DIR__ . '/../src/CampanhaRepositorio.php';
 
 iniciarSessao();
 
-$repo       = new CriaturaRepositorio();
-$id         = isset($_GET['id']) ? (int) $_GET['id'] : 0;
-$modoEdicao = $id > 0;
+$repo          = new CriaturaRepositorio();
+$campanhaRepo  = new CampanhaRepositorio();
+$campanhasOpts = $campanhaRepo->listar();
+$id            = isset($_GET['id']) ? (int) $_GET['id'] : 0;
+$modoEdicao    = $id > 0;
 
 $dados = [
+    'campanha_id' => null,
     'nome'        => '',
     'elemento'    => 'Sangue',
     'vd'          => 1.0,
@@ -30,10 +34,11 @@ if ($modoEdicao && $_SERVER['REQUEST_METHOD'] === 'GET') {
     $existente = $repo->buscarPorId($id);
     if ($existente === null) {
         definirFlash('erro', "Criatura #{$id} nao encontrada nos arquivos.");
-        header('Location: /criaturas/listar.php');
+        header('Location: ' . url('/criaturas/listar.php'));
         exit;
     }
     $dados = [
+        'campanha_id' => isset($existente['campanha_id']) ? (int) $existente['campanha_id'] : null,
         'nome'        => (string) $existente['nome'],
         'elemento'    => (string) $existente['elemento'],
         'vd'          => (float)  $existente['vd'],
@@ -46,7 +51,9 @@ if ($modoEdicao && $_SERVER['REQUEST_METHOD'] === 'GET') {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!validarTokenCsrf($_POST['csrf_token'] ?? null)) {
         definirFlash('erro', 'Token de seguranca invalido. Tente novamente.');
-        $destino = $modoEdicao ? "/criaturas/formulario.php?id={$id}" : '/criaturas/formulario.php';
+        $destino = $modoEdicao
+            ? url('/criaturas/formulario.php?id=' . $id)
+            : url('/criaturas/formulario.php');
         header('Location: ' . $destino);
         exit;
     }
@@ -64,7 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $novoId = $repo->criar($dados);
                 definirFlash('sucesso', "Criatura #{$novoId} catalogada. O Bestiario reconhece a ameaca.");
             }
-            header('Location: /criaturas/listar.php');
+            header('Location: ' . url('/criaturas/listar.php'));
             exit;
         } catch (Throwable $e) {
             $erros['_geral'] = 'Falha na Manifestacao: ' . $e->getMessage();
@@ -102,6 +109,24 @@ require __DIR__ . '/../views/cabecalho.php';
 
 <form method="POST" class="formulario" novalidate data-validar-formulario>
     <input type="hidden" name="csrf_token" value="<?= escapar(gerarTokenCsrf()) ?>">
+
+    <div class="campo">
+        <label for="campanha_id" class="campo__rotulo">
+            <span class="campo__indice">00.</span> CAMPANHA VINCULADA
+        </label>
+        <select id="campanha_id" name="campanha_id" class="campo__entrada">
+            <option value="">[ SEM CAMPANHA ]</option>
+            <?php foreach ($campanhasOpts as $c): ?>
+                <option value="<?= (int) $c['id'] ?>"
+                    <?= (int) $dados['campanha_id'] === (int) $c['id'] ? 'selected' : '' ?>>
+                    <?= escapar((string) $c['nome']) ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
+        <small class="campo__ajuda">
+            Opcional. Vincula esta ameaça a uma operação específica.
+        </small>
+    </div>
 
     <div class="campo <?= isset($erros['nome']) ? 'campo--invalido' : '' ?>">
         <label for="nome" class="campo__rotulo">
@@ -208,7 +233,7 @@ require __DIR__ . '/../views/cabecalho.php';
         <button type="submit" class="botao botao--primario">
             <?= $modoEdicao ? 'ATUALIZAR CRIATURA' : 'CATALOGAR CRIATURA' ?>
         </button>
-        <a href="/criaturas/listar.php" class="botao botao--secundario">CANCELAR</a>
+        <a href="<?= escapar(url('/criaturas/listar.php')) ?>" class="botao botao--secundario">CANCELAR</a>
     </div>
 </form>
 

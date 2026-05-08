@@ -29,8 +29,8 @@ final class CriaturaRepositorio
     {
         if (is_string($elemento) && in_array($elemento, self::ELEMENTOS, true)) {
             $stmt = $this->pdo->prepare(
-                'SELECT id, nome, elemento, vd, pv_atual, pv_maximo, habilidades,
-                        criado_em, atualizado_em
+                'SELECT id, campanha_id, nome, elemento, foto_arquivo, vd, pv_atual,
+                        pv_maximo, habilidades, criado_em, atualizado_em
                  FROM criaturas
                  WHERE elemento = :elemento
                  ORDER BY vd DESC, nome ASC'
@@ -38,8 +38,8 @@ final class CriaturaRepositorio
             $stmt->execute([':elemento' => $elemento]);
         } else {
             $stmt = $this->pdo->query(
-                'SELECT id, nome, elemento, vd, pv_atual, pv_maximo, habilidades,
-                        criado_em, atualizado_em
+                'SELECT id, campanha_id, nome, elemento, foto_arquivo, vd, pv_atual,
+                        pv_maximo, habilidades, criado_em, atualizado_em
                  FROM criaturas
                  ORDER BY vd DESC, nome ASC'
             );
@@ -56,8 +56,8 @@ final class CriaturaRepositorio
     public function buscarPorId(int $id): ?array
     {
         $stmt = $this->pdo->prepare(
-            'SELECT id, nome, elemento, vd, pv_atual, pv_maximo, habilidades,
-                    criado_em, atualizado_em
+            'SELECT id, campanha_id, nome, elemento, foto_arquivo, vd, pv_atual,
+                    pv_maximo, habilidades, criado_em, atualizado_em
              FROM criaturas
              WHERE id = :id
              LIMIT 1'
@@ -75,9 +75,11 @@ final class CriaturaRepositorio
     public function criar(array $dados): int
     {
         $stmt = $this->pdo->prepare(
-            'INSERT INTO criaturas (nome, elemento, vd, pv_atual, pv_maximo, habilidades)
-             VALUES (:nome, :elemento, :vd, :pv_atual, :pv_maximo, :habilidades)'
+            'INSERT INTO criaturas (campanha_id, nome, elemento, vd, pv_atual, pv_maximo, habilidades)
+             VALUES (:campanha_id, :nome, :elemento, :vd, :pv_atual, :pv_maximo, :habilidades)'
         );
+        $stmt->bindValue(':campanha_id', $dados['campanha_id'] ?? null,
+                         isset($dados['campanha_id']) ? PDO::PARAM_INT : PDO::PARAM_NULL);
         $stmt->bindValue(':nome',        $dados['nome']);
         $stmt->bindValue(':elemento',    $dados['elemento']);
         $stmt->bindValue(':vd',          $dados['vd']);
@@ -89,14 +91,15 @@ final class CriaturaRepositorio
     }
 
     /**
-     * @param array{nome: string, elemento: string, vd: float, pv_atual: int,
-     *              pv_maximo: int, habilidades: string} $dados
+     * @param array{campanha_id?: int|null, nome: string, elemento: string, vd: float,
+     *              pv_atual: int, pv_maximo: int, habilidades: string} $dados
      */
     public function atualizar(int $id, array $dados): bool
     {
         $stmt = $this->pdo->prepare(
             'UPDATE criaturas
-             SET nome = :nome,
+             SET campanha_id = :campanha_id,
+                 nome = :nome,
                  elemento = :elemento,
                  vd = :vd,
                  pv_atual = :pv_atual,
@@ -105,6 +108,8 @@ final class CriaturaRepositorio
              WHERE id = :id'
         );
         $stmt->bindValue(':id',          $id, PDO::PARAM_INT);
+        $stmt->bindValue(':campanha_id', $dados['campanha_id'] ?? null,
+                         isset($dados['campanha_id']) ? PDO::PARAM_INT : PDO::PARAM_NULL);
         $stmt->bindValue(':nome',        $dados['nome']);
         $stmt->bindValue(':elemento',    $dados['elemento']);
         $stmt->bindValue(':vd',          $dados['vd']);
@@ -119,5 +124,14 @@ final class CriaturaRepositorio
         $stmt = $this->pdo->prepare('DELETE FROM criaturas WHERE id = :id');
         $stmt->bindValue(':id', $id, PDO::PARAM_INT);
         return $stmt->execute();
+    }
+
+    /**
+     * Conta criaturas catalogadas (usado no Dashboard).
+     */
+    public function contar(): int
+    {
+        $stmt = $this->pdo->query('SELECT COUNT(*) FROM criaturas');
+        return $stmt === false ? 0 : (int) $stmt->fetchColumn();
     }
 }

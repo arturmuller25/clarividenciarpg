@@ -21,14 +21,18 @@ final class NpcRepositorio
     }
 
     /**
-     * Lista NPCs com filtro opcional por atitude e/ou localização.
+     * Lista NPCs com filtros opcionais por atitude, localização e termo de busca.
      *
-     * @param array{atitude?: string|null, localizacao?: string|null} $filtros
+     * O termo "busca" é aplicado via LIKE em nome, ocupacao e historia (case-insensitive
+     * pelo collation utf8mb4_unicode_ci). Caracteres curinga do SQL são escapados.
+     *
+     * @param array{atitude?: string|null, localizacao?: string|null, busca?: string|null} $filtros
      * @return array<int, array<string, mixed>>
      */
     public function listar(array $filtros = []): array
     {
-        $sql    = 'SELECT id, nome, ocupacao, localizacao, atitude, historia, criado_em, atualizado_em
+        $sql    = 'SELECT id, campanha_id, nome, ocupacao, localizacao, atitude, foto_arquivo,
+                          historia, criado_em, atualizado_em
                    FROM npcs';
         $where  = [];
         $params = [];
@@ -45,6 +49,13 @@ final class NpcRepositorio
             $params[':localizacao'] = trim($localizacao);
         }
 
+        $busca = $filtros['busca'] ?? null;
+        if (is_string($busca) && trim($busca) !== '') {
+            $termo            = '%' . self::escaparLike(trim($busca)) . '%';
+            $where[]          = '(nome LIKE :busca OR ocupacao LIKE :busca OR historia LIKE :busca)';
+            $params[':busca'] = $termo;
+        }
+
         if ($where !== []) {
             $sql .= ' WHERE ' . implode(' AND ', $where);
         }
@@ -53,6 +64,23 @@ final class NpcRepositorio
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute($params);
         return $stmt->fetchAll();
+    }
+
+    /**
+     * Escapa os curingas de LIKE (% e _) e a barra invertida usada como ESCAPE padrão.
+     */
+    private static function escaparLike(string $valor): string
+    {
+        return str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $valor);
+    }
+
+    /**
+     * Conta NPCs cadastrados (usado no Dashboard).
+     */
+    public function contar(): int
+    {
+        $stmt = $this->pdo->query('SELECT COUNT(*) FROM npcs');
+        return $stmt === false ? 0 : (int) $stmt->fetchColumn();
     }
 
     /**
@@ -79,7 +107,8 @@ final class NpcRepositorio
     public function buscarPorId(int $id): ?array
     {
         $stmt = $this->pdo->prepare(
-            'SELECT id, nome, ocupacao, localizacao, atitude, historia, criado_em, atualizado_em
+            'SELECT id, campanha_id, nome, ocupacao, localizacao, atitude, foto_arquivo,
+                    historia, criado_em, atualizado_em
              FROM npcs
              WHERE id = :id
              LIMIT 1'
@@ -98,29 +127,31 @@ final class NpcRepositorio
     public function criar(array $dados): int
     {
         $stmt = $this->pdo->prepare(
-            'INSERT INTO npcs (nome, ocupacao, localizacao, atitude, historia)
-             VALUES (:nome, :ocupacao, :localizacao, :atitude, :historia)'
+            'INSERT INTO npcs (campanha_id, nome, ocupacao, localizacao, atitude, historia)
+             VALUES (:campanha_id, :nome, :ocupacao, :localizacao, :atitude, :historia)'
         );
-        $stmt->execute([
-            ':nome'        => $dados['nome'],
-            ':ocupacao'    => $dados['ocupacao'],
-            ':localizacao' => $dados['localizacao'],
-            ':atitude'     => $dados['atitude'],
-            ':historia'    => $dados['historia'],
-        ]);
+        $stmt->bindValue(':campanha_id', $dados['campanha_id'] ?? null,
+                         isset($dados['campanha_id']) ? PDO::PARAM_INT : PDO::PARAM_NULL);
+        $stmt->bindValue(':nome',        $dados['nome']);
+        $stmt->bindValue(':ocupacao',    $dados['ocupacao']);
+        $stmt->bindValue(':localizacao', $dados['localizacao']);
+        $stmt->bindValue(':atitude',     $dados['atitude']);
+        $stmt->bindValue(':historia',    $dados['historia']);
+        $stmt->execute();
         return (int) $this->pdo->lastInsertId();
     }
 
     /**
      * Atualiza os campos editáveis de um NPC existente.
      *
-     * @param array{nome: string, ocupacao: string, localizacao: string, atitude: string, historia: string} $dados
+     * @param array{campanha_id?: int|null, nome: string, ocupacao: string, localizacao: string, atitude: string, historia: string} $dados
      */
     public function atualizar(int $id, array $dados): bool
     {
         $stmt = $this->pdo->prepare(
             'UPDATE npcs
-             SET nome = :nome,
+             SET campanha_id = :campanha_id,
+                 nome = :nome,
                  ocupacao = :ocupacao,
                  localizacao = :localizacao,
                  atitude = :atitude,
@@ -128,6 +159,8 @@ final class NpcRepositorio
              WHERE id = :id'
         );
         $stmt->bindValue(':id', $id, PDO::PARAM_INT);
+        $stmt->bindValue(':campanha_id', $dados['campanha_id'] ?? null,
+                         isset($dados['campanha_id']) ? PDO::PARAM_INT : PDO::PARAM_NULL);
         $stmt->bindValue(':nome', $dados['nome']);
         $stmt->bindValue(':ocupacao', $dados['ocupacao']);
         $stmt->bindValue(':localizacao', $dados['localizacao']);

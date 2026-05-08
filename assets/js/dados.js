@@ -1,17 +1,34 @@
 /**
- * TERMINAL DA ORDEM - Módulo de rolagem de dados.
+ * TERMINAL DA ORDEM - Modulo de rolagem de dados (multi-dado).
  *
- * Regras canônicas (Ordem Paranormal):
- *   - Atributo N >= 1 : rola N d20 e mantém o MAIOR.
- *   - Atributo N == 0 : rola 2 d20 e mantém o MENOR  (Desastre).
- *   - 20 natural = Crítico (destaque visual).
- *   - 1 natural com atributo 0 = Falha catastrófica adicional.
+ * Tipos suportados: d4, d6, d8, d10, d12, d20, d100.
  *
- * O resultado final é POSTado em /rolagem/api.php que persiste no log_rolagens.
+ * Regras:
+ *   - d20 com atributo N >= 1 : rola N d20 e mantem o MAIOR (Vantagem).
+ *   - d20 com atributo N == 0 : rola 2 d20 e mantem o MENOR (Desastre).
+ *   - Demais tipos            : rola 1 dado simples.
+ *
+ * Brilho intenso visual:
+ *   - Resultado 1  -> is-desastre (Falha Critica)
+ *   - Resultado 20 -> is-critico  (Sucesso Critico)
+ *   - Outros valores nao brilham.
+ *
+ * O resultado eh enviado para /rolagem/api.php (URL via data-api do form).
  */
 
 (() => {
     'use strict';
+
+    /** Mapa do numero maximo de cada dado. */
+    const DADOS = {
+        d4:   4,
+        d6:   6,
+        d8:   8,
+        d10:  10,
+        d12:  12,
+        d20:  20,
+        d100: 100,
+    };
 
     document.addEventListener('DOMContentLoaded', () => {
         const form = document.getElementById('form-rolagem');
@@ -21,22 +38,114 @@
         const elRotulo  = document.getElementById('rolador-rotulo');
         const elDados   = document.getElementById('rolador-dados');
         const elSvg     = document.getElementById('dado-svg');
+        const elTipoSvg = document.getElementById('dado-svg-label');
+        const formasSvg = elSvg ? elSvg.querySelectorAll('.dado-svg__forma') : [];
+        const campoAtr  = document.getElementById('campo-atributo');
         const csrfToken = form.dataset.csrf || '';
+        const apiUrl    = form.dataset.api  || '/rolagem/api.php';
+
+        // Audio da rolagem (opcional — instanciado uma vez e reusado).
+        // Volume calibrado em 0.55 para nao competir com a UI.
+        const audioSrc = form.dataset.audioRolagem || '';
+        const audioRolagem = audioSrc ? new Audio(audioSrc) : null;
+        if (audioRolagem) {
+            audioRolagem.preload = 'auto';
+            audioRolagem.volume  = 0.55;
+        }
+        // Duracao aproximada da animacao visual (ticker 750ms + folga ate o "settle"):
+        const DURACAO_ANIMACAO_MS = 1100;
+
+        // Cooldown do botao de invocar — equivale a animacao visual (750ms)
+        //   + fadeout do audio (450ms) + pequena folga para variancia de timing.
+        // Impede spam de cliques que bagunca audio e exibicao do resultado.
+        const botaoSubmit = form.querySelector('button[type="submit"]');
+        const COOLDOWN_MS = 1300;
+
+        // Mostra/esconde o campo "atributo" conforme o tipo selecionado
+        const radios = form.querySelectorAll('input[name="tipo_dado"]');
+        radios.forEach((radio) => {
+            radio.addEventListener('change', () => atualizarVisibilidadeAtributo());
+        });
+        atualizarVisibilidadeAtributo();
+
+        function atualizarVisibilidadeAtributo() {
+            const tipo = obterTipoSelecionado();
+
+            // Mostra/esconde o campo de atributo (apenas d20 usa)
+            if (campoAtr) {
+                campoAtr.classList.toggle('is-oculto', tipo !== 'd20');
+            }
+
+            // Atualiza o label dentro do SVG grande
+            if (elTipoSvg) {
+                elTipoSvg.textContent = tipo;
+            }
+
+            // Troca a forma visivel no SVG da direita.
+            // BUG conhecido: o atributo HTML `hidden` em <g> SVG nao e respeitado
+            // de forma confiavel pelos browsers. Usamos `display="none"` (atributo
+            // SVG) + classe CSS de seguranca para garantir o comportamento.
+            formasSvg.forEach((forma) => {
+                if (forma.dataset.dado === tipo) {
+                    forma.removeAttribute('hidden');
+                    forma.removeAttribute('display');
+                    forma.classList.remove('is-oculta');
+                } else {
+                    forma.setAttribute('hidden', '');
+                    forma.setAttribute('display', 'none');
+                    forma.classList.add('is-oculta');
+                }
+            });
+        }
+
+        function obterTipoSelecionado() {
+            const checked = form.querySelector('input[name="tipo_dado"]:checked');
+            return (checked && DADOS[checked.value]) ? checked.value : 'd20';
+        }
 
         form.addEventListener('submit', async (evt) => {
             evt.preventDefault();
 
-            const dadosForm   = new FormData(form);
-            const quemRolou   = (dadosForm.get('quem_rolou') || '').toString().trim();
-            const descricao   = (dadosForm.get('descricao')  || '').toString().trim();
-            const quantidade  = Math.max(0, Math.min(10, parseInt(dadosForm.get('quantidade') || '1', 10)));
+            // Cooldown guard: se o botao ainda esta desativado da rolagem
+            // anterior, ignora o clique (evita spam que bagunca audio/visual).
+            if (botaoSubmit && botaoSubmit.disabled) return;
+
+            const dadosForm  = new FormData(form);
+            const quemRolou  = (dadosForm.get('quem_rolou') || '').toString().trim();
+            const descricao  = (dadosForm.get('descricao')  || '').toString().trim();
+            const tipo       = obterTipoSelecionado();
+            const isD20      = tipo === 'd20';
+            const quantidade = isD20
+                ? Math.max(0, Math.min(10, parseInt(dadosForm.get('quantidade') || '1', 10)))
+                : 1;
 
             if (quemRolou === '' || descricao === '') {
                 window.alert('Identifique quem esta rolando e o motivo da rolagem.');
                 return;
             }
 
-            // Animação de "girando"
+            // Trava o botao pelo tempo da animacao + audio
+            if (botaoSubmit) {
+                botaoSubmit.disabled = true;
+                botaoSubmit.classList.add('is-cooldown');
+                window.setTimeout(() => {
+                    botaoSubmit.disabled = false;
+                    botaoSubmit.classList.remove('is-cooldown');
+                }, COOLDOWN_MS);
+            }
+
+            // SFX da rolagem — disparado no MESMO instante que a animacao visual
+            // comeca, garantindo sincronia. Reset para permitir cliques rapidos.
+            if (audioRolagem) {
+                try {
+                    audioRolagem.pause();
+                    audioRolagem.currentTime = 0;
+                    audioRolagem.volume = 0.55;
+                    audioRolagem.play().catch(() => { /* autoplay bloqueado, ignora */ });
+                } catch (e) { /* navegador antigo, ignora */ }
+            }
+
+            // Animacao de "girando"
             elSvg?.classList.add('is-rolando');
             elValor.textContent  = '?';
             elValor.classList.remove('is-critico', 'is-desastre');
@@ -44,33 +153,43 @@
             elRotulo.classList.remove('is-critico', 'is-desastre');
             elDados.innerHTML    = '';
 
-            await delay(550);
+            // Pequeno "ticker" durante o giro: o numero central pula entre faces
+            const ticker = setInterval(() => {
+                elValor.textContent = String(Math.floor(Math.random() * DADOS[tipo]) + 1);
+            }, 70);
 
-            const { rolagens, resultadoFinal, ehCritico, ehDesastre, modo } =
-                rolarOrdemParanormal(quantidade);
+            await delay(750);
+            clearInterval(ticker);
+
+            const resultado = rolar(tipo, quantidade);
+            const { rolagens, resultadoFinal, modo, ehCritico, ehDesastre } = resultado;
 
             elSvg?.classList.remove('is-rolando');
             elValor.textContent = String(resultadoFinal);
             if (ehCritico)  { elValor.classList.add('is-critico');  elRotulo.classList.add('is-critico');  }
             if (ehDesastre) { elValor.classList.add('is-desastre'); elRotulo.classList.add('is-desastre'); }
 
-            elRotulo.textContent = textoRotulo(modo, ehCritico, ehDesastre);
-            renderizarMiniDados(elDados, rolagens, resultadoFinal, modo);
+            elRotulo.textContent = textoRotulo(tipo, modo, ehCritico, ehDesastre);
+            renderizarMiniDados(elDados, rolagens, resultadoFinal);
 
-            // Persistência server-side
+            // Sincroniza o audio com a duracao visual: se ainda estiver tocando
+            // alem do tempo da animacao, faz fadeOut suave (sem corte abrupto).
+            if (audioRolagem && !audioRolagem.paused) {
+                fadeOutAudio(audioRolagem, 450);
+            }
+
+            // Persistencia server-side
             try {
-                const resp = await fetch('/rolagem/api.php', {
+                const resp = await fetch(apiUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                     body: new URLSearchParams({
                         csrf_token:        csrfToken,
                         quem_rolou:        quemRolou,
                         descricao:         descricao,
+                        tipo_dado:         tipo,
                         quantidade_dados:  String(quantidade),
                         resultados_brutos: JSON.stringify(rolagens),
-                        resultado_final:   String(resultadoFinal),
-                        eh_critico:        ehCritico  ? '1' : '0',
-                        eh_desastre:       ehDesastre ? '1' : '0',
                     }),
                 });
                 if (!resp.ok) throw new Error('HTTP ' + resp.status);
@@ -83,49 +202,58 @@
     });
 
     /**
-     * Lança N d20 e aplica a regra do Ordem Paranormal.
+     * Lanca dados conforme o tipo e regra aplicavel.
      */
-    function rolarOrdemParanormal(quantidade) {
+    function rolar(tipo, quantidade) {
+        const lados = DADOS[tipo] || 20;
         let rolagens, resultadoFinal, modo;
 
-        if (quantidade === 0) {
-            // Desastre: rola 2 e mantém o MENOR
-            rolagens = [d20(), d20()];
-            resultadoFinal = Math.min(...rolagens);
-            modo = 'desastre';
+        if (tipo === 'd20') {
+            if (quantidade === 0) {
+                rolagens = [rolarDado(lados), rolarDado(lados)];
+                resultadoFinal = Math.min(...rolagens);
+                modo = 'desastre';
+            } else {
+                const n = Math.max(1, Math.min(10, quantidade));
+                rolagens = Array.from({ length: n }, () => rolarDado(lados));
+                resultadoFinal = Math.max(...rolagens);
+                modo = n === 1 ? 'normal' : 'vantagem';
+            }
         } else {
-            const n = Math.max(1, Math.min(10, quantidade));
-            rolagens = Array.from({ length: n }, d20);
-            resultadoFinal = Math.max(...rolagens);
-            modo = n === 1 ? 'normal' : 'vantagem';
+            // d4, d6, d8, d10, d12, d100 — rolagem simples
+            rolagens = [rolarDado(lados)];
+            resultadoFinal = rolagens[0];
+            modo = 'simples';
         }
 
+        // Brilho APENAS em 1 (Falha Critica) e 20 (Sucesso Critico) — conforme brief.
         return {
             rolagens,
             resultadoFinal,
-            ehCritico:  resultadoFinal === 20,
-            ehDesastre: modo === 'desastre',
             modo,
+            ehCritico:  resultadoFinal === 20,
+            ehDesastre: resultadoFinal === 1,
         };
     }
 
-    function d20() {
-        // Math.random() é suficiente para rolagens de jogo (não criptográfico).
-        return Math.floor(Math.random() * 20) + 1;
+    function rolarDado(lados) {
+        return Math.floor(Math.random() * lados) + 1;
     }
 
     function delay(ms) {
         return new Promise((resolve) => setTimeout(resolve, ms));
     }
 
-    function textoRotulo(modo, ehCritico, ehDesastre) {
-        if (ehCritico)  return '>> CRITICO! O Outro Lado responde com clareza.';
-        if (ehDesastre) return '>> DESASTRE. As entidades sussurram com escarnio.';
+    function textoRotulo(tipo, modo, ehCritico, ehDesastre) {
+        if (ehCritico)  return '>> SUCESSO CRITICO! O Outro Lado responde com clareza.';
+        if (ehDesastre) return '>> FALHA CRITICA. As entidades sussurram com escarnio.';
+        if (modo === 'desastre') return '>> DESASTRE. Resultado mantido: menor dado.';
         if (modo === 'vantagem') return '>> VANTAGEM. Resultado mantido: maior dado.';
+        if (modo === 'simples')  return '>> ' + tipo.toUpperCase() + ' - rolagem simples confirmada.';
         return '>> ROLAGEM CONFIRMADA.';
     }
 
-    function renderizarMiniDados(container, rolagens, resultadoFinal, modo) {
+    function renderizarMiniDados(container, rolagens, resultadoFinal) {
         container.innerHTML = '';
         let jaDestacado = false;
         rolagens.forEach((valor) => {
@@ -140,5 +268,26 @@
             }
             container.appendChild(el);
         });
+    }
+
+    /**
+     * Fade-out linear do volume usando requestAnimationFrame (suave, sem clique).
+     */
+    function fadeOutAudio(audioEl, duracao) {
+        const volumeInicial = audioEl.volume;
+        const inicio = performance.now();
+
+        function passo(agora) {
+            const t = (agora - inicio) / duracao;
+            if (t >= 1) {
+                audioEl.pause();
+                audioEl.currentTime = 0;
+                audioEl.volume = volumeInicial;
+                return;
+            }
+            audioEl.volume = volumeInicial * (1 - t);
+            window.requestAnimationFrame(passo);
+        }
+        window.requestAnimationFrame(passo);
     }
 })();
