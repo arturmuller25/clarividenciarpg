@@ -27,3 +27,15 @@ php_errors.log
 *.bak
 *.tmp
 *.orig
+
+# Uploads de usuário (preserva estrutura via .gitkeep, ignora binários enviados)
+uploads/*/*
+!uploads/*/.gitkeep
+!uploads/.htaccess
+!uploads/README.md
+
+# MP3 duplicados na raiz (canônicos vivem em assets/audio/)
+/som_para_a_hero.mp3
+/som_para_as_rolagens.mp3
+/som_para_rolagem_multipla.mp3
+/som_para_rolagem_com_muitos_dados.mp3
