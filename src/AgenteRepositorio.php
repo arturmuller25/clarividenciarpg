@@ -241,6 +241,12 @@ final class AgenteRepositorio
                  :pe_por_turno, :deslocamento, :defesa, :resistencias, :proficiencias,
                  :aparencia, :personalidade, :historico, :objetivos)'
         );
+        // INSERT inclui :foto_arquivo SEMPRE, mas o formulário omite a key
+        // quando o usuário não envia foto (design do UPDATE, que monta SET
+        // dinamicamente). Default null aqui evita HY093 no execute().
+        if (!array_key_exists('foto_arquivo', $a)) {
+            $a['foto_arquivo'] = null;
+        }
         $this->bindAgente($stmt, $a);
         $stmt->execute();
         return (int) $this->pdo->lastInsertId();
