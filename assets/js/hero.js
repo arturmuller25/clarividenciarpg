@@ -18,9 +18,56 @@
 (() => {
     'use strict';
 
+    /**
+     * Decide se a Hero deve rodar nesta carga.
+     *
+     * Regra:
+     *   - Primeira visita ao site (sessionStorage vazio) → SIM
+     *   - F5 / Ctrl+R (Performance API: type === 'reload') → SIM (independente de flag)
+     *   - Voltar de outra pagina via link interno (type === 'navigate' com flag setada) → NÃO
+     *   - Botão voltar/avançar (type === 'back_forward') → NÃO
+     *
+     * sessionStorage é limpo quando a aba fecha — então abrir o site em
+     * nova aba/janela conta como primeira visita e a Hero volta a rodar.
+     */
+    function deveRodarHero() {
+        const navType = detectarNavType();
+        const jaVisto = sessionStorage.getItem('terminalHeroVisto') === '1';
+        return !jaVisto || navType === 'reload';
+    }
+
+    function detectarNavType() {
+        // API moderna (PerformanceNavigationTiming, padrão Level 2)
+        try {
+            const entries = performance.getEntriesByType('navigation');
+            if (entries && entries.length > 0 && entries[0].type) {
+                return entries[0].type;
+            }
+        } catch (_) { /* ignora */ }
+        // Fallback: API legada (deprecada mas amplamente suportada)
+        if (performance.navigation) {
+            const t = performance.navigation.type;
+            if (t === 1) return 'reload';
+            if (t === 2) return 'back_forward';
+        }
+        return 'navigate';
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
         const hero = document.querySelector('.hero');
         if (!hero) return;
+
+        // Gate: pula a Hero se for navegação interna (não é primeira visita
+        // nem reload). Nesses casos esconde imediatamente para o painel
+        // aparecer sem flash de splash.
+        if (!deveRodarHero()) {
+            hero.style.display = 'none';
+            hero.setAttribute('aria-hidden', 'true');
+            return;
+        }
+
+        // Marca como vista — próximo carregamento (sem reload) vai pular.
+        try { sessionStorage.setItem('terminalHeroVisto', '1'); } catch (_) {}
 
         const botaoIniciar = hero.querySelector('.hero__iniciar');
         const audioSrc     = hero.dataset.audio || '';
