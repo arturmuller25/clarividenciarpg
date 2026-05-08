@@ -75,13 +75,15 @@ final class CriaturaRepositorio
     public function criar(array $dados): int
     {
         $stmt = $this->pdo->prepare(
-            'INSERT INTO criaturas (campanha_id, nome, elemento, vd, pv_atual, pv_maximo, habilidades)
-             VALUES (:campanha_id, :nome, :elemento, :vd, :pv_atual, :pv_maximo, :habilidades)'
+            'INSERT INTO criaturas (campanha_id, nome, elemento, foto_arquivo, vd, pv_atual, pv_maximo, habilidades)
+             VALUES (:campanha_id, :nome, :elemento, :foto_arquivo, :vd, :pv_atual, :pv_maximo, :habilidades)'
         );
         $stmt->bindValue(':campanha_id', $dados['campanha_id'] ?? null,
                          isset($dados['campanha_id']) ? PDO::PARAM_INT : PDO::PARAM_NULL);
         $stmt->bindValue(':nome',        $dados['nome']);
         $stmt->bindValue(':elemento',    $dados['elemento']);
+        $foto = $dados['foto_arquivo'] ?? null;
+        $stmt->bindValue(':foto_arquivo', $foto, $foto === null ? PDO::PARAM_NULL : PDO::PARAM_STR);
         $stmt->bindValue(':vd',          $dados['vd']);
         $stmt->bindValue(':pv_atual',    $dados['pv_atual'],  PDO::PARAM_INT);
         $stmt->bindValue(':pv_maximo',   $dados['pv_maximo'], PDO::PARAM_INT);
@@ -92,21 +94,21 @@ final class CriaturaRepositorio
 
     /**
      * @param array{campanha_id?: int|null, nome: string, elemento: string, vd: float,
-     *              pv_atual: int, pv_maximo: int, habilidades: string} $dados
+     *              pv_atual: int, pv_maximo: int, habilidades: string,
+     *              foto_arquivo?: string|null} $dados
+     *
+     * Se 'foto_arquivo' não estiver presente em $dados, a coluna é preservada.
      */
     public function atualizar(int $id, array $dados): bool
     {
-        $stmt = $this->pdo->prepare(
-            'UPDATE criaturas
-             SET campanha_id = :campanha_id,
-                 nome = :nome,
-                 elemento = :elemento,
-                 vd = :vd,
-                 pv_atual = :pv_atual,
-                 pv_maximo = :pv_maximo,
-                 habilidades = :habilidades
-             WHERE id = :id'
-        );
+        $sets = ['campanha_id = :campanha_id', 'nome = :nome', 'elemento = :elemento',
+                 'vd = :vd', 'pv_atual = :pv_atual', 'pv_maximo = :pv_maximo',
+                 'habilidades = :habilidades'];
+        if (array_key_exists('foto_arquivo', $dados)) {
+            $sets[] = 'foto_arquivo = :foto_arquivo';
+        }
+        $sql = 'UPDATE criaturas SET ' . implode(', ', $sets) . ' WHERE id = :id';
+        $stmt = $this->pdo->prepare($sql);
         $stmt->bindValue(':id',          $id, PDO::PARAM_INT);
         $stmt->bindValue(':campanha_id', $dados['campanha_id'] ?? null,
                          isset($dados['campanha_id']) ? PDO::PARAM_INT : PDO::PARAM_NULL);
@@ -116,6 +118,10 @@ final class CriaturaRepositorio
         $stmt->bindValue(':pv_atual',    $dados['pv_atual'],  PDO::PARAM_INT);
         $stmt->bindValue(':pv_maximo',   $dados['pv_maximo'], PDO::PARAM_INT);
         $stmt->bindValue(':habilidades', $dados['habilidades']);
+        if (array_key_exists('foto_arquivo', $dados)) {
+            $foto = $dados['foto_arquivo'];
+            $stmt->bindValue(':foto_arquivo', $foto, $foto === null ? PDO::PARAM_NULL : PDO::PARAM_STR);
+        }
         return $stmt->execute();
     }
 

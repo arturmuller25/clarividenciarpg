@@ -14,6 +14,7 @@ require_once __DIR__ . '/../src/sessao.php';
 require_once __DIR__ . '/../src/NpcRepositorio.php';
 require_once __DIR__ . '/../src/NpcValidador.php';
 require_once __DIR__ . '/../src/CampanhaRepositorio.php';
+require_once __DIR__ . '/../src/UploadHelper.php';
 
 iniciarSessao();
 
@@ -24,35 +25,39 @@ $id            = isset($_GET['id']) ? (int) $_GET['id'] : 0;
 $modoEdicao    = $id > 0;
 
 $dados = [
-    'campanha_id' => null,
-    'nome'        => '',
-    'ocupacao'    => '',
-    'localizacao' => '',
-    'atitude'     => 'Neutro',
-    'historia'    => '',
+    'campanha_id'  => null,
+    'nome'         => '',
+    'ocupacao'     => '',
+    'localizacao'  => '',
+    'atitude'      => 'Neutro',
+    'historia'     => '',
+    'foto_arquivo' => null,
 ];
-$erros = [];
+$fotoAtual = null;
+$erros     = [];
 
 if ($modoEdicao && $_SERVER['REQUEST_METHOD'] === 'GET') {
     $existente = $repo->buscarPorId($id);
     if ($existente === null) {
-        definirFlash('erro', "NPC #{$id} nao encontrado nos arquivos.");
+        definirFlash('erro', "NPC #{$id} não encontrado nos arquivos.");
         header('Location: ' . url('/npcs/listar.php'));
         exit;
     }
     $dados = [
-        'campanha_id' => isset($existente['campanha_id']) ? (int) $existente['campanha_id'] : null,
-        'nome'        => (string) $existente['nome'],
-        'ocupacao'    => (string) $existente['ocupacao'],
-        'localizacao' => (string) $existente['localizacao'],
-        'atitude'     => (string) $existente['atitude'],
-        'historia'    => (string) $existente['historia'],
+        'campanha_id'  => isset($existente['campanha_id']) ? (int) $existente['campanha_id'] : null,
+        'nome'         => (string) $existente['nome'],
+        'ocupacao'     => (string) $existente['ocupacao'],
+        'localizacao'  => (string) $existente['localizacao'],
+        'atitude'      => (string) $existente['atitude'],
+        'historia'     => (string) $existente['historia'],
+        'foto_arquivo' => $existente['foto_arquivo'] ?? null,
     ];
+    $fotoAtual = $existente['foto_arquivo'] ?? null;
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!validarTokenCsrf($_POST['csrf_token'] ?? null)) {
-        definirFlash('erro', 'Token de seguranca invalido. Tente novamente.');
+        definirFlash('erro', 'Token de segurança inválido. Tente novamente.');
         $destino = $modoEdicao
             ? url('/npcs/formulario.php?id=' . $id)
             : url('/npcs/formulario.php');
@@ -64,24 +69,55 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $dados = $resultado['dados'];
     $erros = $resultado['erros'];
 
+    if ($modoEdicao) {
+        $atualDb   = $repo->buscarPorId($id);
+        $fotoAtual = $atualDb['foto_arquivo'] ?? null;
+    }
+
     if (empty($erros)) {
         try {
+            // ---------- Foto ----------
+            $novaFoto     = null;
+            $removerFoto  = isset($_POST['remover_foto']) && $_POST['remover_foto'] === '1';
+            $tentouEnviar = !empty($_FILES['foto']['name'] ?? '');
+
+            if ($tentouEnviar) {
+                $novaFoto = UploadHelper::moverImagem($_FILES['foto'] ?? null, 'npcs');
+            }
+            if ($novaFoto !== null) {
+                $dados['foto_arquivo'] = $novaFoto;
+                if ($modoEdicao && is_string($fotoAtual) && $fotoAtual !== '') {
+                    UploadHelper::apagarImagem('npcs', $fotoAtual);
+                }
+            } elseif ($removerFoto) {
+                $dados['foto_arquivo'] = null;
+                if ($modoEdicao && is_string($fotoAtual) && $fotoAtual !== '') {
+                    UploadHelper::apagarImagem('npcs', $fotoAtual);
+                }
+            } else {
+                // Preserva foto atual: o repositório só atualiza se a chave estiver
+                // presente, então removemos para não sobrescrever com null.
+                unset($dados['foto_arquivo']);
+            }
+
             if ($modoEdicao) {
                 $repo->atualizar($id, $dados);
                 definirFlash('sucesso', "Sincronia com o Outro Lado estabelecida. NPC #{$id} atualizado.");
             } else {
                 $novoId = $repo->criar($dados);
-                definirFlash('sucesso', "Dossie #{$novoId} arquivado. Os Arquivos da Ordem reconhecem o registro.");
+                definirFlash('sucesso', "Dossiê #{$novoId} arquivado. Os Arquivos da Ordem reconhecem o registro.");
             }
             header('Location: ' . url('/npcs/listar.php'));
             exit;
         } catch (Throwable $e) {
-            $erros['_geral'] = 'Falha na Manifestacao: ' . $e->getMessage();
+            $erros['_geral'] = 'Falha na Manifestação: ' . $e->getMessage();
         }
     } else {
-        definirFlash('erro', 'Falha na Manifestacao. Verifique os campos destacados.');
+        definirFlash('erro', 'Falha na Manifestação. Verifique os campos destacados.');
     }
 }
+
+$fotoUrl = UploadHelper::urlImagem('npcs', $fotoAtual);
 
 $titulo      = $modoEdicao ? 'EDITAR_NPC' : 'NOVO_NPC';
 $paginaAtiva = 'npcs';
@@ -92,12 +128,12 @@ require __DIR__ . '/../views/cabecalho.php';
     <h1 class="cabecalho-pagina__titulo">
         <span class="cabecalho-pagina__prompt">&gt;</span>
         <?= $modoEdicao
-            ? 'EDITAR DOSSIE #' . str_pad((string) $id, 4, '0', STR_PAD_LEFT)
-            : 'NOVO DOSSIE' ?>
+            ? 'EDITAR DOSSIÊ #' . str_pad((string) $id, 4, '0', STR_PAD_LEFT)
+            : 'NOVO DOSSIÊ' ?>
     </h1>
     <p class="cabecalho-pagina__subtitulo">
         <?= $modoEdicao
-            ? 'Modifique os campos abaixo e confirme a atualizacao.'
+            ? 'Modifique os campos abaixo e confirme a atualização.'
             : 'Preencha os campos para registrar um novo NPC nos arquivos.' ?>
     </p>
 </section>
@@ -109,12 +145,29 @@ require __DIR__ . '/../views/cabecalho.php';
     </div>
 <?php endif; ?>
 
-<form method="POST" class="formulario" novalidate data-validar-formulario>
+<form method="POST" enctype="multipart/form-data" class="formulario" novalidate data-validar-formulario>
     <input type="hidden" name="csrf_token" value="<?= escapar(gerarTokenCsrf()) ?>">
 
     <div class="campo">
+        <label class="campo__rotulo">
+            <span class="campo__indice">00.</span> FOTO DO NPC
+            <small class="campo__ajuda" style="margin-left: 8px">Recortada automaticamente em 1:1.</small>
+        </label>
+        <div data-cropper data-cropper-input="foto"
+             <?php if ($fotoUrl): ?>data-cropper-existing="<?= escapar($fotoUrl) ?>"<?php endif; ?>>
+            <input type="file" name="foto" accept="image/jpeg,image/png,image/webp" class="campo__entrada campo__entrada--arquivo">
+            <?php if ($fotoUrl): ?>
+                <label class="upload-preview__remover" style="margin-top: 6px">
+                    <input type="checkbox" name="remover_foto" value="1">
+                    <span>Remover foto atual</span>
+                </label>
+            <?php endif; ?>
+        </div>
+    </div>
+
+    <div class="campo">
         <label for="campanha_id" class="campo__rotulo">
-            <span class="campo__indice">00.</span> CAMPANHA VINCULADA
+            <span class="campo__indice">00b.</span> CAMPANHA VINCULADA
         </label>
         <select id="campanha_id" name="campanha_id" class="campo__entrada">
             <option value="">[ SEM CAMPANHA ]</option>
@@ -161,7 +214,7 @@ require __DIR__ . '/../views/cabecalho.php';
     <div class="formulario__linha">
         <div class="campo <?= isset($erros['localizacao']) ? 'campo--invalido' : '' ?>">
             <label for="localizacao" class="campo__rotulo">
-                <span class="campo__indice">03.</span> LOCALIZACAO
+                <span class="campo__indice">03.</span> LOCALIZAÇÃO
                 <span class="campo__obrigatorio" aria-hidden="true">*</span>
             </label>
             <input type="text" id="localizacao" name="localizacao" class="campo__entrada"
@@ -214,7 +267,7 @@ require __DIR__ . '/../views/cabecalho.php';
 
     <div class="formulario__acoes">
         <button type="submit" class="botao botao--primario">
-            <?= $modoEdicao ? 'ATUALIZAR DOSSIE' : 'REGISTRAR NPC' ?>
+            <?= $modoEdicao ? 'ATUALIZAR DOSSIÊ' : 'REGISTRAR NPC' ?>
         </button>
         <a href="<?= escapar(url('/npcs/listar.php')) ?>" class="botao botao--secundario">CANCELAR</a>
     </div>

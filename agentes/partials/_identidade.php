@@ -11,19 +11,19 @@
 
     <div class="ficha-secao__corpo ficha-identidade">
         <div class="ficha-identidade__foto">
-            <?php if (!empty($fotoUrl)): ?>
-                <img src="<?= escapar($fotoUrl) ?>" alt="Foto do agente" class="ficha-identidade__img">
-                <label class="upload-preview__remover">
-                    <input type="checkbox" name="remover_foto" value="1">
-                    <span>Remover foto atual</span>
-                </label>
-            <?php else: ?>
-                <div class="ficha-identidade__semfoto" aria-hidden="true">&#9678;</div>
-            <?php endif; ?>
-            <input type="file" name="foto" id="foto"
-                   class="campo__entrada campo__entrada--arquivo"
-                   accept="image/jpeg,image/png,image/webp">
-            <small class="campo__ajuda">JPG, PNG ou WebP. Máximo 4 MB.</small>
+            <small class="campo__ajuda" style="margin-bottom:6px">Recortada em 1:1. Máx. 4 MB.</small>
+            <div data-cropper data-cropper-input="foto"
+                 <?php if (!empty($fotoUrl)): ?>data-cropper-existing="<?= escapar($fotoUrl) ?>"<?php endif; ?>>
+                <input type="file" name="foto" id="foto"
+                       class="campo__entrada campo__entrada--arquivo"
+                       accept="image/jpeg,image/png,image/webp">
+                <?php if (!empty($fotoUrl)): ?>
+                    <label class="upload-preview__remover" style="margin-top: 6px">
+                        <input type="checkbox" name="remover_foto" value="1">
+                        <span>Remover foto atual</span>
+                    </label>
+                <?php endif; ?>
+            </div>
         </div>
 
         <div class="ficha-identidade__campos">

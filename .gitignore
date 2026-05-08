@@ -1,4 +1,4 @@
-﻿# Configuracoes locais do Claude Code (nao devem ir pro repositorio)
+# Configurações locais do Claude Code (não devem ir pro repositório)
 .claude/settings.local.json
 
 # IDE / editores
@@ -19,24 +19,11 @@ error_log
 php_errors.log
 *.cache
 
-# Dependencias (caso futuro)
+# Dependências (caso futuro)
 /vendor/
 /node_modules/
 
-# Backups e temporarios
+# Backups e temporários
 *.bak
 *.tmp
 *.orig
-
-# Uploads de usuario (fotos de campanhas/agentes/npcs/criaturas)
-# A estrutura e o .htaccess SAO versionados.
-uploads/campanhas/*
-uploads/agentes/*
-uploads/npcs/*
-uploads/criaturas/*
-!uploads/campanhas/.gitkeep
-!uploads/agentes/.gitkeep
-!uploads/npcs/.gitkeep
-!uploads/criaturas/.gitkeep
-!uploads/.htaccess
-!uploads/README.md

@@ -47,13 +47,13 @@ final class CriaturaValidador
         $erros = [];
 
         if ($nome === '') {
-            $erros['nome'] = 'O nome da criatura e obrigatorio.';
+            $erros['nome'] = 'O nome da criatura é obrigatório.';
         } elseif (mb_strlen($nome) > self::NOME_MAX) {
-            $erros['nome'] = sprintf('O nome deve ter no maximo %d caracteres.', self::NOME_MAX);
+            $erros['nome'] = sprintf('O nome deve ter no máximo %d caracteres.', self::NOME_MAX);
         }
 
         if (!in_array($elemento, CriaturaRepositorio::ELEMENTOS, true)) {
-            $erros['elemento'] = 'Selecione um elemento valido (Sangue, Morte, Conhecimento, Energia).';
+            $erros['elemento'] = 'Selecione um elemento válido (Sangue, Morte, Conhecimento, Energia).';
         }
 
         if ($vd < self::VD_MIN || $vd > self::VD_MAX) {
@@ -61,13 +61,13 @@ final class CriaturaValidador
         }
 
         if ($pvMaximo < self::PV_MIN || $pvMaximo > self::PV_MAX) {
-            $erros['pv_maximo'] = sprintf('PV maximo deve estar entre %d e %d.', self::PV_MIN, self::PV_MAX);
+            $erros['pv_maximo'] = sprintf('PV máximo deve estar entre %d e %d.', self::PV_MIN, self::PV_MAX);
         }
 
         if ($pvAtual < self::PV_MIN || $pvAtual > self::PV_MAX) {
             $erros['pv_atual'] = sprintf('PV atual deve estar entre %d e %d.', self::PV_MIN, self::PV_MAX);
         } elseif ($pvMaximo >= 0 && $pvAtual > $pvMaximo) {
-            $erros['pv_atual'] = 'PV atual nao pode exceder o PV maximo.';
+            $erros['pv_atual'] = 'PV atual não pode exceder o PV máximo.';
         }
 
         if ($habilidades === '') {
@@ -75,7 +75,7 @@ final class CriaturaValidador
         } elseif (mb_strlen($habilidades) < self::HABILIDADES_MIN) {
             $erros['habilidades'] = sprintf('Habilidades devem ter ao menos %d caracteres.', self::HABILIDADES_MIN);
         } elseif (mb_strlen($habilidades) > self::HABILIDADES_MAX) {
-            $erros['habilidades'] = sprintf('Habilidades devem ter no maximo %d caracteres.', self::HABILIDADES_MAX);
+            $erros['habilidades'] = sprintf('Habilidades devem ter no máximo %d caracteres.', self::HABILIDADES_MAX);
         }
 
         return [

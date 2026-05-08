@@ -127,8 +127,8 @@ final class NpcRepositorio
     public function criar(array $dados): int
     {
         $stmt = $this->pdo->prepare(
-            'INSERT INTO npcs (campanha_id, nome, ocupacao, localizacao, atitude, historia)
-             VALUES (:campanha_id, :nome, :ocupacao, :localizacao, :atitude, :historia)'
+            'INSERT INTO npcs (campanha_id, nome, ocupacao, localizacao, atitude, foto_arquivo, historia)
+             VALUES (:campanha_id, :nome, :ocupacao, :localizacao, :atitude, :foto_arquivo, :historia)'
         );
         $stmt->bindValue(':campanha_id', $dados['campanha_id'] ?? null,
                          isset($dados['campanha_id']) ? PDO::PARAM_INT : PDO::PARAM_NULL);
@@ -136,6 +136,8 @@ final class NpcRepositorio
         $stmt->bindValue(':ocupacao',    $dados['ocupacao']);
         $stmt->bindValue(':localizacao', $dados['localizacao']);
         $stmt->bindValue(':atitude',     $dados['atitude']);
+        $foto = $dados['foto_arquivo'] ?? null;
+        $stmt->bindValue(':foto_arquivo', $foto, $foto === null ? PDO::PARAM_NULL : PDO::PARAM_STR);
         $stmt->bindValue(':historia',    $dados['historia']);
         $stmt->execute();
         return (int) $this->pdo->lastInsertId();
@@ -144,28 +146,30 @@ final class NpcRepositorio
     /**
      * Atualiza os campos editáveis de um NPC existente.
      *
-     * @param array{campanha_id?: int|null, nome: string, ocupacao: string, localizacao: string, atitude: string, historia: string} $dados
+     * Se a chave 'foto_arquivo' NÃO estiver presente em $dados, a coluna
+     * é preservada — útil quando o usuário edita o NPC sem reenviar foto.
      */
     public function atualizar(int $id, array $dados): bool
     {
-        $stmt = $this->pdo->prepare(
-            'UPDATE npcs
-             SET campanha_id = :campanha_id,
-                 nome = :nome,
-                 ocupacao = :ocupacao,
-                 localizacao = :localizacao,
-                 atitude = :atitude,
-                 historia = :historia
-             WHERE id = :id'
-        );
+        $sets   = ['campanha_id = :campanha_id', 'nome = :nome', 'ocupacao = :ocupacao',
+                   'localizacao = :localizacao', 'atitude = :atitude', 'historia = :historia'];
+        if (array_key_exists('foto_arquivo', $dados)) {
+            $sets[] = 'foto_arquivo = :foto_arquivo';
+        }
+        $sql = 'UPDATE npcs SET ' . implode(', ', $sets) . ' WHERE id = :id';
+        $stmt = $this->pdo->prepare($sql);
         $stmt->bindValue(':id', $id, PDO::PARAM_INT);
         $stmt->bindValue(':campanha_id', $dados['campanha_id'] ?? null,
                          isset($dados['campanha_id']) ? PDO::PARAM_INT : PDO::PARAM_NULL);
-        $stmt->bindValue(':nome', $dados['nome']);
-        $stmt->bindValue(':ocupacao', $dados['ocupacao']);
+        $stmt->bindValue(':nome',        $dados['nome']);
+        $stmt->bindValue(':ocupacao',    $dados['ocupacao']);
         $stmt->bindValue(':localizacao', $dados['localizacao']);
-        $stmt->bindValue(':atitude', $dados['atitude']);
-        $stmt->bindValue(':historia', $dados['historia']);
+        $stmt->bindValue(':atitude',     $dados['atitude']);
+        $stmt->bindValue(':historia',    $dados['historia']);
+        if (array_key_exists('foto_arquivo', $dados)) {
+            $foto = $dados['foto_arquivo'];
+            $stmt->bindValue(':foto_arquivo', $foto, $foto === null ? PDO::PARAM_NULL : PDO::PARAM_STR);
+        }
         return $stmt->execute();
     }
 

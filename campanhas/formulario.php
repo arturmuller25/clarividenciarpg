@@ -169,23 +169,21 @@ $capaUrl = UploadHelper::urlImagem('campanhas', $capaAtual);
     </div>
 
     <div class="campo">
-        <label for="capa" class="campo__rotulo">
+        <label class="campo__rotulo">
             <span class="campo__indice">03.</span> CAPA DA CAMPANHA
-            <small class="campo__ajuda" style="margin-left: 8px">JPG, PNG ou WebP. Máximo 4 MB.</small>
+            <small class="campo__ajuda" style="margin-left: 8px">Recortada em 1:1. JPG, PNG ou WebP. Máx. 4 MB.</small>
         </label>
-
-        <?php if ($capaUrl): ?>
-            <div class="upload-preview">
-                <img src="<?= escapar($capaUrl) ?>" alt="Capa atual da campanha" class="upload-preview__img">
-                <label class="upload-preview__remover">
+        <div data-cropper data-cropper-input="capa"
+             <?php if ($capaUrl): ?>data-cropper-existing="<?= escapar($capaUrl) ?>"<?php endif; ?>>
+            <input type="file" id="capa" name="capa" class="campo__entrada campo__entrada--arquivo"
+                   accept="image/jpeg,image/png,image/webp">
+            <?php if ($capaUrl): ?>
+                <label class="upload-preview__remover" style="margin-top: 6px">
                     <input type="checkbox" name="remover_capa" value="1">
                     <span>Remover capa atual</span>
                 </label>
-            </div>
-        <?php endif; ?>
-
-        <input type="file" id="capa" name="capa" class="campo__entrada campo__entrada--arquivo"
-               accept="image/jpeg,image/png,image/webp">
+            <?php endif; ?>
+        </div>
     </div>
 
     <div class="campo <?= isset($erros['descricao']) ? 'campo--invalido' : '' ?>">

@@ -199,12 +199,12 @@ require __DIR__ . '/views/cabecalho.php';
         <a class="indicador__link" href="<?= escapar(url('/agentes/listar.php')) ?>">CONSULTAR &rarr;</a>
     </article>
     <article class="indicador">
-        <span class="indicador__rotulo">// DOSSIES_NPC</span>
+        <span class="indicador__rotulo">// DOSSIÊS_NPC</span>
         <span class="indicador__valor"><?= str_pad((string) $totalNpcs, 3, '0', STR_PAD_LEFT) ?></span>
         <a class="indicador__link" href="<?= escapar(url('/npcs/listar.php')) ?>">CONSULTAR &rarr;</a>
     </article>
     <article class="indicador">
-        <span class="indicador__rotulo">// AMEACAS_BESTIARIO</span>
+        <span class="indicador__rotulo">// AMEAÇAS_BESTIÁRIO</span>
         <span class="indicador__valor"><?= str_pad((string) $totalCriaturas, 3, '0', STR_PAD_LEFT) ?></span>
         <a class="indicador__link" href="<?= escapar(url('/criaturas/listar.php')) ?>">CONSULTAR &rarr;</a>
     </article>
@@ -248,7 +248,7 @@ require __DIR__ . '/views/cabecalho.php';
 
             <a href="<?= escapar(url('/criaturas/listar.php')) ?>" class="cartao-modulo cartao-modulo--ativo">
                 <span class="cartao-modulo__codigo">// 04</span>
-                <h3 class="cartao-modulo__nome">BESTIARIO</h3>
+                <h3 class="cartao-modulo__nome">BESTIÁRIO</h3>
                 <p class="cartao-modulo__descricao">
                     Catalogo de criaturas paranormais classificadas por elemento.
                 </p>
@@ -257,16 +257,16 @@ require __DIR__ . '/views/cabecalho.php';
 
             <a href="<?= escapar(url('/rolagem/index.php')) ?>" class="cartao-modulo cartao-modulo--ativo">
                 <span class="cartao-modulo__codigo">// 05</span>
-                <h3 class="cartao-modulo__nome">ROLAGEM_RITUAL</h3>
+                <h3 class="cartao-modulo__nome">ROLAGEM</h3>
                 <p class="cartao-modulo__descricao">
-                    Lancador de dados d4..d100 com regra do maior valor.
+                    Lançador de dados d4..d100 com regra do maior valor.
                 </p>
                 <span class="cartao-modulo__status">[OPERACIONAL]</span>
             </a>
 
             <a href="<?= escapar(url('/historico/listar.php')) ?>" class="cartao-modulo cartao-modulo--ativo">
                 <span class="cartao-modulo__codigo">// 06</span>
-                <h3 class="cartao-modulo__nome">HISTORICO</h3>
+                <h3 class="cartao-modulo__nome">HISTÓRICO</h3>
                 <p class="cartao-modulo__descricao">
                     Registro de todas as rolagens efetuadas no terminal.
                 </p>

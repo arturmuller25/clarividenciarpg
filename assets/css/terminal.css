@@ -962,6 +962,18 @@ button { font: inherit; color: inherit; cursor: pointer; }
     letter-spacing: 0.04em;
 }
 
+/* Thumbnail 1:1 nos cards de NPC e Criatura */
+.cartao-npc__foto,
+.cartao-criatura__foto {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    margin-bottom: 12px;
+    background: var(--surface-2);
+}
+
 .cartao-npc__meta {
     margin: 0 0 12px;
     display: grid;
@@ -1296,6 +1308,38 @@ button { font: inherit; color: inherit; cursor: pointer; }
     border-bottom: 1px dashed var(--border-strong);
     position: relative;
 }
+
+/* Foto 1:1 do dossiê (NPCs e Criaturas) */
+.dossie__foto {
+    width: 140px;
+    height: 140px;
+    object-fit: cover;
+    border: 1px solid var(--border-metal);
+    border-radius: var(--r);
+    flex-shrink: 0;
+    background: var(--surface-2);
+}
+.dossie__foto--vazia {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 214, 10, 0.18);
+    font-size: 4rem;
+}
+@media (max-width: 540px) {
+    .dossie__foto { width: 100%; height: auto; aspect-ratio: 1 / 1; }
+}
+
+/* Variações por elemento (criatura) */
+.dossie--elem-sangue       { border-left-color: var(--el-sangue); box-shadow: 0 0 36px -16px rgba(200, 16, 46, 0.5); }
+.dossie--elem-morte        { border-left-color: var(--el-morte); }
+.dossie--elem-conhecimento { border-left-color: var(--el-conhecimento); box-shadow: 0 0 36px -16px rgba(255, 214, 10, 0.45); }
+.dossie--elem-energia      { border-left-color: var(--el-energia); box-shadow: 0 0 36px -16px rgba(157, 78, 221, 0.5); }
+
+.dossie__selo--elem-sangue       { color: var(--el-sangue); }
+.dossie__selo--elem-morte        { color: var(--el-morte); }
+.dossie__selo--elem-conhecimento { color: var(--el-conhecimento); }
+.dossie__selo--elem-energia      { color: var(--el-energia); }
 
 .dossie__codigo {
     color: var(--ink-faint);
@@ -3287,6 +3331,109 @@ pre, code {
 .grade-atributos--leitura .atributo__valor { font-size: 1.6rem; }
 
 .barras-agente--leitura .barra-agente__valor { color: var(--ink); }
+
+/* ====================================================================
+ * CROPPER 1:1 (assets/js/cropper.js)
+ * Componente de upload com preview + drag + zoom. Usado em campanhas,
+ * agentes, npcs e criaturas. O <input type="file"> permanece como
+ * primeiro filho de [data-cropper]; o resto é construído via JS.
+ * ==================================================================== */
+
+[data-cropper] {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px;
+    background: var(--surface-2);
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--r);
+}
+
+.cropper__palco {
+    position: relative;
+    width: 320px;
+    height: 320px;
+    max-width: 100%;
+    overflow: hidden;
+    background: #000;
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    cursor: grab;
+    user-select: none;
+    touch-action: none;
+    align-self: center;
+}
+.cropper__palco:active { cursor: grabbing; }
+
+.cropper__img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    transform-origin: 0 0;
+    will-change: transform;
+}
+
+/* Máscara: quadrado central revelado, escuro nas bordas */
+.cropper__mascara {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    /* Anel escuro com furo central — usa box-shadow inset combinado */
+    border: 2px dashed rgba(255, 214, 10, 0.55);
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.55);
+    /* O furo é o próprio palco (320x320). Como a mascara cobre 100% e tem
+       9999px de sombra, o resultado visual é uma "moldura escura" externa.
+       Como o palco tem overflow:hidden, só a parte de dentro é visível. */
+}
+
+.cropper__controles {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.cropper__btn {
+    width: 36px;
+    height: 36px;
+    background: var(--surface-3);
+    border: 1px solid var(--border-strong);
+    color: var(--ink);
+    border-radius: var(--r);
+    font-family: var(--mono);
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 150ms ease;
+}
+.cropper__btn:hover {
+    border-color: var(--el-conhecimento);
+    color: var(--el-conhecimento);
+}
+.cropper__btn--reset { font-size: 1.1rem; }
+.cropper__slider {
+    flex: 1 1 200px;
+    max-width: 240px;
+    accent-color: var(--el-conhecimento);
+}
+.cropper__dica {
+    margin: 0;
+    color: var(--ink-faint);
+    font-size: 0.75rem;
+    text-align: center;
+    letter-spacing: 0.04em;
+}
+
+/* Esconder palco/controles quando ainda não há imagem (apenas o file input visível) */
+.cropper--vazio .cropper__palco,
+.cropper--vazio .cropper__controles,
+.cropper--vazio .cropper__dica {
+    display: none;
+}
+
+@media (max-width: 540px) {
+    .cropper__palco { width: 240px; height: 240px; }
+}
 
 /* Badge do tipo de dado na tabela do Historico */
 .tabela__tipo-dado {

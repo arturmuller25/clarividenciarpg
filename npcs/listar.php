@@ -8,6 +8,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../src/sessao.php';
 require_once __DIR__ . '/../src/NpcRepositorio.php';
+require_once __DIR__ . '/../src/UploadHelper.php';
 
 iniciarSessao();
 
@@ -37,10 +38,11 @@ require __DIR__ . '/../views/cabecalho.php';
 <section class="cabecalho-pagina">
     <h1 class="cabecalho-pagina__titulo">
         <span class="cabecalho-pagina__prompt">&gt;</span>
-        DOSSIES DE NPCS
+        DOSSIÊS DE NPCS
     </h1>
     <p class="cabecalho-pagina__subtitulo">
         TOTAL DE FICHAS LOCALIZADAS: <strong><?= count($npcs) ?></strong>
+        — DOSSIÊS DA ORDEM
     </p>
     <div class="cabecalho-pagina__acoes">
         <a href="<?= escapar(url('/npcs/formulario.php')) ?>" class="botao botao--primario">
@@ -52,7 +54,7 @@ require __DIR__ . '/../views/cabecalho.php';
 
 <form method="GET" class="filtros" aria-label="Filtros de NPCs">
     <div class="filtros__grupo filtros__grupo--busca">
-        <label for="filtro-busca" class="filtros__rotulo">// BUSCAR DOSSIE</label>
+        <label for="filtro-busca" class="filtros__rotulo">// BUSCAR DOSSIÊ</label>
         <input type="search" id="filtro-busca" name="busca"
                class="filtros__entrada"
                value="<?= escapar($filtroBusca) ?>"
@@ -75,7 +77,7 @@ require __DIR__ . '/../views/cabecalho.php';
     </div>
 
     <div class="filtros__grupo">
-        <label for="filtro-localizacao" class="filtros__rotulo">// LOCALIZACAO</label>
+        <label for="filtro-localizacao" class="filtros__rotulo">// LOCALIZAÇÃO</label>
         <select id="filtro-localizacao" name="localizacao" class="filtros__select">
             <option value="">[ TODAS ]</option>
             <?php foreach ($localizacoes as $loc): ?>
@@ -96,7 +98,7 @@ require __DIR__ . '/../views/cabecalho.php';
 <?php if (empty($npcs)): ?>
     <div class="estado-vazio">
         <pre class="estado-vazio__arte" aria-hidden="true">
-[ NENHUM_DOSSIE_LOCALIZADO ]
+[ NENHUM_DOSSIÊ_LOCALIZADO ]
 
          .--.
         /    \
@@ -107,13 +109,14 @@ require __DIR__ . '/../views/cabecalho.php';
         </pre>
         <p class="estado-vazio__texto">
             Nenhum NPC corresponde aos filtros aplicados. Ajuste os filtros ou
-            <a href="<?= escapar(url('/npcs/formulario.php')) ?>" class="link">[REGISTRE UM NOVO DOSSIE]</a>.
+            <a href="<?= escapar(url('/npcs/formulario.php')) ?>" class="link">[REGISTRE UM NOVO DOSSIÊ]</a>.
         </p>
     </div>
 <?php else: ?>
     <div class="galeria" role="list">
         <?php foreach ($npcs as $npc):
             $atitudeSlug = strtolower((string) $npc['atitude']);
+            $fotoUrl     = UploadHelper::urlImagem('npcs', $npc['foto_arquivo'] ?? null);
         ?>
             <article class="cartao-npc cartao-npc--<?= escapar($atitudeSlug) ?>" role="listitem">
                 <header class="cartao-npc__topo">
@@ -122,6 +125,10 @@ require __DIR__ . '/../views/cabecalho.php';
                         <?= escapar(strtoupper((string) $npc['atitude'])) ?>
                     </span>
                 </header>
+
+                <?php if ($fotoUrl): ?>
+                    <img src="<?= escapar($fotoUrl) ?>" alt="" class="cartao-npc__foto">
+                <?php endif; ?>
 
                 <h2 class="cartao-npc__nome">
                     <a href="<?= escapar(url('/npcs/visualizar.php?id=' . (int) $npc['id'])) ?>"
@@ -147,7 +154,7 @@ require __DIR__ . '/../views/cabecalho.php';
 
                 <footer class="cartao-npc__acoes">
                     <a href="<?= escapar(url('/npcs/visualizar.php?id=' . (int) $npc['id'])) ?>"
-                       class="botao botao--pequeno botao--primario">DOSSIE</a>
+                       class="botao botao--pequeno botao--primario">DOSSIÊ</a>
                     <a href="<?= escapar(url('/npcs/formulario.php?id=' . (int) $npc['id'])) ?>"
                        class="botao botao--pequeno">EDITAR</a>
                     <form action="<?= escapar(url('/npcs/excluir.php')) ?>" method="POST"

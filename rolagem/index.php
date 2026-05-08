@@ -13,7 +13,7 @@ require_once __DIR__ . '/../src/sessao.php';
 
 iniciarSessao();
 
-$titulo      = 'ROLAGEM_RITUAL';
+$titulo      = 'ROLAGEM';
 $paginaAtiva = 'rolagem';
 require __DIR__ . '/../views/cabecalho.php';
 ?>
@@ -21,10 +21,10 @@ require __DIR__ . '/../views/cabecalho.php';
 <section class="cabecalho-pagina">
     <h1 class="cabecalho-pagina__titulo">
         <span class="cabecalho-pagina__prompt">&gt;</span>
-        RITUAL DE CLARIVIDENCIA
+        RITUAL DE CLARIVIDÊNCIA
     </h1>
     <p class="cabecalho-pagina__subtitulo">
-        Lance N d20 e mantenha o MAIOR. Atributo zero invoca DESASTRE: rola dois e mantem o MENOR.
+        Lance N d20 e mantenha o MAIOR. Atributo zero invoca DESASTRE: rola dois e mantém o MENOR.
     </p>
 </section>
 
@@ -53,7 +53,7 @@ require __DIR__ . '/../views/cabecalho.php';
             </label>
             <input type="text" id="descricao" name="descricao"
                    class="campo__entrada" maxlength="160" required
-                   placeholder="Ex: Percepcao no porao do hospital">
+                   placeholder="Ex: Percepção no porão do hospital">
         </div>
 
         <div class="campo">
@@ -240,7 +240,7 @@ require __DIR__ . '/../views/cabecalho.php';
         </svg>
 
         <div id="rolador-valor" class="rolador__valor">--</div>
-        <div id="rolador-rotulo" class="rolador__rotulo">>> AGUARDANDO INVOCACAO</div>
+        <div id="rolador-rotulo" class="rolador__rotulo">>> AGUARDANDO INVOCAÇÃO</div>
         <div id="rolador-dados" class="rolador__dados" aria-label="Dados rolados"></div>
     </div>
 </div>

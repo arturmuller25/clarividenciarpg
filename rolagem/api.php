@@ -111,9 +111,10 @@ $resultadoFinal = match (true) {
     default                                  => $brutos[0],
 };
 
-// Brilho APENAS em 1 e 20, conforme regra do sistema.
-$ehCritico  = $resultadoFinal === 20;
-$ehDesastre = $resultadoFinal === 1;
+// Crítico/Desastre APENAS no d20 (regra Ordem Paranormal). Outros tipos
+// de dado registram a rolagem mas sem flags de crítico/falha.
+$ehCritico  = $tipoDado === 'd20' && $resultadoFinal === 20;
+$ehDesastre = $tipoDado === 'd20' && $resultadoFinal === 1;
 
 try {
     $repo = new LogRepositorio();

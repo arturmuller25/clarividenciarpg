@@ -10,6 +10,7 @@ require_once __DIR__ . '/../src/sessao.php';
 require_once __DIR__ . '/../src/CriaturaRepositorio.php';
 require_once __DIR__ . '/../src/CriaturaValidador.php';
 require_once __DIR__ . '/../src/CampanhaRepositorio.php';
+require_once __DIR__ . '/../src/UploadHelper.php';
 
 iniciarSessao();
 
@@ -20,37 +21,41 @@ $id            = isset($_GET['id']) ? (int) $_GET['id'] : 0;
 $modoEdicao    = $id > 0;
 
 $dados = [
-    'campanha_id' => null,
-    'nome'        => '',
-    'elemento'    => 'Sangue',
-    'vd'          => 1.0,
-    'pv_atual'    => 10,
-    'pv_maximo'   => 10,
-    'habilidades' => '',
+    'campanha_id'  => null,
+    'nome'         => '',
+    'elemento'     => 'Sangue',
+    'vd'           => 1.0,
+    'pv_atual'     => 10,
+    'pv_maximo'    => 10,
+    'habilidades'  => '',
+    'foto_arquivo' => null,
 ];
-$erros = [];
+$fotoAtual = null;
+$erros     = [];
 
 if ($modoEdicao && $_SERVER['REQUEST_METHOD'] === 'GET') {
     $existente = $repo->buscarPorId($id);
     if ($existente === null) {
-        definirFlash('erro', "Criatura #{$id} nao encontrada nos arquivos.");
+        definirFlash('erro', "Criatura #{$id} não encontrada nos arquivos.");
         header('Location: ' . url('/criaturas/listar.php'));
         exit;
     }
     $dados = [
-        'campanha_id' => isset($existente['campanha_id']) ? (int) $existente['campanha_id'] : null,
-        'nome'        => (string) $existente['nome'],
-        'elemento'    => (string) $existente['elemento'],
-        'vd'          => (float)  $existente['vd'],
-        'pv_atual'    => (int)    $existente['pv_atual'],
-        'pv_maximo'   => (int)    $existente['pv_maximo'],
-        'habilidades' => (string) $existente['habilidades'],
+        'campanha_id'  => isset($existente['campanha_id']) ? (int) $existente['campanha_id'] : null,
+        'nome'         => (string) $existente['nome'],
+        'elemento'     => (string) $existente['elemento'],
+        'vd'           => (float)  $existente['vd'],
+        'pv_atual'     => (int)    $existente['pv_atual'],
+        'pv_maximo'    => (int)    $existente['pv_maximo'],
+        'habilidades'  => (string) $existente['habilidades'],
+        'foto_arquivo' => $existente['foto_arquivo'] ?? null,
     ];
+    $fotoAtual = $existente['foto_arquivo'] ?? null;
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!validarTokenCsrf($_POST['csrf_token'] ?? null)) {
-        definirFlash('erro', 'Token de seguranca invalido. Tente novamente.');
+        definirFlash('erro', 'Token de segurança inválido. Tente novamente.');
         $destino = $modoEdicao
             ? url('/criaturas/formulario.php?id=' . $id)
             : url('/criaturas/formulario.php');
@@ -62,24 +67,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $dados = $resultado['dados'];
     $erros = $resultado['erros'];
 
+    if ($modoEdicao) {
+        $atualDb   = $repo->buscarPorId($id);
+        $fotoAtual = $atualDb['foto_arquivo'] ?? null;
+    }
+
     if (empty($erros)) {
         try {
+            // ---------- Foto ----------
+            $novaFoto     = null;
+            $removerFoto  = isset($_POST['remover_foto']) && $_POST['remover_foto'] === '1';
+            $tentouEnviar = !empty($_FILES['foto']['name'] ?? '');
+
+            if ($tentouEnviar) {
+                $novaFoto = UploadHelper::moverImagem($_FILES['foto'] ?? null, 'criaturas');
+            }
+            if ($novaFoto !== null) {
+                $dados['foto_arquivo'] = $novaFoto;
+                if ($modoEdicao && is_string($fotoAtual) && $fotoAtual !== '') {
+                    UploadHelper::apagarImagem('criaturas', $fotoAtual);
+                }
+            } elseif ($removerFoto) {
+                $dados['foto_arquivo'] = null;
+                if ($modoEdicao && is_string($fotoAtual) && $fotoAtual !== '') {
+                    UploadHelper::apagarImagem('criaturas', $fotoAtual);
+                }
+            } else {
+                unset($dados['foto_arquivo']);
+            }
+
             if ($modoEdicao) {
                 $repo->atualizar($id, $dados);
                 definirFlash('sucesso', "Sincronia com o Outro Lado estabelecida. Criatura #{$id} atualizada.");
             } else {
                 $novoId = $repo->criar($dados);
-                definirFlash('sucesso', "Criatura #{$novoId} catalogada. O Bestiario reconhece a ameaca.");
+                definirFlash('sucesso', "Criatura #{$novoId} catalogada. O Bestiário reconhece a ameaça.");
             }
             header('Location: ' . url('/criaturas/listar.php'));
             exit;
         } catch (Throwable $e) {
-            $erros['_geral'] = 'Falha na Manifestacao: ' . $e->getMessage();
+            $erros['_geral'] = 'Falha na Manifestação: ' . $e->getMessage();
         }
     } else {
-        definirFlash('erro', 'Falha na Manifestacao. Verifique os campos destacados.');
+        definirFlash('erro', 'Falha na Manifestação. Verifique os campos destacados.');
     }
 }
+
+$fotoUrl = UploadHelper::urlImagem('criaturas', $fotoAtual);
 
 $titulo      = $modoEdicao ? 'EDITAR_CRIATURA' : 'NOVA_CRIATURA';
 $paginaAtiva = 'bestiario';
@@ -95,8 +129,8 @@ require __DIR__ . '/../views/cabecalho.php';
     </h1>
     <p class="cabecalho-pagina__subtitulo">
         <?= $modoEdicao
-            ? 'Atualize os parametros da criatura conforme novas evidencias.'
-            : 'Catalogue uma nova ameaca paranormal nos arquivos do Bestiario.' ?>
+            ? 'Atualize os parâmetros da criatura conforme novas evidências.'
+            : 'Catalogue uma nova ameaça paranormal nos arquivos do Bestiário.' ?>
     </p>
 </section>
 
@@ -107,12 +141,29 @@ require __DIR__ . '/../views/cabecalho.php';
     </div>
 <?php endif; ?>
 
-<form method="POST" class="formulario" novalidate data-validar-formulario>
+<form method="POST" enctype="multipart/form-data" class="formulario" novalidate data-validar-formulario>
     <input type="hidden" name="csrf_token" value="<?= escapar(gerarTokenCsrf()) ?>">
 
     <div class="campo">
+        <label class="campo__rotulo">
+            <span class="campo__indice">00.</span> FOTO DA CRIATURA
+            <small class="campo__ajuda" style="margin-left: 8px">Recortada automaticamente em 1:1.</small>
+        </label>
+        <div data-cropper data-cropper-input="foto"
+             <?php if ($fotoUrl): ?>data-cropper-existing="<?= escapar($fotoUrl) ?>"<?php endif; ?>>
+            <input type="file" name="foto" accept="image/jpeg,image/png,image/webp" class="campo__entrada campo__entrada--arquivo">
+            <?php if ($fotoUrl): ?>
+                <label class="upload-preview__remover" style="margin-top: 6px">
+                    <input type="checkbox" name="remover_foto" value="1">
+                    <span>Remover foto atual</span>
+                </label>
+            <?php endif; ?>
+        </div>
+    </div>
+
+    <div class="campo">
         <label for="campanha_id" class="campo__rotulo">
-            <span class="campo__indice">00.</span> CAMPANHA VINCULADA
+            <span class="campo__indice">00b.</span> CAMPANHA VINCULADA
         </label>
         <select id="campanha_id" name="campanha_id" class="campo__entrada">
             <option value="">[ SEM CAMPANHA ]</option>

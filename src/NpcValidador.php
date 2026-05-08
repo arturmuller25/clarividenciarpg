@@ -43,33 +43,33 @@ final class NpcValidador
         $erros = [];
 
         if ($nome === '') {
-            $erros['nome'] = 'O nome do NPC e obrigatorio.';
+            $erros['nome'] = 'O nome do NPC é obrigatório.';
         } elseif (mb_strlen($nome) > self::NOME_MAX) {
-            $erros['nome'] = sprintf('O nome deve ter no maximo %d caracteres.', self::NOME_MAX);
+            $erros['nome'] = sprintf('O nome deve ter no máximo %d caracteres.', self::NOME_MAX);
         }
 
         if ($ocupacao === '') {
-            $erros['ocupacao'] = 'A ocupacao e obrigatoria.';
+            $erros['ocupacao'] = 'A ocupação é obrigatória.';
         } elseif (mb_strlen($ocupacao) > self::OCUPACAO_MAX) {
-            $erros['ocupacao'] = sprintf('A ocupacao deve ter no maximo %d caracteres.', self::OCUPACAO_MAX);
+            $erros['ocupacao'] = sprintf('A ocupação deve ter no máximo %d caracteres.', self::OCUPACAO_MAX);
         }
 
         if ($localizacao === '') {
-            $erros['localizacao'] = 'A localizacao e obrigatoria.';
+            $erros['localizacao'] = 'A localização é obrigatória.';
         } elseif (mb_strlen($localizacao) > self::LOCALIZACAO_MAX) {
-            $erros['localizacao'] = sprintf('A localizacao deve ter no maximo %d caracteres.', self::LOCALIZACAO_MAX);
+            $erros['localizacao'] = sprintf('A localização deve ter no máximo %d caracteres.', self::LOCALIZACAO_MAX);
         }
 
         if (!in_array($atitude, NpcRepositorio::ATITUDES, true)) {
-            $erros['atitude'] = 'Atitude invalida. Selecione Amigavel, Neutro ou Hostil.';
+            $erros['atitude'] = 'Atitude inválida. Selecione Amigável, Neutro ou Hostil.';
         }
 
         if ($historia === '') {
-            $erros['historia'] = 'A historia e obrigatoria.';
+            $erros['historia'] = 'A história é obrigatória.';
         } elseif (mb_strlen($historia) < self::HISTORIA_MIN) {
-            $erros['historia'] = sprintf('A historia deve ter ao menos %d caracteres.', self::HISTORIA_MIN);
+            $erros['historia'] = sprintf('A história deve ter ao menos %d caracteres.', self::HISTORIA_MIN);
         } elseif (mb_strlen($historia) > self::HISTORIA_MAX) {
-            $erros['historia'] = sprintf('A historia deve ter no maximo %d caracteres.', self::HISTORIA_MAX);
+            $erros['historia'] = sprintf('A história deve ter no máximo %d caracteres.', self::HISTORIA_MAX);
         }
 
         return [

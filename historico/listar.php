@@ -19,7 +19,7 @@ try {
     $rolagens = [];
 }
 
-$titulo      = 'DIARIO_DE_CAMPANHA';
+$titulo      = 'DIÁRIO_DE_CAMPANHA';
 $paginaAtiva = 'historico';
 require __DIR__ . '/../views/cabecalho.php';
 ?>
@@ -27,11 +27,11 @@ require __DIR__ . '/../views/cabecalho.php';
 <section class="cabecalho-pagina">
     <h1 class="cabecalho-pagina__titulo">
         <span class="cabecalho-pagina__prompt">&gt;</span>
-        DIARIO DE CAMPANHA
+        DIÁRIO DE CAMPANHA
     </h1>
     <p class="cabecalho-pagina__subtitulo">
-        REGISTROS DE PERCEPCAO: <strong><?= count($rolagens) ?></strong> /
-        ULTIMAS 100 ROLAGENS REGISTRADAS NO TERMINAL
+        REGISTROS DE PERCEPÇÃO: <strong><?= count($rolagens) ?></strong> /
+        ÚLTIMAS 100 ROLAGENS REGISTRADAS NO TERMINAL
     </p>
     <div class="cabecalho-pagina__acoes">
         <a href="<?= escapar(url('/rolagem/index.php')) ?>" class="botao botao--primario">NOVA ROLAGEM</a>

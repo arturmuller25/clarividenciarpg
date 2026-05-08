@@ -8,6 +8,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../src/sessao.php';
 require_once __DIR__ . '/../src/CriaturaRepositorio.php';
+require_once __DIR__ . '/../src/UploadHelper.php';
 
 iniciarSessao();
 
@@ -21,7 +22,7 @@ try {
     $criaturas = [];
 }
 
-$titulo      = 'BESTIARIO';
+$titulo      = 'BESTIÁRIO';
 $paginaAtiva = 'bestiario';
 require __DIR__ . '/../views/cabecalho.php';
 ?>
@@ -29,10 +30,10 @@ require __DIR__ . '/../views/cabecalho.php';
 <section class="cabecalho-pagina">
     <h1 class="cabecalho-pagina__titulo">
         <span class="cabecalho-pagina__prompt">&gt;</span>
-        BESTIARIO PARANORMAL
+        BESTIÁRIO PARANORMAL
     </h1>
     <p class="cabecalho-pagina__subtitulo">
-        AMEACAS CATALOGADAS: <strong><?= count($criaturas) ?></strong>
+        AMEAÇAS CATALOGADAS: <strong><?= count($criaturas) ?></strong>
     </p>
     <div class="cabecalho-pagina__acoes">
         <a href="<?= escapar(url('/criaturas/formulario.php')) ?>" class="botao botao--primario">
@@ -64,7 +65,7 @@ require __DIR__ . '/../views/cabecalho.php';
 <?php if (empty($criaturas)): ?>
     <div class="estado-vazio">
         <pre class="estado-vazio__arte" aria-hidden="true">
-[ NENHUMA_AMEACA_REGISTRADA ]
+[ NENHUMA_AMEAÇA_REGISTRADA ]
 
    /\___/\
   ( o   o )
@@ -81,7 +82,8 @@ require __DIR__ . '/../views/cabecalho.php';
 <?php else: ?>
     <div class="galeria" role="list">
         <?php foreach ($criaturas as $criatura):
-            $slug = strtolower((string) $criatura['elemento']);
+            $slug    = strtolower((string) $criatura['elemento']);
+            $fotoUrl = UploadHelper::urlImagem('criaturas', $criatura['foto_arquivo'] ?? null);
         ?>
             <article class="cartao-criatura cartao-criatura--<?= escapar($slug) ?>" role="listitem">
                 <header class="cartao-criatura__topo">
@@ -91,7 +93,14 @@ require __DIR__ . '/../views/cabecalho.php';
                     </span>
                 </header>
 
-                <h2 class="cartao-criatura__nome"><?= escapar($criatura['nome']) ?></h2>
+                <?php if ($fotoUrl): ?>
+                    <img src="<?= escapar($fotoUrl) ?>" alt="" class="cartao-criatura__foto">
+                <?php endif; ?>
+
+                <h2 class="cartao-criatura__nome">
+                    <a href="<?= escapar(url('/criaturas/visualizar.php?id=' . (int) $criatura['id'])) ?>"
+                       class="cartao-npc__nome-link"><?= escapar($criatura['nome']) ?></a>
+                </h2>
 
                 <dl class="cartao-criatura__stats">
                     <div class="cartao-criatura__stat">

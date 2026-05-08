@@ -226,13 +226,16 @@
             modo = 'simples';
         }
 
-        // Brilho APENAS em 1 (Falha Critica) e 20 (Sucesso Critico) — conforme brief.
+        // Brilho APENAS em 1 (Falha Critica) e 20 (Sucesso Critico) NO d20.
+        // Outros tipos de dado (d4, d6, d8, d10, d12, d100) NAO possuem
+        // criticos/desastres — sao rolagens neutras do ponto de vista de regra.
+        const ehD20 = tipo === 'd20';
         return {
             rolagens,
             resultadoFinal,
             modo,
-            ehCritico:  resultadoFinal === 20,
-            ehDesastre: resultadoFinal === 1,
+            ehCritico:  ehD20 && resultadoFinal === 20,
+            ehDesastre: ehD20 && resultadoFinal === 1,
         };
     }
 
@@ -245,11 +248,11 @@
     }
 
     function textoRotulo(tipo, modo, ehCritico, ehDesastre) {
-        if (ehCritico)  return '>> SUCESSO CRITICO! O Outro Lado responde com clareza.';
-        if (ehDesastre) return '>> FALHA CRITICA. As entidades sussurram com escarnio.';
+        if (ehCritico)  return '>> SUCESSO CRÍTICO! O Outro Lado responde com clareza.';
+        if (ehDesastre) return '>> FALHA CRÍTICA. As entidades sussurram com escárnio.';
         if (modo === 'desastre') return '>> DESASTRE. Resultado mantido: menor dado.';
         if (modo === 'vantagem') return '>> VANTAGEM. Resultado mantido: maior dado.';
-        if (modo === 'simples')  return '>> ' + tipo.toUpperCase() + ' - rolagem simples confirmada.';
+        if (modo === 'simples')  return '>> ' + tipo.toUpperCase() + ' — rolagem simples confirmada.';
         return '>> ROLAGEM CONFIRMADA.';
     }
 

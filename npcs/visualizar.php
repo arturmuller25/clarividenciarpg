@@ -8,6 +8,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../src/sessao.php';
 require_once __DIR__ . '/../src/NpcRepositorio.php';
+require_once __DIR__ . '/../src/UploadHelper.php';
 
 iniciarSessao();
 
@@ -36,19 +37,20 @@ if ($npc === null) {
 $atitudeSlug  = strtolower((string) $npc['atitude']);
 $atitudeRotulo = match ($atitudeSlug) {
     'amigavel' => 'CONTATO ALIADO',
-    'hostil'   => 'AMEACA HOSTIL',
+    'hostil'   => 'AMEAÇA HOSTIL',
     default    => 'CONTATO NEUTRO',
 };
 
-$titulo      = 'DOSSIE_' . str_pad((string) $id, 4, '0', STR_PAD_LEFT);
+$titulo      = 'DOSSIÊ_' . str_pad((string) $id, 4, '0', STR_PAD_LEFT);
 $paginaAtiva = 'npcs';
+$fotoUrl     = UploadHelper::urlImagem('npcs', $npc['foto_arquivo'] ?? null);
 require __DIR__ . '/../views/cabecalho.php';
 ?>
 
 <section class="cabecalho-pagina">
     <h1 class="cabecalho-pagina__titulo">
         <span class="cabecalho-pagina__prompt">&gt;</span>
-        DOSSIE #<?= str_pad((string) $npc['id'], 4, '0', STR_PAD_LEFT) ?>
+        DOSSIÊ #<?= str_pad((string) $npc['id'], 4, '0', STR_PAD_LEFT) ?>
     </h1>
     <p class="cabecalho-pagina__subtitulo">
         ARQUIVO INDIVIDUAL // CLASSIFICACAO:
@@ -56,7 +58,7 @@ require __DIR__ . '/../views/cabecalho.php';
     </p>
     <div class="cabecalho-pagina__acoes">
         <a href="<?= escapar(url('/npcs/formulario.php?id=' . (int) $npc['id'])) ?>"
-           class="botao botao--primario">EDITAR DOSSIE</a>
+           class="botao botao--primario">EDITAR DOSSIÊ</a>
         <a href="<?= escapar(url('/npcs/listar.php')) ?>" class="botao botao--secundario">VOLTAR A GALERIA</a>
         <form action="<?= escapar(url('/npcs/excluir.php')) ?>" method="POST"
               data-confirmar="Confirma o arquivamento permanente de <?= escapar($npc['nome']) ?>?"
@@ -70,6 +72,11 @@ require __DIR__ . '/../views/cabecalho.php';
 
 <article class="dossie dossie--<?= escapar($atitudeSlug) ?>">
     <header class="dossie__cabecalho">
+        <?php if ($fotoUrl): ?>
+            <img src="<?= escapar($fotoUrl) ?>" alt="" class="dossie__foto">
+        <?php else: ?>
+            <div class="dossie__foto dossie__foto--vazia" aria-hidden="true">&#9678;</div>
+        <?php endif; ?>
         <div class="dossie__identificacao">
             <span class="dossie__codigo">// REGISTRO_NPC</span>
             <h2 class="dossie__nome"><?= escapar($npc['nome']) ?></h2>
@@ -83,7 +90,7 @@ require __DIR__ . '/../views/cabecalho.php';
 
     <dl class="dossie__metadados">
         <div class="dossie__campo">
-            <dt>// LOCALIZACAO CONHECIDA</dt>
+            <dt>// LOCALIZAÇÃO CONHECIDA</dt>
             <dd><?= escapar((string) $npc['localizacao']) ?></dd>
         </div>
         <div class="dossie__campo">
@@ -104,7 +111,7 @@ require __DIR__ . '/../views/cabecalho.php';
     </section>
 
     <footer class="dossie__rodape">
-        <span>// FIM DO DOSSIE</span>
+        <span>// FIM DO DOSSIÊ</span>
         <span>// CLASSIFICADO PELA ORDEM</span>
     </footer>
 </article>
