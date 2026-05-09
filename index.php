@@ -266,21 +266,33 @@ require __DIR__ . '/views/cabecalho.php';
     <article class="stat-tile">
         <span class="stat-tile__rotulo">// CAMPANHAS</span>
         <span class="stat-tile__valor"><?= str_pad((string) $totalCampanhas, 3, '0', STR_PAD_LEFT) ?></span>
+        <span class="stat-tile__hint"><?= $totalCampanhas > 0
+            ? '// EM_ANDAMENTO'
+            : '// AGUARDANDO_PRIMEIRA' ?></span>
         <a class="stat-tile__link" href="<?= escapar(url('/campanhas/listar.php')) ?>">Consultar &rarr;</a>
     </article>
     <article class="stat-tile">
         <span class="stat-tile__rotulo">// AGENTES</span>
         <span class="stat-tile__valor"><?= str_pad((string) $totalAgentes, 3, '0', STR_PAD_LEFT) ?></span>
+        <span class="stat-tile__hint"><?= $totalAgentes > 0
+            ? '// EM_CAMPO'
+            : '// SEM_INVESTIGADORES' ?></span>
         <a class="stat-tile__link" href="<?= escapar(url('/agentes/listar.php')) ?>">Consultar &rarr;</a>
     </article>
     <article class="stat-tile">
         <span class="stat-tile__rotulo">// NPCS</span>
         <span class="stat-tile__valor"><?= str_pad((string) $totalNpcs, 3, '0', STR_PAD_LEFT) ?></span>
+        <span class="stat-tile__hint"><?= $totalNpcs > 0
+            ? '// DOSSIES_ABERTOS'
+            : '// SEM_CONTATOS' ?></span>
         <a class="stat-tile__link" href="<?= escapar(url('/npcs/listar.php')) ?>">Consultar &rarr;</a>
     </article>
     <article class="stat-tile">
         <span class="stat-tile__rotulo">// AMEACAS</span>
         <span class="stat-tile__valor"><?= str_pad((string) $totalCriaturas, 3, '0', STR_PAD_LEFT) ?></span>
+        <span class="stat-tile__hint"><?= $totalCriaturas > 0
+            ? '// CATALOGADAS'
+            : '// BESTIARIO_LIMPO' ?></span>
         <a class="stat-tile__link" href="<?= escapar(url('/criaturas/listar.php')) ?>">Consultar &rarr;</a>
     </article>
     <article class="stat-tile stat-tile--sparkline">
