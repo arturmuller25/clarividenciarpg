@@ -77,7 +77,7 @@ require __DIR__ . '/views/cabecalho.php';
      ============================================================ -->
 <div class="hero" role="dialog" aria-label="Tela de boas-vindas"
      data-audio="<?= escapar(url('/assets/audio/som_para_a_hero.mp3')) ?>"
-     data-duracao-ms="6500">
+     data-duracao-ms="5200">
     <div class="hero__particles" id="hero-particles" aria-hidden="true"></div>
     <div class="hero__palco">
         <div class="hero__floor" aria-hidden="true"></div>

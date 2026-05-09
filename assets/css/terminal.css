@@ -2224,7 +2224,8 @@ pre, code {
     z-index: -1;
 }
 .hero.is-rodando .hero__floor {
-    animation: hero-floor-fade 1.2s ease 4.5s forwards;
+    /* Pool of light fade-in no instante do RESTING (3.2s) */
+    animation: hero-floor-fade 1.2s ease 3.2s forwards;
 }
 @keyframes hero-floor-fade {
     0%   { opacity: 0; }
@@ -2279,16 +2280,16 @@ pre, code {
 }
 
 .hero.is-rodando .hero__shockwave--1 {
-    /* Onda principal sai EXATAMENTE no instante do RESTING (t=4.5s) */
-    animation: hero-shockwave 1.0s cubic-bezier(0, 0.55, 0.45, 1) 4.5s 1 forwards;
+    /* Onda principal sai EXATAMENTE no instante do RESTING (t=3.2s) */
+    animation: hero-shockwave 1.0s cubic-bezier(0, 0.55, 0.45, 1) 3.2s 1 forwards;
 }
 .hero.is-rodando .hero__shockwave--2 {
     /* Segunda onda em SANGUE — leve defasagem para "echo" cinematografico */
     border-color: var(--el-sangue);
-    animation: hero-shockwave 1.3s cubic-bezier(0, 0.55, 0.45, 1) 4.65s 1 forwards;
+    animation: hero-shockwave 1.3s cubic-bezier(0, 0.55, 0.45, 1) 3.35s 1 forwards;
 }
 .hero.is-rodando .hero__shockwave--flash {
-    animation: hero-shockwave-flash 0.5s ease-out 4.5s 1 forwards;
+    animation: hero-shockwave-flash 0.5s ease-out 3.2s 1 forwards;
 }
 
 @keyframes hero-shockwave {
@@ -2329,8 +2330,8 @@ pre, code {
     pointer-events: none;
 }
 .hero.is-rodando .hero__aura {
-    /* Aura comeca quando o dado para (4.5s) e pulsa infinitamente */
-    animation: hero-aura 2.4s ease 4.5s infinite;
+    /* Aura comeca quando o dado para (3.2s) e pulsa infinitamente */
+    animation: hero-aura 2.4s ease 3.2s infinite;
 }
 @keyframes hero-aura {
     0%, 100% { opacity: 0; transform: scale(0.95); }
@@ -2353,10 +2354,10 @@ pre, code {
     will-change: transform, opacity, filter, letter-spacing;
 }
 .hero.is-rodando .hero__titulo {
-    /* Titulo aparece em 5.0s — 500ms apos o dado assentar em 4.5s, dando
+    /* Titulo aparece em 3.7s — 500ms apos o dado assentar em 3.2s, dando
      * respiro para a aura/shockwaves se expressarem antes da revelacao
      * narrativa. 1.3s ease-in-out (blur->nitido + slide + letter-spacing). */
-    animation: hero-titulo 1.3s ease-in-out 5.0s forwards;
+    animation: hero-titulo 1.3s ease-in-out 3.7s forwards;
 }
 .hero__titulo-realce {
     color: var(--el-conhecimento);
@@ -2406,9 +2407,9 @@ pre, code {
     opacity: 0;
 }
 .hero.is-rodando .hero__subtitulo {
-    /* Subtitulo entra apos o titulo se assentar (~6.1s) e fica visivel
-     * por ~400ms antes do .is-saindo (6.5s) iniciar o fadeout do panel. */
-    animation: hero-subtitulo 0.7s ease-in-out 6.1s forwards;
+    /* Subtitulo entra apos o titulo se assentar (~4.8s) e fica visivel
+     * por ~400ms antes do .is-saindo (5.2s) iniciar o fadeout do panel. */
+    animation: hero-subtitulo 0.7s ease-in-out 4.8s forwards;
 }
 @keyframes hero-subtitulo {
     0%   { opacity: 0; transform: translateY(10px); filter: blur(4px); }

@@ -5,21 +5,23 @@
  * na face 20 (RESTING * integer turns). Portado do hero_d20.html do
  * design system Claude.
  *
- * SEQUENCIA (timeline ms):
+ * SEQUENCIA (timeline ms — calibrada para casar com som_para_a_hero.mp3 ~3.2s):
  *   0     - 1400  : queda do topo + scale-in (easeIn) + offset X esquerdo
  *   1400  - 1700  : bounce/squash no impacto
- *   0     - 4500  : tumble decelerante (rollEase) com integer turns por
+ *   0     - 3200  : tumble decelerante (rollEase) com integer turns por
  *                   eixo (4*X / 5*Y / 3*Z) => em p=1, R_tumble = identity,
  *                   logo rot = RESTING (face 20 alinhada com +Z, exata).
- *   2475  - 4500  : late wobble com decay quadratico => 0 em p=1.
- *   4400+         : burst de particulas (28) + sustain interval 220ms.
- *   4500+         : hover senoidal infinito ate fadeout.
- *   5000+         : titulo "CLARIVIDENCIA PARANORMAL" entra (CSS keyframe).
- *   6500          : .is-saindo => fadeout do panel + audio.
+ *   1760  - 3200  : late wobble com decay quadratico => 0 em p=1.
+ *   3100+         : burst de particulas (28) + sustain interval 220ms.
+ *   3200+         : hover senoidal infinito ate fadeout. Som termina natural
+ *                   exatamente neste instante (sincronia perfeita).
+ *   3700+         : titulo "CLARIVIDENCIA PARANORMAL" entra (CSS keyframe).
+ *   5200          : .is-saindo => fadeout do panel.
  *
  * AUDIO:
- *   som_para_a_hero.mp3 (~3.5s) acompanha queda+impacto. Termina antes
- *   do hover — silencio narrativo durante o assentamento e flutuacao.
+ *   som_para_a_hero.mp3 (~3.19s @ 320 kbps) ACOMPANHA exatamente a queda+
+ *   tumble. Termina natural no instante do RESTING. Hover continua em
+ *   silencio narrativo (~2s).
  *
  * DECISAO 019: gate first-visit/F5 preservado.
  *
@@ -128,8 +130,12 @@
     const _n0    = [_f0[0]/_n0Len, _f0[1]/_n0Len, _f0[2]/_n0Len];
     const RESTING = alignMat(_n0, [0, 0, 1]);
 
-    /* Timeline — integer turns por eixo => em p=1, R_tumble = I */
-    const T_SETTLE_END = 4500;
+    /* Timeline — integer turns por eixo => em p=1, R_tumble = I.
+     * T_SETTLE_END calibrado para CASAR com a duracao do som
+     * `som_para_a_hero.mp3` (~3.19s @ 320 kbps): som termina natural
+     * exatamente quando o dado para (RESTING). Tumble mais frenetico
+     * (mesma quantidade de turns em menos tempo) que a versao 4.5s. */
+    const T_SETTLE_END = 3200;
     const TURNS_X = 4, TURNS_Y = 5, TURNS_Z = 3;
     const TOTAL_X = TURNS_X * 2 * Math.PI;
     const TOTAL_Y = TURNS_Y * 2 * Math.PI;
@@ -419,7 +425,9 @@
             } else {
                 t0 = performance.now();
                 requestAnimationFrame(stepLoop);
-                window.setTimeout(iniciarParticulas, 4400);
+                /* Burst de particulas 100ms antes do RESTING — sai junto
+                 * com o impacto sonoro da queda. */
+                window.setTimeout(iniciarParticulas, T_SETTLE_END - 100);
             }
 
             window.setTimeout(() => {
