@@ -1885,6 +1885,18 @@ pre, code {
     background: var(--el-conhecimento);
 }
 
+/* Quando aberto: dispensa border + background + rotulo "MENU" do botao —
+ * o X dourado isolado ja comunica "fechar" sem o box quadrado destacado. */
+.menu-hamburger__toggle:checked + .menu-hamburger__botao {
+    background: transparent;
+    border-color: transparent;
+    box-shadow: none;
+}
+.menu-hamburger__toggle:checked + .menu-hamburger__botao .menu-hamburger__rotulo {
+    opacity: 0;
+    visibility: hidden;
+}
+
 /* Overlay (escurece o resto da tela) */
 .menu-hamburger__overlay {
     position: fixed;
@@ -1911,7 +1923,7 @@ pre, code {
     right: 0;
     width: min(360px, 88vw);
     height: 100vh;
-    padding: 80px 28px 40px;
+    padding: 40px 28px 40px;   /* topo enxuto — logo stacked agora ancora o painel */
     background: rgba(10, 10, 10, 0.72);
     backdrop-filter: blur(18px) saturate(120%);
     -webkit-backdrop-filter: blur(18px) saturate(120%);
@@ -1930,29 +1942,12 @@ pre, code {
     transform: translateX(0);
 }
 
-/* Detalhe ritualistico no canto */
-.menu-hamburger__painel::before {
-    content: '';
-    position: absolute;
-    top: 24px;
-    left: 28px;
-    width: 32px;
-    height: 32px;
-    border: 1px solid rgba(255, 214, 10, 0.4);
-    border-radius: 50%;
-    box-shadow: inset 0 0 14px rgba(255, 214, 10, 0.15);
-}
-.menu-hamburger__painel::after {
-    content: '';
-    position: absolute;
-    top: 39px;
-    left: 43px;
-    width: 2px;
-    height: 2px;
-    background: var(--el-conhecimento);
-    border-radius: 50%;
-    box-shadow: 0 0 8px var(--el-conhecimento);
-}
+/* Detalhe ritualistico antigo no canto superior esquerdo (anel dourado +
+ * ponto) — REMOVIDO no Passo 1 do design system: a logo stacked centralizada
+ * passa a ser o "ancora visual" do topo do painel; os decoradores conflitam.
+ * Mantemos a regra como :empty no-op para preservar historia do BEM. */
+.menu-hamburger__painel::before,
+.menu-hamburger__painel::after { content: none; }
 
 /* Logo stacked dentro do menu hamburguer aberto.
  * Estratégia HTML+SVG inline (texto selecionável; cor herda via currentColor).
@@ -3704,11 +3699,20 @@ pre, code {
     margin: 0;
     font-family: var(--titulo);
     font-weight: 900;
-    font-size: clamp(2.4rem, 5vw, 3.8rem);
+    font-size: clamp(2rem, 6vw, 5rem);
     line-height: 1.02;
     letter-spacing: 0.06em;
     color: var(--el-morte);
     text-transform: uppercase;
+    text-align: left;
+    white-space: nowrap;        /* nao quebra "MESTRE" no meio em desktop/tablet */
+    word-break: keep-all;       /* mantem palavras inteiras quando quebrar */
+}
+@media (max-width: 540px) {
+    /* Em mobile pequeno, libera quebra natural (entre palavras) — clamp ja
+     * reduz font-size, e word-break:keep-all garante que palavras inteiras
+     * descem para a linha de baixo em vez de fragmentarem. */
+    .painel-hero__h1 { white-space: normal; }
 }
 .painel-hero__h1 .gold { color: var(--el-conhecimento); }
 .painel-hero__h1 .glitch { position: relative; display: inline-block; }
