@@ -117,6 +117,11 @@
 html { scroll-behavior: smooth; }
 html, body { height: 100%; }
 
+/* Trava scroll do body enquanto a Hero esta ativa (position:fixed cobre a
+ * viewport, mas o conteudo principal ja renderiza por baixo gerando scrollbar
+ * lateral). Class adicionada/removida em hero.js. */
+body.hero-ativa { overflow: hidden; }
+
 body {
     font-family: var(--corpo);
     /* Background contínuo — 6 radial gradients fixos cobrem o scroll inteiro,

@@ -171,9 +171,31 @@
         if (!deveRodarHero()) {
             hero.style.display = 'none';
             hero.setAttribute('aria-hidden', 'true');
+            console.log('[Hero] Decisao 019: navegacao interna detectada, Hero pulada.');
             return;
         }
         try { sessionStorage.setItem('terminalHeroVisto', '1'); } catch (_) {}
+        console.log('[Hero] Iniciando — first-visit ou F5 detectado (Decisao 019).');
+
+        /* ATENCAO — POLITICA DE AUTOPLAY DOS BROWSERS:
+         * Browsers modernos (Chrome >=66, Firefox >=66, Safari >=11) BLOQUEIAM
+         * audio.play() automatico se o usuario nao interagiu com a pagina ainda
+         * (a chamada Promise rejeita com NotAllowedError). Isso NAO e bug deste
+         * codigo — e protecao contra anuncios sonoros invasivos.
+         *
+         * COMPORTAMENTO ESPERADO:
+         *   - Primeira visita ao site: audio queda + loop AMBOS bloqueados.
+         *     Animacao visual roda silenciosa. Usuario clica em qualquer lugar
+         *     (incluindo o proprio botao "// ROMPER O VEU") -> loop libera via
+         *     document click listener instalado em iniciarLoop().
+         *   - Recarga via F5 apos uma sessao ja ativa: audio geralmente liberado
+         *     (browser lembra que o usuario interagiu com este origin).
+         *
+         * NAO HA WORKAROUND TECNICO LIMPO. Tentativas como Web Audio API
+         * (AudioContext suspended -> resume) tambem exigem user gesture.
+         * Botao invisivel / "click trap" e UX enganosa — nao implementar. */
+
+        document.body.classList.add('hero-ativa');   /* trava scroll do body durante a Hero */
 
         const dice           = hero.querySelector('#hero-dice');
         const particles      = hero.querySelector('#hero-particles');
@@ -188,6 +210,7 @@
             audioQueda.preload = 'auto';
             audioQueda.volume  = 0.7;
             audioQueda.load();   /* pre-cache para minimizar latencia do play() */
+            console.log('[Hero] Audio queda: load() chamado para', audioQuedaSrc);
         }
 
         /* Audio loop ambiente (toca apos a queda, fade-in suave) */
@@ -198,10 +221,12 @@
             audioLoop.loop    = true;
             audioLoop.volume  = 0;
             audioLoop.load();    /* pre-cache para o loop nao demorar a iniciar em 3.7s */
+            console.log('[Hero] Audio loop: load() chamado para', audioLoopSrc);
         }
 
         /* Flags de orquestracao */
         let _heroFinalizado = false;   /* true apos click em "Continuar" */
+        let _podeFinalizar  = false;   /* true apos botao Continuar ficar clicavel (~5.8s) */
         let _loopFading     = false;   /* lock para evitar fadeOuts concorrentes */
 
         const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -451,9 +476,19 @@
              * realmente comecou) ANTES do primeiro RAF da visual. play() returns
              * Promise — quando ela resolve, o som comecou. RAF dispara ~16ms
              * depois (1 frame). Desync residual <= 16ms (limite do refresh rate
-             * do browser). Imperceptivel. */
+             * do browser). Imperceptivel.
+             *
+             * Se autoplay for bloqueado (NotAllowedError), animacao roda silenciosa
+             * — comportamento esperado em first-visit. */
             if (audioQueda) {
-                try { await audioQueda.play(); } catch (_) { /* sem som — segue silenciosa */ }
+                console.log('[Hero] Audio queda: tentando play()...');
+                try {
+                    await audioQueda.play();
+                    console.log('[Hero] Audio queda: tocando (autoplay liberado).');
+                } catch (err) {
+                    console.log('[Hero] Audio queda: BLOQUEADO pelo browser (' + err.name +
+                                '). Animacao visual continuara silenciosa. Politica normal de autoplay.');
+                }
             }
 
             if (reduced) {
@@ -473,6 +508,11 @@
             /* Loop ambiente comeca quando o titulo aparece (3.7s a partir DESTE
              * ponto — apos o await play(), entao relativo ao inicio real da visual). */
             window.setTimeout(iniciarLoop, T_LOOP_START);
+
+            /* Esc/scroll-down so liberam DEPOIS que o botao "// ROMPER O VEU"
+             * fica clicavel (5.0s + 0.8s fade-in = 5.8s). Antes disso, esses
+             * gestos sao ignorados — usuario precisa esperar a animacao. */
+            window.setTimeout(() => { _podeFinalizar = true; }, 5800);
         }
 
         /* iniciarLoop — try play; se autoplay bloqueado, instala click listener
@@ -480,13 +520,18 @@
         async function iniciarLoop() {
             if (_heroFinalizado || !audioLoop) return;
             audioLoop.volume = 0;
+            console.log('[Hero] Audio loop: tentando play() em t=3.7s...');
             try {
                 await audioLoop.play();
+                console.log('[Hero] Audio loop: tocando (autoplay liberado), fade-in iniciado.');
                 fadeInLoop();
-            } catch (_) {
+            } catch (err) {
                 /* Autoplay do loop bloqueado — primeiro click libera */
+                console.log('[Hero] Audio loop: BLOQUEADO (' + err.name +
+                            '). Aguardando primeira interacao do usuario (click em qualquer lugar).');
                 const ativarApos = () => {
                     if (_heroFinalizado || !audioLoop) return;
+                    console.log('[Hero] Audio loop: liberado pelo click do usuario, tocando agora.');
                     audioLoop.play().then(fadeInLoop).catch(() => { /* ignore */ });
                 };
                 document.addEventListener('click', ativarApos, { once: true });
@@ -508,14 +553,16 @@
             requestAnimationFrame(passo);
         }
 
-        /* fadeOutLoopEFechar — disparado pelo click no botao "// ROMPER O VEU".
-         * Fade do volume atual -> 0 (800ms), pause, depois .is-saindo no panel.
+        /* fadeOutLoopEFechar — disparado por click no botao "// ROMPER O VEU"
+         * (ou Esc/scroll-down apos _podeFinalizar). Fade do loop -> 0 (800ms),
+         * pause, .is-saindo no panel, body.hero-ativa removido (libera scroll).
          * Lock _heroFinalizado bloqueia callbacks pendentes (fadeInLoop, click
          * listener global do iniciarLoop, etc). */
         function fadeOutLoopEFechar() {
             if (_loopFading || _heroFinalizado) return;
             _heroFinalizado = true;
             _loopFading     = true;
+            console.log('[Hero] Romper o veu: fade-out do loop iniciado (800ms).');
 
             const DUR   = 800;
             const v0    = audioLoop ? audioLoop.volume : 0;
@@ -535,11 +582,30 @@
                     window.setTimeout(() => {
                         hero.style.display = 'none';
                         hero.setAttribute('aria-hidden', 'true');
+                        document.body.classList.remove('hero-ativa');
+                        console.log('[Hero] Encerrada. Scroll do body liberado, conteudo principal acessivel.');
                     }, 950);
                 }
             }
             requestAnimationFrame(passo);
         }
+
+        /* Acionadores alternativos — Esc tecla ou scroll-down — so liberam apos
+         * _podeFinalizar (botao "// ROMPER O VEU" clicavel em ~5.8s). */
+        function handlerEscape(e) {
+            if (e.key === 'Escape' && _podeFinalizar && !_heroFinalizado) {
+                console.log('[Hero] Esc pressionado — finalizando.');
+                fadeOutLoopEFechar();
+            }
+        }
+        function handlerWheel(e) {
+            if (e.deltaY > 0 && _podeFinalizar && !_heroFinalizado) {
+                console.log('[Hero] Scroll-down detectado — finalizando.');
+                fadeOutLoopEFechar();
+            }
+        }
+        document.addEventListener('keydown', handlerEscape);
+        document.addEventListener('wheel', handlerWheel, { passive: true });
 
         if (botaoContinuar) {
             botaoContinuar.addEventListener('click', fadeOutLoopEFechar);

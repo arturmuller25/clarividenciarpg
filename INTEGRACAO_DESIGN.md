@@ -390,7 +390,19 @@ Passo 7 (Hero D20)                   DEPENDE de:
 > Surpresas, armadilhas, atalhos descobertos.
 > Útil para próxima refatoração visual grande.
 
-_(vazio — preencher ao concluir)_
+### L1 (2026-05-08) — Autoplay policy é browser-side e não tem workaround limpo
+- **Sintoma:** ao recarregar a página pela primeira vez, o áudio de queda do d20 e o loop ambiente ficam silenciosos. Animação visual roda normal.
+- **Causa raiz:** browsers modernos (Chrome ≥66, Firefox ≥66, Safari ≥11) bloqueiam `audio.play()` automático se o usuário **não interagiu com a página ainda nesta sessão**. A Promise retornada pelo `play()` rejeita com `NotAllowedError`. Isso é proteção contra anúncios sonoros invasivos — não é bug do código.
+- **Implementação correta no `hero.js`:**
+  1. `audio.load()` no DOMContentLoaded — pré-cache reduz latência do `play()` quando finalmente liberado.
+  2. `await audioQueda.play()` antes do RAF inicial — sincronia frame-a-frame se permitido.
+  3. Para o loop: try `play()` em t=3.7s; se falhar, instala `document.addEventListener('click', ativar, { once: true })` que toca no primeiro click do usuário em qualquer lugar (inclusive o próprio botão "// ROMPER O VÉU").
+- **Não funciona como workaround:**
+  - Web Audio API com `AudioContext.resume()` — também exige user gesture
+  - Botão invisível no início "para iniciar o ritual" — UX enganosa, descartado
+  - Autoplay com `muted` + unmute via JS — funciona para vídeo, mas o som inicial fica perdido mesmo se desmutar
+- **Como reconhecer no console:** log `[Hero] Audio queda: BLOQUEADO pelo browser (NotAllowedError)`. Logs diagnósticos foram adicionados ao `hero.js` para ajudar a identificar o estado em sessões futuras.
+- **Mitigação acordada:** documentação explícita + console logs honestos. Usuários que recarregam frequentemente acabam com o autoplay liberado pelo histórico de interação. Primeira visita: animação silenciosa, loop libera no primeiro click.
 
 ---
 
