@@ -119,7 +119,7 @@ Passo 7 (Hero D20)                   DEPENDE de:
 > Status: ⏳ pendente · 🔄 em andamento · ✅ concluído · ⚠️ bloqueado
 
 ### Passo 1 — Logo redesenhada + Menu hambúrguer com logo
-- **Status:** ⏳ pendente
+- **Status:** ✅ concluído (commit `2f21aca`)
 - **Fontes do design system:**
   - `_design_import/clarivid-ncia-paranormal-design-system/project/assets/logo-stacked.svg` (versão final aprovada — 480×320, com 3 elementos: "CLARIVIDÊNCIA" + "PARANORMAL" + icosaedro)
   - `_design_import/.../assets/logo-mark.svg` (apenas o icosaedro 48×48 — útil no menu hambúrguer)
@@ -144,7 +144,7 @@ Passo 7 (Hero D20)                   DEPENDE de:
   - [ ] Texto da logo permanece selecionável (estratégia HTML, não SVG-único)
 
 ### Passo 2 — Ícones de elementos (decisão SVG local — ver "Decisões")
-- **Status:** ⏳ pendente
+- **Status:** ✅ concluído (commit `efc584c`)
 - **Fontes do design system:**
   - `_design_import/.../assets/elementos-icons.svg` (sprite com 5 `<symbol>`: `el-sangue`, `el-morte`, `el-conhecimento`, `el-energia`, `el-medo` — 24×24 viewBox, stroke-only com `currentColor`)
   - `_design_import/.../preview/cards_criatura.html` (referência visual — usa FA `fa-droplet/skull/eye/bolt/hurricane`; vamos REIMPLEMENTAR com SVG local)
@@ -178,7 +178,7 @@ Passo 7 (Hero D20)                   DEPENDE de:
   - [ ] Sprite é incluído uma única vez por página (não duplicado)
 
 ### Passo 3 — Ícones geométricos dos dados (só contorno externo)
-- **Status:** ⏳ pendente
+- **Status:** ✅ concluído (commit `4232911`)
 - **Fontes do design system:**
   - `_design_import/.../assets/dice-icons.svg` (sprite com `<symbol id="d4|d6|d8|d10|d12|d20|d100|sigil">`, viewBox 64×64, stroke-only, `currentColor`)
   - `_design_import/.../preview/dice_icons.html` (referência de hover/active states)
@@ -210,7 +210,7 @@ Passo 7 (Hero D20)                   DEPENDE de:
   - [ ] Sprite não duplica em DOM se incluído via cabecalho.php
 
 ### Passo 4 — Cards de criatura no bestiário
-- **Status:** ⏳ pendente
+- **Status:** ✅ concluído (commit `9af1eec`)
 - **Arquivos:**
   - `criaturas/listar.php` (markup do `.cartao-criatura`)
   - `assets/css/terminal.css` (todas as classes `.cartao-criatura*`)
@@ -224,7 +224,7 @@ Passo 7 (Hero D20)                   DEPENDE de:
 - **Notas:** boa oportunidade para extrair tokens de elemento se ainda não estão em `:root`.
 
 ### Passo 5 — Background contínuo + refinamentos estéticos globais
-- **Status:** ⏳ pendente
+- **Status:** ✅ concluído (commit `abef18b`)
 - **Fontes do design system:**
   - `_design_import/.../colors_and_type.css` (135 linhas — extração dos nossos tokens **+ tokens novos** que ainda não estão em `:root`)
   - `_design_import/.../ui_kits/painel/index.html` (linhas 7-39 — paleta envenenada page-scoped via classe `.app` + grain SVG inline + radial gradients contínuos)
@@ -276,7 +276,7 @@ Passo 7 (Hero D20)                   DEPENDE de:
   - [ ] Background não se "corta" entre seções (gradientes fixed cobrem scroll inteiro)
 
 ### Passo 6 — Painel do Mestre (rebuild da home)
-- **Status:** ⏳ pendente
+- **Status:** ✅ concluído (commit `1765f3e`)
 - **Fontes do design system:**
   - `_design_import/.../ui_kits/painel/index.html` (48 KB — protótipo HTML+CSS completo da home reformulada)
   - `_design_import/.../ui_kits/painel/Header.jsx`, `Components.jsx` (referência de markup React; reescrever em PHP)
@@ -300,7 +300,8 @@ Passo 7 (Hero D20)                   DEPENDE de:
 - **Notas:** considerar lazy-render dos sparklines (Intersection Observer) se houver impacto de paint.
 
 ### Passo 7 — Hero do D20 refinada
-- **Status:** ⏳ pendente
+- **Status:** ✅ concluído (commit `6b471bc`) — refit pontual de timing/easing/brilho.
+  Renderização 3D dinâmica em JS do design system NÃO portada (escopo grande); fica para uma reescrita futura caso o usuário queira o nível cinematográfico completo.
 - **Arquivos:**
   - `assets/js/hero.js` (timing, easing, sequência logo-aparece-após)
   - `assets/css/terminal.css` (seção `.hero-rolar-3d`, keyframes)
@@ -400,3 +401,10 @@ _(vazio — preencher ao concluir)_
 | 2026-05-08 | Plano criado | aguardando handoff do Claude Design para `/_design_import/` |
 | 2026-05-08 | Tentativa de handoff via URL `api.anthropic.com/v1/design/h/4CyG9epk7rsmEPg_tcdvjw` | **HTTP 404 NotFound** sem `WWW-Authenticate` (não é falha de auth — endpoint não responde para esse ID). Aguardando URL nova ou ZIP extraído manualmente em `/_design_import/`. |
 | 2026-05-08 | Arquivos do design system extraídos via ZIP em `_design_import/clarivid-ncia-paranormal-design-system/` | 32 arquivos. Estrutura: `README.md`, `project/{README.md, SKILL.md, colors_and_type.css, assets/, components/, preview/, ui_kits/painel/}`. Mapeamento crítico realizado, decisões D1-D4 registradas, passos 1/2/3/5 do checklist atualizados com fontes específicas. **Descoberta:** `terminal.css` deles é **idêntico ao nosso** (`diff -q` confirma) — o "design system" é uma curadoria documentada do nosso CSS atual, não uma reforma. O que é genuinamente novo: 6 SVGs (3 logos, d20-hero estático, sprite dice, sprite elementos), tokens novos em `colors_and_type.css` (spacing/type/animation), paleta envenenada page-scoped no `index.html` do painel, hero standalone em `components/hero_d20.html`. |
+| 2026-05-08 | **Passo 1 concluído** — commit `2f21aca` | Logo stacked no menu hambúrguer (HTML+SVG inline, texto selecionável). Topbar mantém estilo terminal. Glow do topbar mantido conforme correção do usuário. Sem `aria-hidden` no container — screen reader anuncia logo. |
+| 2026-05-08 | **Passo 5 concluído** — commit `abef18b` | Reforma direta no `:root` (Decisão D4 — global, não scoped). Paleta envenenada: `--el-conhecimento` `#ffd60a→#e0b53d` (mostarda), `--el-energia` `#9d4edd→#7b4d9e` (roxo cinza), `--el-sangue` `#c8102e→#a53846` (sangue antigo), `--critico` `#00ff66→#5fa873` (fosforescente apagado). Tokens novos: `--space-1..8`, `--t-h1..mono`, `--ls-tight..wide`, `--shadow-card/lift/inset`, `--ease-standard/overshoot`, `--t-fast/base/slow`. Background: 6 radial gradients fixos contínuos. Grain SVG fractal substituindo scanlines. Vignette ajustada. |
+| 2026-05-08 | **Passo 2 concluído** — commit `efc584c` | `assets/img/elementos-icons.svg` copiado do design system. Sprite global incluído via `readfile()` em `cabecalho.php`. `criaturas/listar.php` e `criaturas/visualizar.php` agora usam `<svg><use href="#el-X"/></svg>` em vez de texto. CSS `.tag-elemento` com 5 variantes + drop-shadow do glow. **Sem FontAwesome** (Decisão D1). |
+| 2026-05-08 | **Passo 3 concluído** — commit `4232911` | `assets/img/dice-icons.svg` copiado renomeando IDs `dN→geo-dN` (Decisão D2 — preserva compat com `dados.js`). Sprite inline antigo de `rolagem/index.php` substituído por `readfile()`. Outer `<text>` redundante removido (sprite já tem label dentro). Decisão 011 preservada — `dados.js` toggla um SVG separado, não foi tocado. |
+| 2026-05-08 | **Passo 4 concluído** — commit `9af1eec` | Refit do `.cartao-criatura`: background `--metalico` (papel texturizado), border-left 4px, padding ajustado, sombra `--shadow-card`/`--shadow-lift` no hover, `overflow-wrap: anywhere`. Tipografia hierárquica via tokens semânticos do Passo 5. Bug fix: classe `.cartao-npc__nome-link` (copy-paste leftover) corrigida para `.cartao-criatura__nome-link`. |
+| 2026-05-08 | **Passo 6 concluído** — commit `1765f3e` | `index.php` refatorado em 5 seções cinematográficas: `.painel-hero` (com glitch sutil em "T" + card `.ultima-critica`), `.faixa-stats` (5 tiles + sparkline 7d gerado em PHP), `.trilhas` (3 principais + 3 auxiliares), `.sussurros` (atmosférico, fundo radial púrpura, fontes Cormorant Garamond + IM Fell English), `.atalhos-rapidos`. Microcopy oculto `// nao confiar nos numeros pares` em canto inferior direito (opacity 18%). `LogRepositorio::buscarUltimaCritica()` e `::contarPorDia(int)` adicionados. Cormorant Garamond + IM Fell English no `<link>` Google Fonts (Decisão D5 — escopo restrito via `--font-sussurro`/`--font-poetica`). |
+| 2026-05-08 | **Passo 7 concluído** — commit `6b471bc` | Refit pontual da Hero d20: duração 4.4s→4.6s, queda mais lenta (1.8s→2.4s) com easing pesado, impacto/bounce 0.7s, brilho dourado intenso 4 camadas no número 20, pool of light dourado-púrpura no chão (`.hero__floor`), aura/título/subtítulo com timings ajustados pra sequência narrativa. Decisão 019 preservada (gate first-visit/F5 intacto). Audio sync intacto. **Não portado:** renderização 3D dinâmica em JS do design system (matrizes/quaternions/slerp) — escopo grande, fica para reescrita futura. |
