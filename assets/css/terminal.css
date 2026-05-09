@@ -108,6 +108,10 @@
     --t-fast:    150ms;
     --t-base:    220ms;
     --t-slow:    380ms;
+
+    /* Fontes de cena (Decisão D5) — escopo restrito ao Painel do Mestre */
+    --font-sussurro: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+    --font-poetica:  'IM Fell English', 'Cormorant Garamond', Georgia, serif;
 }
 
 html { scroll-behavior: smooth; }
@@ -3618,3 +3622,413 @@ pre, code {
     color: var(--ink);
     background: var(--surface-2);
 }
+
+/* =====================================================================
+ * PAINEL DO MESTRE — refit em 5 seções (Passo 6 do design system)
+ * Estrutura cinematográfica: painel-hero → faixa-stats → trilhas →
+ * sussurros (atmosférico) → atalhos-rapidos.
+ * ===================================================================== */
+
+/* --- Seção 1: Painel-hero (hero do dashboard, NÃO confundir com Hero d20) -- */
+.painel-hero {
+    position: relative;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 56px 28px 36px;
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 40px;
+}
+@media (max-width: 880px) {
+    .painel-hero { grid-template-columns: 1fr; gap: 24px; padding: 40px 22px 28px; }
+}
+.painel-hero__esq { display: flex; flex-direction: column; gap: 14px; justify-content: center; }
+.painel-hero__acesso {
+    font: var(--t-mono);
+    font-size: 11px;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--el-conhecimento);
+    display: flex;
+    align-items: center;
+}
+.painel-hero__pulso {
+    display: inline-block;
+    width: 8px; height: 8px;
+    background: var(--critico);
+    border-radius: 50%;
+    margin-right: 10px;
+    box-shadow: 0 0 12px var(--critico);
+    animation: painel-hero-pulso 1.6s ease-in-out infinite;
+}
+@keyframes painel-hero-pulso { 50% { opacity: 0.4; } }
+.painel-hero__h1 {
+    margin: 0;
+    font-family: var(--titulo);
+    font-weight: 900;
+    font-size: clamp(2.4rem, 5vw, 3.8rem);
+    line-height: 1.02;
+    letter-spacing: 0.06em;
+    color: var(--el-morte);
+    text-transform: uppercase;
+}
+.painel-hero__h1 .gold { color: var(--el-conhecimento); }
+.painel-hero__h1 .glitch { position: relative; display: inline-block; }
+.painel-hero__h1 .glitch::after {
+    content: attr(data-glitch);
+    position: absolute; left: 2px; top: -1px;
+    color: var(--el-sangue);
+    opacity: 0.55;
+    mix-blend-mode: screen;
+    pointer-events: none;
+}
+.painel-hero__sub {
+    margin: 0;
+    max-width: 46ch;
+    font-family: var(--font-sussurro);
+    font-style: italic;
+    font-weight: 500;
+    font-size: 1.2rem;
+    line-height: 1.55;
+    color: rgba(232, 232, 232, 0.78);
+}
+.painel-hero__sub::before { content: '❝ '; color: var(--el-conhecimento); font-style: normal; }
+.painel-hero__sub::after  { content: ' ❞'; color: var(--el-conhecimento); font-style: normal; }
+.painel-hero__op {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    font: var(--t-mono);
+    font-size: 10px;
+    color: var(--ink-faint);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+}
+.painel-hero__op b { color: var(--el-conhecimento); font-weight: 500; }
+
+/* Card "última atividade crítica" — coração do painel */
+.ultima-critica {
+    align-self: center;
+    padding: 22px 24px;
+    background: linear-gradient(180deg, rgba(20, 20, 30, 0.7), rgba(8, 8, 12, 0.55));
+    border: 1px solid var(--border-metal);
+    border-left: 3px solid var(--ink-faint);   /* default; overrides abaixo */
+    border-radius: var(--r);
+    box-shadow: var(--shadow-card), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    display: flex; flex-direction: column; gap: 12px;
+    transform: rotate(-0.35deg);   /* assimetria intencional */
+}
+.ultima-critica.is-critico {
+    border-left-color: var(--critico);
+    box-shadow: 0 0 38px -8px rgba(95, 168, 115, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+.ultima-critica.is-desastre {
+    border-left-color: var(--falha);
+    box-shadow: 0 0 38px -8px rgba(255, 56, 56, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+.ultima-critica__cab {
+    display: flex; justify-content: space-between; align-items: center;
+    font: var(--t-mono); font-size: 10px;
+    letter-spacing: 0.20em;
+    color: var(--ink-faint);
+    text-transform: uppercase;
+}
+.ultima-critica__quem {
+    font: var(--t-mono); font-size: 0.85rem;
+    color: var(--el-conhecimento);
+    letter-spacing: 0.06em;
+}
+.ultima-critica__desc {
+    margin: 0;
+    color: var(--ink-dim);
+    font-size: 0.85rem;
+    line-height: 1.45;
+    font-style: italic;
+    font-family: var(--font-sussurro);
+}
+.ultima-critica__num {
+    display: flex; align-items: baseline; gap: 14px;
+    font-family: var(--titulo);
+    font-weight: 900;
+    font-size: clamp(2.6rem, 5vw, 3.4rem);
+    line-height: 1;
+    color: var(--el-morte);
+}
+.ultima-critica.is-critico  .ultima-critica__num { color: var(--critico); text-shadow: 0 0 18px rgba(95, 168, 115, 0.6); }
+.ultima-critica.is-desastre .ultima-critica__num { color: var(--falha);   text-shadow: 0 0 18px rgba(255, 56, 56, 0.55); }
+.ultima-critica__selo {
+    font: var(--t-mono); font-size: 11px;
+    letter-spacing: 0.20em;
+    color: currentColor;
+    padding: 4px 10px;
+    border: 1px solid currentColor;
+    border-radius: var(--r);
+    align-self: center;
+}
+.ultima-critica__vazio {
+    margin: 0;
+    color: var(--ink-faint);
+    font-family: var(--font-sussurro);
+    font-style: italic;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+/* --- Seção 2: Faixa de stats (5 tiles + sparkline) -------------------- */
+.faixa-stats {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 28px 28px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+}
+@media (max-width: 540px) {
+    .faixa-stats { padding: 0 22px 24px; }
+}
+.stat-tile {
+    padding: 14px 16px;
+    background: var(--metalico);
+    border: 1px solid var(--border-metal);
+    border-radius: var(--r);
+    display: flex; flex-direction: column; gap: 6px;
+    transition: transform var(--t-base) ease, border-color var(--t-base) ease;
+}
+.stat-tile:hover { transform: translateY(-2px); border-color: var(--el-conhecimento); }
+.stat-tile__rotulo {
+    font: var(--t-mono); font-size: 10px;
+    letter-spacing: 0.18em;
+    color: var(--ink-faint);
+    text-transform: uppercase;
+}
+.stat-tile__valor {
+    font-family: var(--titulo);
+    font-weight: 900;
+    font-size: 1.8rem;
+    line-height: 1;
+    color: var(--el-conhecimento);
+    letter-spacing: 0.04em;
+}
+.stat-tile__link {
+    font: var(--t-mono); font-size: 10px;
+    letter-spacing: 0.18em;
+    color: var(--ink-dim);
+    text-decoration: none;
+    text-transform: uppercase;
+    border-bottom: 1px dashed transparent;
+    margin-top: auto;
+    transition: color var(--t-fast) ease, border-color var(--t-fast) ease;
+}
+.stat-tile__link:hover { color: var(--el-conhecimento); border-bottom-color: currentColor; }
+.stat-tile--sparkline .sparkline {
+    width: 100%;
+    height: 24px;
+    color: var(--el-conhecimento);
+}
+.sparkline polyline {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+}
+.stat-tile__hint {
+    font: var(--t-mono); font-size: 10px;
+    letter-spacing: 0.16em;
+    color: var(--ink-faint);
+    text-transform: uppercase;
+}
+
+/* --- Seção 3: Trilhas de Investigação (hierarquia 3+3) ---------------- */
+.trilhas {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 12px 28px 32px;
+}
+@media (max-width: 540px) { .trilhas { padding: 12px 22px 28px; } }
+.trilhas__h2 {
+    font: var(--t-mono);
+    font-size: 12px;
+    letter-spacing: 0.20em;
+    text-transform: uppercase;
+    color: var(--el-conhecimento);
+    margin: 0 0 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px dashed var(--border);
+}
+.trilhas__principais {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 14px;
+    margin-bottom: 14px;
+}
+.trilhas__auxiliares {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+}
+.trilha-card {
+    display: flex; flex-direction: column; gap: 8px;
+    padding: 18px 20px;
+    background: var(--metalico);
+    border: 1px solid var(--border-metal);
+    border-left: 3px solid var(--el-conhecimento);
+    border-radius: var(--r);
+    color: inherit;
+    text-decoration: none;
+    transition: transform var(--t-base) ease, border-color var(--t-base) ease, box-shadow var(--t-base) ease;
+}
+.trilha-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--el-conhecimento);
+    box-shadow: var(--shadow-lift);
+}
+.trilha-card--secundario {
+    padding: 14px 16px;
+    border-left-color: var(--ink-faint);
+}
+.trilha-card__codigo {
+    font: var(--t-mono); font-size: 10px;
+    letter-spacing: 0.20em;
+    color: var(--el-conhecimento);
+    text-transform: uppercase;
+}
+.trilha-card__nome {
+    margin: 0;
+    font-family: var(--titulo);
+    font-weight: 700;
+    font-size: 1.2rem;
+    line-height: 1.2;
+    letter-spacing: 0.06em;
+    color: var(--el-morte);
+    text-transform: uppercase;
+}
+.trilha-card--secundario .trilha-card__nome { font-size: 1rem; }
+.trilha-card__desc {
+    margin: 0;
+    color: var(--ink-dim);
+    font-size: 0.85rem;
+    line-height: 1.5;
+}
+.trilha-card__status {
+    font: var(--t-mono); font-size: 10px;
+    letter-spacing: 0.16em;
+    color: var(--critico);
+    margin-top: auto;
+    text-transform: uppercase;
+}
+
+/* --- Seção 4: Sussurros do Outro Lado (atmosférico, fontes de cena) --- */
+.sussurros {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 24px 28px 36px;
+    border-top: 1px dashed var(--border);
+    border-bottom: 1px dashed var(--border);
+    background: radial-gradient(ellipse at 50% 0%, rgba(90, 29, 138, 0.10), transparent 65%);
+}
+@media (max-width: 540px) { .sussurros { padding: 24px 22px 32px; } }
+.sussurros__h2 {
+    font: var(--t-mono); font-size: 12px;
+    letter-spacing: 0.20em;
+    text-transform: uppercase;
+    color: var(--el-medo);
+    filter: brightness(1.6);
+    margin: 0 0 8px;
+}
+.sussurros__poetico {
+    font-family: var(--font-poetica);
+    font-style: italic;
+    font-size: clamp(1.15rem, 2vw, 1.55rem);
+    line-height: 1.4;
+    color: rgba(232, 232, 232, 0.7);
+    margin: 0 0 24px;
+    max-width: 50ch;
+}
+.sussurros__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+}
+.sussurros__card {
+    padding: 16px 18px;
+    background: rgba(8, 8, 12, 0.55);
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--r);
+    display: flex; flex-direction: column; gap: 8px;
+}
+.sussurros__rotulo {
+    font: var(--t-mono); font-size: 10px;
+    letter-spacing: 0.20em;
+    color: var(--el-medo);
+    filter: brightness(1.4);
+    text-transform: uppercase;
+}
+.sussurros__nome {
+    font-family: var(--titulo);
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: var(--el-morte);
+    letter-spacing: 0.04em;
+}
+.sussurros__corpo {
+    margin: 0;
+    font-family: var(--font-sussurro);
+    font-style: italic;
+    font-size: 0.95rem;
+    color: var(--ink-dim);
+    line-height: 1.5;
+}
+
+/* --- Seção 5: Atalhos rápidos no rodapé ------------------------------- */
+.atalhos-rapidos {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 28px 28px 40px;
+}
+@media (max-width: 540px) { .atalhos-rapidos { padding: 24px 22px 36px; } }
+.atalhos-rapidos__h2 {
+    font: var(--t-mono); font-size: 11px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0 0 14px;
+}
+.atalhos-rapidos__grade {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+}
+.atalho-rapido {
+    padding: 12px 16px;
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    color: var(--ink-dim);
+    font: var(--t-ui);
+    text-transform: uppercase;
+    letter-spacing: 0.10em;
+    text-decoration: none;
+    transition: all var(--t-fast) ease;
+}
+.atalho-rapido:hover {
+    border-color: var(--el-conhecimento);
+    color: var(--el-conhecimento);
+    background: rgba(224, 181, 61, 0.04);
+}
+.atalho-rapido__plus { color: var(--el-conhecimento); margin-right: 8px; }
+
+/* --- Microcopy oculto (easter egg "// não confiar nos números pares") -- */
+.microcopy-oculto {
+    position: fixed;
+    bottom: 8px;
+    right: 12px;
+    font: var(--t-mono);
+    font-size: 9px;
+    letter-spacing: 0.16em;
+    color: rgba(160, 133, 39, 0.18);
+    pointer-events: none;
+    user-select: none;
+    z-index: 3;
+}
+@media (max-width: 540px) { .microcopy-oculto { display: none; } }

@@ -26,6 +26,13 @@ $mensagens   = consumirFlash();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#000000">
     <title><?= escapar($titulo) ?> // TERMINAL DA ORDEM</title>
+    <?php /* Decisão D5: Cormorant Garamond + IM Fell English entram com escopo
+              restrito (Sussurros do Outro Lado / subtítulos poéticos diegéticos).
+              Não promovidas para variáveis globais --titulo/--corpo. */ ?>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=IM+Fell+English:ital@0;1&display=swap">
     <link rel="stylesheet" href="<?= escapar(url('/assets/css/terminal.css')) ?>">
 </head>
 <body>

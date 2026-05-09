@@ -84,4 +84,56 @@ final class LogRepositorio
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM log_rolagens');
         return $stmt === false ? 0 : (int) $stmt->fetchColumn();
     }
+
+    /**
+     * Busca a rolagem mais recente que foi crítica (Nat 20) OU desastre (Nat 1).
+     * Usado no card "última atividade crítica" do Painel do Mestre.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function buscarUltimaCritica(): ?array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT id, quem_rolou, descricao, tipo_dado, quantidade_dados, resultados_brutos,
+                    resultado_final, eh_critico, eh_desastre, rolado_em
+             FROM log_rolagens
+             WHERE eh_critico = 1 OR eh_desastre = 1
+             ORDER BY rolado_em DESC, id DESC
+             LIMIT 1'
+        );
+        $stmt->execute();
+        $linha = $stmt->fetch();
+        return $linha === false ? null : $linha;
+    }
+
+    /**
+     * Conta rolagens por dia nos últimos N dias. Retorna array com 7 inteiros
+     * (do mais antigo ao mais recente) — útil para sparkline simples.
+     *
+     * @return array<int, int>
+     */
+    public function contarPorDia(int $dias = 7): array
+    {
+        $dias = max(1, min(30, $dias));
+        $stmt = $this->pdo->prepare(
+            'SELECT DATE(rolado_em) AS dia, COUNT(*) AS qtd
+             FROM log_rolagens
+             WHERE rolado_em >= (CURRENT_DATE - INTERVAL :dias_param DAY)
+             GROUP BY DATE(rolado_em)
+             ORDER BY dia ASC'
+        );
+        $stmt->bindValue(':dias_param', $dias, PDO::PARAM_INT);
+        $stmt->execute();
+        $brutos = [];
+        foreach ($stmt->fetchAll() as $linha) {
+            $brutos[(string) $linha['dia']] = (int) $linha['qtd'];
+        }
+        // Preenche dias sem rolagem com 0 — mantém eixo consistente
+        $resultado = [];
+        for ($i = $dias - 1; $i >= 0; $i--) {
+            $dia = date('Y-m-d', strtotime("-{$i} days"));
+            $resultado[] = $brutos[$dia] ?? 0;
+        }
+        return $resultado;
+    }
 }

@@ -22,6 +22,10 @@ $totalNpcs       = 0;
 $totalCriaturas  = 0;
 $totalRolagens   = 0;
 $ultimasRolagens = [];
+$ultimaCritica   = null;
+$rolagens7d      = [0, 0, 0, 0, 0, 0, 0];
+$ultimaCriatura  = null;
+$ultimaCampanha  = null;
 
 try {
     $totalCampanhas  = (new CampanhaRepositorio())->contar();
@@ -31,9 +35,28 @@ try {
     $logRepo         = new LogRepositorio();
     $ultimasRolagens = $logRepo->listarRecentes(5);
     $totalRolagens   = $logRepo->contar();
+    $ultimaCritica   = $logRepo->buscarUltimaCritica();
+    $rolagens7d      = $logRepo->contarPorDia(7);
+
+    $criaturasRecentes = (new CriaturaRepositorio())->listar();
+    $ultimaCriatura    = $criaturasRecentes[0] ?? null;
+
+    $campanhasRecentes = (new CampanhaRepositorio())->listar();
+    $ultimaCampanha    = $campanhasRecentes[0] ?? null;
 } catch (Throwable $e) {
     definirFlash('aviso', 'Indicadores indisponiveis (banco offline?): ' . $e->getMessage());
 }
+
+/* Sparkline 7d — gera polyline points "x,y x,y ..." normalizado em viewBox 70x24. */
+$sparklineMax = max(max($rolagens7d), 1);
+$sparklinePoints = '';
+foreach ($rolagens7d as $i => $valor) {
+    $x = (int) round(($i / 6) * 70);
+    $y = (int) round(23 - ($valor / $sparklineMax) * 21);
+    $sparklinePoints .= "{$x},{$y} ";
+}
+$sparklinePoints = trim($sparklinePoints);
+$sparklineSoma   = array_sum($rolagens7d);
 
 $titulo      = 'PAINEL_DO_MESTRE';
 $paginaAtiva = 'inicio';
@@ -176,137 +199,226 @@ require __DIR__ . '/views/cabecalho.php';
     </button>
 </div>
 
-<section class="cabecalho-pagina">
-    <h1 class="cabecalho-pagina__titulo">
-        <span class="cabecalho-pagina__bracket">[</span>
-        PAINEL DO MESTRE
-        <span class="cabecalho-pagina__bracket">]</span>
-    </h1>
-    <p class="cabecalho-pagina__subtitulo">
-        ACESSO AUTORIZADO. SELECIONE UM MODULO PARA INICIAR A INVESTIGACAO.
-    </p>
-</section>
+<!-- ===========================================================
+     SECAO 1 — PAINEL-HERO (hero do dashboard, NAO confundir com Hero d20)
+     - Mensagem de acesso autorizado + glitch sutil em "MESTRE"
+     - Citação poética em Cormorant Garamond italic
+     - Card lateral "ULTIMA ATIVIDADE CRITICA" — borda colorida por estado
+     =========================================================== -->
+<section class="painel-hero" aria-label="Painel do Mestre">
+    <div class="painel-hero__esq">
+        <span class="painel-hero__acesso">
+            <span class="painel-hero__pulso" aria-hidden="true"></span>
+            ACESSO AUTORIZADO &nbsp;//&nbsp; SESSAO ATIVA
+        </span>
+        <h1 class="painel-hero__h1">
+            PAINEL <span class="gold">DO</span>
+            MES<span class="glitch" data-glitch="T">T</span>RE
+        </h1>
+        <p class="painel-hero__sub">
+            Acesso liberado. Selecione um modulo para iniciar a investigacao.
+        </p>
+        <span class="painel-hero__op">
+            <span>OP. <b>ATIVA</b></span>
+            <span>NIVEL <b>2</b></span>
+            <span>// CLASSIFICADO</span>
+        </span>
+    </div>
 
-<section class="indicadores" aria-label="Visao geral da sessao">
-    <article class="indicador">
-        <span class="indicador__rotulo">// CAMPANHAS_ATIVAS</span>
-        <span class="indicador__valor"><?= str_pad((string) $totalCampanhas, 3, '0', STR_PAD_LEFT) ?></span>
-        <a class="indicador__link" href="<?= escapar(url('/campanhas/listar.php')) ?>">CONSULTAR &rarr;</a>
-    </article>
-    <article class="indicador">
-        <span class="indicador__rotulo">// AGENTES_ATIVOS</span>
-        <span class="indicador__valor"><?= str_pad((string) $totalAgentes, 3, '0', STR_PAD_LEFT) ?></span>
-        <a class="indicador__link" href="<?= escapar(url('/agentes/listar.php')) ?>">CONSULTAR &rarr;</a>
-    </article>
-    <article class="indicador">
-        <span class="indicador__rotulo">// DOSSIÊS_NPC</span>
-        <span class="indicador__valor"><?= str_pad((string) $totalNpcs, 3, '0', STR_PAD_LEFT) ?></span>
-        <a class="indicador__link" href="<?= escapar(url('/npcs/listar.php')) ?>">CONSULTAR &rarr;</a>
-    </article>
-    <article class="indicador">
-        <span class="indicador__rotulo">// AMEAÇAS_BESTIÁRIO</span>
-        <span class="indicador__valor"><?= str_pad((string) $totalCriaturas, 3, '0', STR_PAD_LEFT) ?></span>
-        <a class="indicador__link" href="<?= escapar(url('/criaturas/listar.php')) ?>">CONSULTAR &rarr;</a>
-    </article>
-    <article class="indicador">
-        <span class="indicador__rotulo">// ROLAGENS_REGISTRADAS</span>
-        <span class="indicador__valor"><?= str_pad((string) $totalRolagens, 3, '0', STR_PAD_LEFT) ?></span>
-        <a class="indicador__link" href="<?= escapar(url('/historico/listar.php')) ?>">CONSULTAR &rarr;</a>
-    </article>
-</section>
+    <article class="ultima-critica<?= $ultimaCritica
+        ? ((bool) $ultimaCritica['eh_critico'] ? ' is-critico' : ' is-desastre')
+        : '' ?>" aria-label="Ultima atividade critica">
+        <header class="ultima-critica__cab">
+            <span>// ULTIMA_ATIVIDADE_CRITICA</span>
+            <span><?= $ultimaCritica
+                ? escapar(substr((string) $ultimaCritica['rolado_em'], 0, 16))
+                : '— —' ?></span>
+        </header>
 
-<div class="painel-secundario">
-    <section class="painel-secundario__bloco">
-        <h2 class="painel-secundario__titulo">// MODULOS_DISPONIVEIS</h2>
-        <div class="grade-modulos">
-            <a href="<?= escapar(url('/campanhas/listar.php')) ?>" class="cartao-modulo cartao-modulo--ativo">
-                <span class="cartao-modulo__codigo">// 01</span>
-                <h3 class="cartao-modulo__nome">CAMPANHAS</h3>
-                <p class="cartao-modulo__descricao">
-                    Operações ativas: capa, sistema, agentes vinculados.
-                </p>
-                <span class="cartao-modulo__status">[OPERACIONAL]</span>
-            </a>
-
-            <a href="<?= escapar(url('/agentes/listar.php')) ?>" class="cartao-modulo cartao-modulo--ativo">
-                <span class="cartao-modulo__codigo">// 02</span>
-                <h3 class="cartao-modulo__nome">AGENTES</h3>
-                <p class="cartao-modulo__descricao">
-                    Fichas dos personagens jogadores (PJs). CRUD completo na próxima fase.
-                </p>
-                <span class="cartao-modulo__status">[LEITURA]</span>
-            </a>
-
-            <a href="<?= escapar(url('/npcs/listar.php')) ?>" class="cartao-modulo cartao-modulo--ativo">
-                <span class="cartao-modulo__codigo">// 03</span>
-                <h3 class="cartao-modulo__nome">NPCS</h3>
-                <p class="cartao-modulo__descricao">
-                    Cadastro e dossie de personagens nao-jogaveis.
-                </p>
-                <span class="cartao-modulo__status">[OPERACIONAL]</span>
-            </a>
-
-            <a href="<?= escapar(url('/criaturas/listar.php')) ?>" class="cartao-modulo cartao-modulo--ativo">
-                <span class="cartao-modulo__codigo">// 04</span>
-                <h3 class="cartao-modulo__nome">BESTIÁRIO</h3>
-                <p class="cartao-modulo__descricao">
-                    Catalogo de criaturas paranormais classificadas por elemento.
-                </p>
-                <span class="cartao-modulo__status">[OPERACIONAL]</span>
-            </a>
-
-            <a href="<?= escapar(url('/rolagem/index.php')) ?>" class="cartao-modulo cartao-modulo--ativo">
-                <span class="cartao-modulo__codigo">// 05</span>
-                <h3 class="cartao-modulo__nome">ROLAGEM</h3>
-                <p class="cartao-modulo__descricao">
-                    Lançador de dados d4..d100 com regra do maior valor.
-                </p>
-                <span class="cartao-modulo__status">[OPERACIONAL]</span>
-            </a>
-
-            <a href="<?= escapar(url('/historico/listar.php')) ?>" class="cartao-modulo cartao-modulo--ativo">
-                <span class="cartao-modulo__codigo">// 06</span>
-                <h3 class="cartao-modulo__nome">HISTÓRICO</h3>
-                <p class="cartao-modulo__descricao">
-                    Registro de todas as rolagens efetuadas no terminal.
-                </p>
-                <span class="cartao-modulo__status">[OPERACIONAL]</span>
-            </a>
-        </div>
-    </section>
-
-    <aside class="painel-secundario__bloco painel-secundario__bloco--lateral">
-        <h2 class="painel-secundario__titulo">// ULTIMOS_REGISTROS</h2>
-        <?php if (empty($ultimasRolagens)): ?>
-            <p class="painel-secundario__vazio">
-                Nenhuma rolagem registrada ainda.<br>
-                <a href="<?= escapar(url('/rolagem/index.php')) ?>" class="link">[INVOCAR PRIMEIRA ROLAGEM]</a>
+        <?php if ($ultimaCritica): ?>
+            <span class="ultima-critica__quem">
+                <?= escapar((string) $ultimaCritica['quem_rolou']) ?>
+                <span style="opacity:.5"> // <?= escapar(strtoupper((string) $ultimaCritica['tipo_dado'])) ?></span>
+            </span>
+            <p class="ultima-critica__desc">
+                "<?= escapar(mb_strimwidth((string) $ultimaCritica['descricao'], 0, 96, '...')) ?>"
             </p>
+            <div class="ultima-critica__num">
+                <?= (int) $ultimaCritica['resultado_final'] ?>
+                <span class="ultima-critica__selo">
+                    <?= ((bool) $ultimaCritica['eh_critico']) ? '◎ CRITICO ◎' : '▼ DESASTRE ▼' ?>
+                </span>
+            </div>
         <?php else: ?>
-            <ol class="lista-eventos">
-                <?php foreach ($ultimasRolagens as $r):
-                    $ehCritico  = (bool) $r['eh_critico'];
-                    $ehDesastre = (bool) $r['eh_desastre'];
-                    $classeRes  = $ehCritico ? 'is-critico' : ($ehDesastre ? 'is-desastre' : '');
-                ?>
-                    <li class="lista-eventos__item">
-                        <span class="lista-eventos__quando">
-                            <?= escapar(substr((string) $r['rolado_em'], 0, 16)) ?>
-                        </span>
-                        <span class="lista-eventos__motivo"
-                              title="<?= escapar((string) $r['descricao']) ?>">
-                            <strong><?= escapar((string) $r['quem_rolou']) ?></strong>
-                            &mdash; <?= escapar(mb_strimwidth((string) $r['descricao'], 0, 48, '...')) ?>
-                        </span>
-                        <span class="lista-eventos__resultado <?= $classeRes ?>">
-                            <?= (int) $r['resultado_final'] ?>
-                        </span>
-                    </li>
-                <?php endforeach; ?>
-            </ol>
-            <a href="<?= escapar(url('/historico/listar.php')) ?>" class="painel-secundario__link">VER DIARIO COMPLETO &rarr;</a>
+            <p class="ultima-critica__vazio">
+                Nenhum sucesso decisivo nem desastre registrado ainda.<br>
+                O proximo 20 natural marca o instante.
+            </p>
         <?php endif; ?>
-    </aside>
-</div>
+    </article>
+</section>
+
+<!-- ===========================================================
+     SECAO 2 — FAIXA DE STATS (5 tiles + sparkline 7d)
+     =========================================================== -->
+<section class="faixa-stats" aria-label="Estatisticas da sessao">
+    <article class="stat-tile">
+        <span class="stat-tile__rotulo">// CAMPANHAS</span>
+        <span class="stat-tile__valor"><?= str_pad((string) $totalCampanhas, 3, '0', STR_PAD_LEFT) ?></span>
+        <a class="stat-tile__link" href="<?= escapar(url('/campanhas/listar.php')) ?>">Consultar &rarr;</a>
+    </article>
+    <article class="stat-tile">
+        <span class="stat-tile__rotulo">// AGENTES</span>
+        <span class="stat-tile__valor"><?= str_pad((string) $totalAgentes, 3, '0', STR_PAD_LEFT) ?></span>
+        <a class="stat-tile__link" href="<?= escapar(url('/agentes/listar.php')) ?>">Consultar &rarr;</a>
+    </article>
+    <article class="stat-tile">
+        <span class="stat-tile__rotulo">// NPCS</span>
+        <span class="stat-tile__valor"><?= str_pad((string) $totalNpcs, 3, '0', STR_PAD_LEFT) ?></span>
+        <a class="stat-tile__link" href="<?= escapar(url('/npcs/listar.php')) ?>">Consultar &rarr;</a>
+    </article>
+    <article class="stat-tile">
+        <span class="stat-tile__rotulo">// AMEACAS</span>
+        <span class="stat-tile__valor"><?= str_pad((string) $totalCriaturas, 3, '0', STR_PAD_LEFT) ?></span>
+        <a class="stat-tile__link" href="<?= escapar(url('/criaturas/listar.php')) ?>">Consultar &rarr;</a>
+    </article>
+    <article class="stat-tile stat-tile--sparkline">
+        <span class="stat-tile__rotulo">// ROLAGENS_7D</span>
+        <svg class="sparkline" viewBox="0 0 70 24" preserveAspectRatio="none" aria-hidden="true">
+            <polyline points="<?= escapar($sparklinePoints) ?>"/>
+        </svg>
+        <span class="stat-tile__hint">SOMA 7D: <?= (int) $sparklineSoma ?> // TOTAL: <?= (int) $totalRolagens ?></span>
+    </article>
+</section>
+
+<!-- ===========================================================
+     SECAO 3 — TRILHAS DE INVESTIGACAO (3 principais + 3 auxiliares)
+     =========================================================== -->
+<section class="trilhas" aria-label="Trilhas de investigacao">
+    <h2 class="trilhas__h2">// TRILHAS_DE_INVESTIGACAO</h2>
+
+    <div class="trilhas__principais">
+        <a href="<?= escapar(url('/campanhas/listar.php')) ?>" class="trilha-card">
+            <span class="trilha-card__codigo">// 01 // OPERACIONAL</span>
+            <h3 class="trilha-card__nome">Campanhas</h3>
+            <p class="trilha-card__desc">
+                Operacoes ativas: capa, sistema, agentes vinculados.
+                O fio condutor da investigacao.
+            </p>
+            <span class="trilha-card__status">[OPERACIONAL]</span>
+        </a>
+
+        <a href="<?= escapar(url('/criaturas/listar.php')) ?>" class="trilha-card">
+            <span class="trilha-card__codigo">// 04 // CLASSIFICADO</span>
+            <h3 class="trilha-card__nome">Bestiario Paranormal</h3>
+            <p class="trilha-card__desc">
+                Catalogo de ameacas classificadas pelos 4 elementos do
+                Outro Lado. Nao subestime nada.
+            </p>
+            <span class="trilha-card__status">[OPERACIONAL]</span>
+        </a>
+
+        <a href="<?= escapar(url('/rolagem/index.php')) ?>" class="trilha-card">
+            <span class="trilha-card__codigo">// 05 // RITUAL</span>
+            <h3 class="trilha-card__nome">Lancador de Dados</h3>
+            <p class="trilha-card__desc">
+                d4 a d100. Regra OP no d20 (vantagem/desastre). Audio
+                em camadas conforme quantidade.
+            </p>
+            <span class="trilha-card__status">[OPERACIONAL]</span>
+        </a>
+    </div>
+
+    <div class="trilhas__auxiliares">
+        <a href="<?= escapar(url('/agentes/listar.php')) ?>" class="trilha-card trilha-card--secundario">
+            <span class="trilha-card__codigo">// 02</span>
+            <h3 class="trilha-card__nome">Agentes</h3>
+            <p class="trilha-card__desc">Fichas completas dos PJs.</p>
+        </a>
+        <a href="<?= escapar(url('/npcs/listar.php')) ?>" class="trilha-card trilha-card--secundario">
+            <span class="trilha-card__codigo">// 03</span>
+            <h3 class="trilha-card__nome">NPCs</h3>
+            <p class="trilha-card__desc">Dossies de personagens nao-jogaveis.</p>
+        </a>
+        <a href="<?= escapar(url('/historico/listar.php')) ?>" class="trilha-card trilha-card--secundario">
+            <span class="trilha-card__codigo">// 06</span>
+            <h3 class="trilha-card__nome">Diario de Missao</h3>
+            <p class="trilha-card__desc">Cronologia de todas as rolagens.</p>
+        </a>
+    </div>
+</section>
+
+<!-- ===========================================================
+     SECAO 4 — SUSSURROS DO OUTRO LADO (atmosférico)
+     - Cita ultima criatura, ultima campanha e ultima atividade narrativa
+     - Tipografia em Cormorant Garamond / IM Fell English (Decisao D5)
+     =========================================================== -->
+<section class="sussurros" aria-label="Sussurros do Outro Lado">
+    <h2 class="sussurros__h2">// SUSSURROS_DO_OUTRO_LADO</h2>
+    <p class="sussurros__poetico">Os véus estão tênues. O Outro Lado escuta.</p>
+
+    <div class="sussurros__grid">
+        <article class="sussurros__card">
+            <span class="sussurros__rotulo">ULTIMA AMEACA CATALOGADA</span>
+            <?php if ($ultimaCriatura): ?>
+                <span class="sussurros__nome"><?= escapar((string) $ultimaCriatura['nome']) ?></span>
+                <p class="sussurros__corpo">
+                    Elemento <?= escapar((string) $ultimaCriatura['elemento']) ?>.
+                    Catalogada em <?= escapar(substr((string) ($ultimaCriatura['criado_em'] ?? ''), 0, 10)) ?>.
+                </p>
+            <?php else: ?>
+                <span class="sussurros__nome">— silencio —</span>
+                <p class="sussurros__corpo">Nenhuma criatura registrada. O Bestiario aguarda.</p>
+            <?php endif; ?>
+        </article>
+
+        <article class="sussurros__card">
+            <span class="sussurros__rotulo">CAMPANHA EM ANDAMENTO</span>
+            <?php if ($ultimaCampanha): ?>
+                <span class="sussurros__nome"><?= escapar((string) $ultimaCampanha['nome']) ?></span>
+                <p class="sussurros__corpo">
+                    Sistema: <?= escapar((string) ($ultimaCampanha['sistema'] ?? 'Ordem Paranormal')) ?>.
+                    Os agentes estao em campo.
+                </p>
+            <?php else: ?>
+                <span class="sussurros__nome">— sem ordem ativa —</span>
+                <p class="sussurros__corpo">Nenhuma campanha registrada. Inicie a primeira.</p>
+            <?php endif; ?>
+        </article>
+
+        <article class="sussurros__card">
+            <span class="sussurros__rotulo">PROXIMA INVOCACAO</span>
+            <span class="sussurros__nome">Ritual pendente</span>
+            <p class="sussurros__corpo">
+                <?= $totalRolagens > 0
+                    ? 'O ultimo eco do d20 ainda reverbera. Continue o ritual.'
+                    : 'Nenhum dado lancado ainda. O primeiro 20 anuncia o despertar.' ?>
+            </p>
+        </article>
+    </div>
+</section>
+
+<!-- ===========================================================
+     SECAO 5 — ATALHOS RAPIDOS (rodape)
+     =========================================================== -->
+<section class="atalhos-rapidos" aria-label="Acesso direto">
+    <h2 class="atalhos-rapidos__h2">// ACESSO_DIRETO</h2>
+    <div class="atalhos-rapidos__grade">
+        <a class="atalho-rapido" href="<?= escapar(url('/campanhas/formulario.php')) ?>">
+            <span class="atalho-rapido__plus">+</span>NOVA CAMPANHA
+        </a>
+        <a class="atalho-rapido" href="<?= escapar(url('/agentes/formulario.php')) ?>">
+            <span class="atalho-rapido__plus">+</span>NOVO AGENTE
+        </a>
+        <a class="atalho-rapido" href="<?= escapar(url('/criaturas/formulario.php')) ?>">
+            <span class="atalho-rapido__plus">+</span>NOVA AMEACA
+        </a>
+        <a class="atalho-rapido" href="<?= escapar(url('/rolagem/index.php')) ?>">
+            <span class="atalho-rapido__plus">&#9678;</span>INVOCAR ROLAGEM
+        </a>
+    </div>
+</section>
+
+<aside class="microcopy-oculto" aria-hidden="true">// nao confiar nos numeros pares</aside>
 
 <?php require __DIR__ . '/views/rodape.php'; ?>
