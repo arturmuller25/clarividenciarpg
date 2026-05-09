@@ -66,15 +66,22 @@ clarividencia rpg/
 │   └── migration_003_vtt.sql         ← já aplicado
 │
 ├── assets/
-│   ├── css/terminal.css   ← folha única (~2200 linhas, organizada por módulo)
+│   ├── css/terminal.css   ← folha única (~3700 linhas após Phase 6, organizada por módulo)
 │   ├── js/
 │   │   ├── validacao.js   ← validação de form + confirmações + contadores
-│   │   ├── dados.js       ← rolagem multi-dado + áudio
-│   │   ├── hero.js        ← splash screen com d20 3D + ondas de choque
-│   │   └── agente.js      ← ficha dinâmica (barras, ataques, listas)
+│   │   ├── dados.js       ← rolagem multi-dado + áudio em camadas
+│   │   ├── hero.js        ← splash com geometria 3D real do icosaedro (479 linhas)
+│   │   ├── agente.js      ← ficha dinâmica (barras, ataques, listas)
+│   │   └── cropper.js     ← cropper 1:1 vanilla canvas (Decisão 016)
+│   ├── img/               ← sprites SVG do design system (Phase 6)
+│   │   ├── dice-icons.svg       ← 7 dados (`#geo-d4..#geo-d100` + sigil)
+│   │   └── elementos-icons.svg  ← 5 elementos (`#el-sangue..#el-medo`)
 │   └── audio/
-│       ├── som_para_a_hero.mp3
-│       └── som_para_as_rolagens.mp3
+│       ├── som_para_a_hero.mp3                       ← queda da Hero (~3.19s)
+│       ├── clarividencia_paranormal_loop.mp3         ← loop ambiente (61s)
+│       ├── som_para_as_rolagens.mp3
+│       ├── som_para_rolagem_multipla.mp3
+│       └── som_para_rolagem_com_muitos_dados.mp3
 │
 └── uploads/              ← imagens enviadas (não versionadas, exceto estrutura)
     ├── .htaccess         ← bloqueia execução PHP/CGI nesta árvore
@@ -93,11 +100,12 @@ clarividencia rpg/
 | **3** | Vínculos NPC↔Campanha e Criatura↔Campanha, marca renomeada para "Clarividência Paranormal", paleta refinada (5 elementos com Medo), responsividade mobile (4 breakpoints) | ✅ |
 | **4** | Ficha completa de Agente (9 seções modulares, salvamento transacional, JS dinâmico para barras/ataques/listas) | ✅ |
 | **5** | Polimento: cropper 1:1 vanilla canvas, fotos em todos os perfis, multi-dado liberado para todos os tipos com soma, áudio em 3 camadas com calibragem manual, Hero apenas em primeira-visita/F5, auditoria de acentos | ✅ |
-| **6** | Pendente. Veja "Backlog" abaixo. | ⏳ |
+| **6** | **Refatoração visual via Claude Design (7 passos):** logo stacked + hambúrguer, ícones SVG locais para os 5 elementos (sem FontAwesome), sprite de dados refit (só contorno externo, IDs `geo-d*` preservados), cards de criatura com background metálico, paleta envenenada global no `:root` + grain SVG + tokens novos (spacing/type/animation), Painel do Mestre em 5 seções cinematográficas, Hero D20 com geometria 3D real e botão "// INICIAR" antes da animação. ADRs 023-030 documentam. | ✅ |
+| **7** | Pendente. Veja "Backlog" abaixo. | ⏳ |
 
 ## 5. Backlog (próximas sessões)
 
-Ordem sugerida:
+Ordem sugerida (após Phase 6 concluída em 2026-05-09):
 
 1. **AJAX para barras de PV/SAN/PE** — endpoint que persiste mudança de uma coluna isoladamente, sem ter que dar submit no formulário inteiro. Útil durante combate.
 2. **Página de visualização da Campanha** com gestão bidirecional de vínculos (assign/remove agentes/NPCs/criaturas pelo lado da campanha).
@@ -107,6 +115,8 @@ Ordem sugerida:
 6. **Importar/Exportar ficha como JSON** (para salvar/recuperar entre campanhas).
 7. **Modo público de campanha** (URL com slug que jogadores podem visitar para ver as próprias fichas).
 8. **Normalização real dos MP3 via ffmpeg** (`-af loudnorm`) para parar de depender da calibragem manual em JS.
+9. **Painel do Mestre — preencher o que ficou placeholder**: sparkline real para os 4 stats sem histórico (hoje só ROLAGENS_7D tem dados; CAMPANHAS/AGENTES/NPCS/AMEACAS têm hint estático). Pode exigir tracking de criação por dia em colunas `criado_em`.
+10. **Audit de glows decorativos** em elementos não-interativos (adiado durante Passo 5 da refatoração visual). A paleta envenenada por si reduziu a intensidade percebida; refinamento pode acontecer organicamente.
 
 ## 6. Ambiente local (XAMPP)
 
@@ -231,19 +241,30 @@ Git instalado em `C:\Program Files\Git\cmd\git.exe` (versão 2.54).
 
 | Quero entender... | Olhe primeiro... |
 |---|---|
-| Como a hero d20 funciona | `index.php` (HTML), `assets/css/terminal.css` (procurar `hero-rolar-3d`), `assets/js/hero.js` |
+| Como a hero d20 funciona | `index.php` (markup), `assets/css/terminal.css` (regras `.hero__*`), `assets/js/hero.js` (geometria 3D + render loop) |
+| Como o icosaedro 3D é renderizado | `assets/js/hero.js`. Geometria via razão áurea (PHI), 12 vértices, 20 faces, painter's algorithm + back-face culling. Procurar `VERTS_RAW`, `FACES`, `RESTING`, `renderPose` |
+| Por que tem botão "// INICIAR" antes da animação | Decisão 029. Política de autoplay do browser bloqueia áudio até gesto humano; click pré-animação libera autoplay para a sessão e garante sincronia frame-a-frame da queda |
+| Como funciona o gate de autoplay da Hero | `assets/js/hero.js` (procurar `dispararAnimacao`, `clicouIniciar`, `iniciarEspera`, `_modoEspera`). Decisão 029 explica o porquê |
 | Por que a Hero não roda em todo navegação | Decisão 019. `hero.js::deveRodarHero()` usa Performance Navigation API + sessionStorage |
-| Como o áudio é tocado | `assets/js/hero.js` (autoplay + fallback), `assets/js/dados.js` (som da rolagem em camadas) |
+| Como a Hero trava o scroll do body | Decisão 030. Classe `body.hero-ativa` adicionada/removida pelo `hero.js`; CSS `body.hero-ativa { overflow: hidden }`. Esc + wheel-down como acionadores alternativos do "// ROMPER O VÉU" após 5.8s |
+| Como o áudio da Hero é tocado | `assets/js/hero.js`. `audio.load()` no DOMContentLoaded, `await audio.play()` antes do RAF inicial. Loop ambiente em t=3.7s com fadeIn 1s. fadeOutLoopEFechar 800ms ao clicar "// ROMPER O VÉU" (ou Esc/scroll-down após 5.8s) |
+| Como o áudio das rolagens é tocado | `assets/js/dados.js` (som em camadas) |
 | Por que sons da rolagem soam balanceados | Decisão 021. Calibragem manual via `VOLUMES.*` no topo do `dados.js` (não reencodamos os MP3) |
 | Por que multi-dado d20 e d6 funcionam diferente | Decisão 020. d20 mantém regra OP (vantagem); demais somam todos os valores |
 | Por que tem 3 atributos `hidden`/`display`/`is-oculta` no SVG | Decisão 011. Resumo: `hidden` em `<g>` SVG é unreliable em alguns browsers |
+| Onde fica o sprite dos dados | `assets/img/dice-icons.svg` (não mais inline em `rolagem/index.php`). IDs `geo-dN` preservados ao copiar do design system — Decisão 026. Incluído via `<?php readfile() ?>` |
+| Onde fica o sprite dos 5 elementos | `assets/img/elementos-icons.svg`. IDs `el-sangue/-morte/-conhecimento/-energia/-medo`. Incluído globalmente via `readfile()` em `views/cabecalho.php`. Decisão 024 (sem FontAwesome) |
+| Por que a paleta é "envenenada" (mostarda em vez de neon dourado) | Decisão 025. Refit direto no `:root` durante a refatoração visual (Phase 6, Passo 5) |
+| Quais tokens estão disponíveis no `:root` (spacing, type, ls, shadow, animation) | Decisão 027. Adicionados como acréscimo durante Phase 6, Passo 5 |
+| Por que Cormorant Garamond e IM Fell English aparecem no Painel | Decisão 028. Escopo restrito a "Sussurros do Outro Lado" e citações — não promovidas a `--corpo`/`--titulo` |
 | Como o cropper 1:1 funciona | `assets/js/cropper.js`. Decisão 016: vanilla canvas, sem libs externas |
 | Por que `<FilesMatch>` em `/uploads/.htaccess` está em 3 linhas | Decisão 017. Apache 2.4 não tolera abrir e fechar na mesma linha |
 | Como CSRF funciona | `src/sessao.php` |
 | Como upload é seguro | `src/UploadHelper.php` + `uploads/.htaccess` |
 | Como salvamento da ficha é transacional | `src/AgenteRepositorio.php::criar()` e `atualizar()` |
-| Quais decisões arquiteturais foram tomadas | `decisoes.md` |
-| O que aconteceu em cada sessão | `logs.md` |
+| Quais decisões arquiteturais foram tomadas | `decisoes.md` (atual: ADR 030) |
+| O que aconteceu em cada sessão | `logs.md` (atual: Sprint 23) |
+| Como foi feita a refatoração visual via Claude Design | `INTEGRACAO_DESIGN.md` (mantido como artefato histórico do processo) |
 
 ## 12. O que NÃO está documentado aqui (mas deveria, em algum momento)
 

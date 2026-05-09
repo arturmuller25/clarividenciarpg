@@ -442,4 +442,46 @@ Passo 7 (Hero D20)                   DEPENDE de:
 | 2026-05-08 | **Passo 3 concluído** — commit `4232911` | `assets/img/dice-icons.svg` copiado renomeando IDs `dN→geo-dN` (Decisão D2 — preserva compat com `dados.js`). Sprite inline antigo de `rolagem/index.php` substituído por `readfile()`. Outer `<text>` redundante removido (sprite já tem label dentro). Decisão 011 preservada — `dados.js` toggla um SVG separado, não foi tocado. |
 | 2026-05-08 | **Passo 4 concluído** — commit `9af1eec` | Refit do `.cartao-criatura`: background `--metalico` (papel texturizado), border-left 4px, padding ajustado, sombra `--shadow-card`/`--shadow-lift` no hover, `overflow-wrap: anywhere`. Tipografia hierárquica via tokens semânticos do Passo 5. Bug fix: classe `.cartao-npc__nome-link` (copy-paste leftover) corrigida para `.cartao-criatura__nome-link`. |
 | 2026-05-08 | **Passo 6 concluído** — commit `1765f3e` | `index.php` refatorado em 5 seções cinematográficas: `.painel-hero` (com glitch sutil em "T" + card `.ultima-critica`), `.faixa-stats` (5 tiles + sparkline 7d gerado em PHP), `.trilhas` (3 principais + 3 auxiliares), `.sussurros` (atmosférico, fundo radial púrpura, fontes Cormorant Garamond + IM Fell English), `.atalhos-rapidos`. Microcopy oculto `// nao confiar nos numeros pares` em canto inferior direito (opacity 18%). `LogRepositorio::buscarUltimaCritica()` e `::contarPorDia(int)` adicionados. Cormorant Garamond + IM Fell English no `<link>` Google Fonts (Decisão D5 — escopo restrito via `--font-sussurro`/`--font-poetica`). |
-| 2026-05-08 | **Passo 7 concluído** — commit `6b471bc` | Refit pontual da Hero d20: duração 4.4s→4.6s, queda mais lenta (1.8s→2.4s) com easing pesado, impacto/bounce 0.7s, brilho dourado intenso 4 camadas no número 20, pool of light dourado-púrpura no chão (`.hero__floor`), aura/título/subtítulo com timings ajustados pra sequência narrativa. Decisão 019 preservada (gate first-visit/F5 intacto). Audio sync intacto. **Não portado:** renderização 3D dinâmica em JS do design system (matrizes/quaternions/slerp) — escopo grande, fica para reescrita futura. |
+| 2026-05-08 | **Passo 7 concluído** — commit `6b471bc` | Refit pontual da Hero d20: duração 4.4s→4.6s, queda mais lenta (1.8s→2.4s) com easing pesado, impacto/bounce 0.7s, brilho dourado intenso 4 camadas no número 20, pool of light dourado-púrpura no chão (`.hero__floor`), aura/título/subtítulo com timings ajustados pra sequência narrativa. Decisão 019 preservada (gate first-visit/F5 intacto). Audio sync intacto. |
+| 2026-05-08 | **Hero D20 v2 — geometria 3D real** — commit `37cc563` | Reescrita completa do `hero.js`: 12 vértices via PHI (razão áurea), 20 faces triangulares, painter's algorithm + back-face culling, paragem matematicamente exata na face 20 via `RESTING × integer turns`. SVG dinâmico criado em runtime. Particulas dos 4 elementos. Logs diagnósticos `[Hero] ...` adicionados. |
+| 2026-05-08 | **Sincronia áudio 3.2s** — commit `c9ba77f` | Usuário trocou `som_para_a_hero.mp3` por versão 320 kbps @ 48 kHz (3.19s). Animação encurtada de 4.5s → 3.2s para casar com duração real do som. Tumble mais frenético (mesma quantidade de turns em menos tempo). |
+| 2026-05-08 | **Loop ambiente + "// ROMPER O VÉU"** — commit `c935acd` | `clarividencia_paranormal_loop.mp3` (61.2s) tocando após o RESTING com fadeIn 1s. Botão "// ROMPER O VÉU" substitui o antigo "// MANIFESTAR TRANSMISSÃO". `await audioQueda.play()` antes do RAF inicial — sincronia frame-a-frame. |
+| 2026-05-08 | **Trava scroll + Esc/wheel + diagnóstico autoplay** — commit `f5acea3` | `body.hero-ativa { overflow: hidden }` + Esc/wheel-down como acionadores alternativos após `_podeFinalizar` em 5.8s. Comentário grande sobre policy de autoplay no `hero.js`. Logs `[Hero] BLOQUEADO ...` para diagnosticar. |
+| 2026-05-09 | **Botão "// INICIAR" antes da animação** — commit `b1fe3e5` (Decisão D029) | Solução final do problema de sincronia áudio em first-visit. Pose RESTING estática + bloco "// AUTORIZAR RITUAL" + botão "// INICIAR" antes da animação. Click libera autoplay para a sessão → animação dispara com áudio sincronizado frame-a-frame. Fluxo definitivo. |
+| 2026-05-09 | **Documentação consolidada (Sprint 23)** | ADRs 023-030 migradas para `decisoes.md`. Sprints 17-23 adicionados ao `logs.md`. `claude.md` atualizado: Phase 6 ✅, Phase 7 backlog, tabela "Onde olhar" expandida (~10 entradas novas), estrutura do projeto refletindo `assets/img/` + 5 MP3s. Pasta `_design_import/` arquivada em ZIP no `~/Downloads/` e deletada do XAMPP. |
+
+---
+
+## ✅ INTEGRAÇÃO COMPLETA
+
+**Status final:** todos os 7 passos planejados foram implementados, validados visualmente pelo usuário, e a Hero passou por refinamento iterativo até o fluxo definitivo (botão "// INICIAR" + sincronia áudio + loop ambiente + "// ROMPER O VÉU").
+
+### Totais
+
+| Métrica | Valor |
+|---|---|
+| **Commits aplicados** | 18 (incluindo plano, fix bugs, doc) |
+| **Range de commits** | `213078d`..HEAD em `main` |
+| **Linhas adicionadas** | 2369 |
+| **Linhas removidas** | 634 |
+| **Arquivos modificados** | 16 |
+| **Novos arquivos** | `assets/img/dice-icons.svg`, `assets/img/elementos-icons.svg`, `assets/audio/clarividencia_paranormal_loop.mp3`, `INTEGRACAO_DESIGN.md` |
+| **Decisões registradas** | D1–D6 internamente, migradas para ADRs **023–030** em `decisoes.md` |
+| **Lições aprendidas** | L1 (autoplay policy + solução D029) |
+
+### Mapeamento Decisões D# → ADRs (#023+)
+
+| Aqui (D#) | `decisoes.md` (ADR #) | Tema |
+|---|---|---|
+| — | **023** | Visão geral da refatoração via Claude Design (7 passos) |
+| **D1** | **024** | Ícones SVG locais (sem FontAwesome) |
+| **D4** | **025** | Paleta envenenada global no `:root` |
+| **D2** | **026** | Sprite de dados — IDs `geo-d*` preservados |
+| **D3** | **027** | Tokens novos como acréscimo |
+| **D5** | **028** | Cormorant Garamond + IM Fell English com escopo restrito |
+| **D6** | **029** | Botão "// INICIAR" antes da animação da Hero |
+| (parte da D6) | **030** | `body.hero-ativa { overflow: hidden }` + Esc/wheel |
+
+### Status deste arquivo
+
+Este `INTEGRACAO_DESIGN.md` permanece no repo como **artefato histórico** do processo de refatoração visual. Não deve ser apagado — serve como referência do "como" da decisão de cada passo, do plano original que orientou a integração, e do checklist com riscos identificados antes de cada commit. Para consulta de "porquê" das decisões, use `decisoes.md` (formato ADR oficial).

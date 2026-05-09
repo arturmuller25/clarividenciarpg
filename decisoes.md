@@ -241,3 +241,127 @@
 - **Decisão**: Funções **stateful** que precisam ler closures locais devem ser declaradas dentro do `DOMContentLoaded`. Funções **stateless** (que recebem tudo por parâmetro) podem ficar no escopo da IIFE.
 - **Status**: `tocarAudioRolagem` movida para dentro do `DOMContentLoaded`. `criarAudio` e `fadeOutAudio` ficam fora (são puras).
 - **Consequências**: Lição registrada para futuros refactors. Padrão a seguir: se a função usa variáveis do escopo do handler, ela mora ali junto.
+
+---
+
+## Decisão 023: Refatoração visual via design system (Claude Design)
+- **Contexto**: Após o MVP v0.2 estar estável, foi gerado um design system completo no Claude Design (claude.ai/design) para refinar a estética do produto. O bundle de 32 arquivos (~233 KB) foi extraído em `_design_import/clarivid-ncia-paranormal-design-system/` e contém: logos SVG (3 variantes), sprites SVG novos (`dice-icons.svg`, `elementos-icons.svg`), `d20-hero.svg` estático, `colors_and_type.css` (extração documentada do nosso `:root` + tokens novos), protótipos HTML em `preview/` e `ui_kits/painel/index.html`, componentes JSX como referência visual, hero standalone em `components/hero_d20.html` (487 linhas, com geometria 3D real do icosaedro).
+- **Descoberta crítica**: `diff -q` confirmou que o `assets/terminal.css` deles é **idêntico** ao nosso — o "design system" é uma **curadoria documentada** do nosso CSS atual, NÃO uma reforma do código. O que é genuinamente novo: 6 SVGs, tokens novos no `colors_and_type.css`, paleta envenenada page-scoped no `index.html` do painel, e o hero standalone com renderização 3D dinâmica.
+- **Decisão**: Integrar em **7 passos sequenciais** documentados em `INTEGRACAO_DESIGN.md`:
+  1. **Logo + hambúrguer** (logo stacked no painel hambúrguer aberto)
+  2. **Ícones SVG dos elementos** (sprite local, sem FontAwesome — ver D024)
+  3. **Sprite de dados refit** (só contorno externo — ver D026)
+  4. **Cards de criatura** (background metálico + tipografia hierárquica)
+  5. **Background contínuo + paleta envenenada global** (ver D025)
+  6. **Painel do Mestre em 5 seções cinematográficas** (com sparkline 7d, sussurros do outro lado, atalhos)
+  7. **Hero D20 cinematográfica** (geometria 3D real, paragem matematicamente exata na face 20)
+- **Status**: Implementado nos commits `2f21aca` (Passo 1), `efc584c` (P2), `4232911` (P3), `9af1eec` (P4), `abef18b` (P5), `1765f3e` (P6), `37cc563`/`c9ba77f`/`c935acd`/`f5acea3`/`b1fe3e5` (P7 + refinamentos da Hero).
+- **Consequências**: O projeto deixa de ter estética "MVP funcional" e ganha presença diegética cinematográfica. Decisões 024-030 documentam aspectos específicos. Pasta `_design_import/` arquivada (não foi versionada — `.gitignore` cobre).
+
+---
+
+## Decisão 024: Ícones de elementos — SVG local em vez de FontAwesome
+- **Contexto**: O design system trouxe DOIS caminhos para a tag de elemento (Sangue/Morte/Conhecimento/Energia/Medo) nos cards de criatura: (a) sprite local `elementos-icons.svg` com 5 `<symbol>` de 24×24 stroke-only, e (b) protótipos HTML em `preview/cards_criatura.html` e `ui_kits/painel/index.html` que importam Font Awesome 6 via CDN (`fa-droplet`, `fa-skull`, `fa-eye`, `fa-bolt`, `fa-hurricane`).
+- **Decisão**: Usar o **SVG local** (`elementos-icons.svg`) — copiado para `assets/img/elementos-icons.svg` e referenciado via `<svg><use href="#el-X"/></svg>`.
+- **Razões**:
+  - Disciplina de "zero dependências de runtime" (claude.md §2) preservada
+  - 2 KB inline vs ~30 KB de CSS+font do FA via CDN
+  - `currentColor` integra perfeitamente com vars CSS de elemento (`--el-sangue`, etc.)
+  - Consistente com o pattern já estabelecido (sprite SVG dos dados em `rolagem/index.php`)
+  - Permite `<title>` semântico dentro de cada `<symbol>` para a11y
+  - Sem FOIT/FOUT da CDN
+  - **Detalhe decisivo**: `project/README.md` do próprio design system declara literalmente "There is no Font Awesome" na seção "Iconography" — os protótipos HTML que usam FA são **inconsistentes com a própria documentação** (provável shortcut do designer). O `elementos-icons.svg` foi entregue justamente como caminho canônico.
+- **Status**: Implementado no Passo 2 (commit `efc584c`).
+- **Consequências**: Sprite incluído via `readfile()` no `views/cabecalho.php` uma vez por página. CSS `.tag-elemento` com 5 variantes + drop-shadow do glow. Glifos: gota / caveira / triângulo+olho / raio / espirais concêntricas. `criaturas/listar.php` e `criaturas/visualizar.php` usam `<svg><use>` em vez de texto.
+
+---
+
+## Decisão 025: Paleta envenenada global no `:root` (não scoped via `.app`)
+- **Contexto**: O design system define uma "paleta envenenada" (cores envelhecidas/dessaturadas) no `ui_kits/painel/index.html` dentro de um bloco `.app { --gold: #e0b53d; ... }` — implementação page-scoped. Considerei manter assim (refit gradual, classes opcionais por página) vs reformar diretamente o `:root` global.
+- **Decisão**: **Reforma direta no `:root`** do `terminal.css`. Paleta envenenada vira a paleta canônica do projeto.
+- **Razões**:
+  - O projeto tem **uma única "app"** — scoping seria proteção desnecessária
+  - Refit gradual cria duas paletas em paralelo, gera ambiguidade visual durante a transição
+  - Passo 5 (refinamentos) foi agendado **antes** do Passo 6 (Painel do Mestre), então a reforma estaria completa quando os componentes fossem refatorados
+- **Mapeamento aplicado**:
+  - `--el-conhecimento`: `#ffd60a` (neon) → `#e0b53d` (mostarda envelhecida)
+  - `--el-energia`: `#9d4edd` (neon) → `#7b4d9e` (roxo cinza dessaturado)
+  - `--el-sangue`: `#c8102e` → `#a53846` (sangue antigo)
+  - `--critico`: `#00ff66` → `#5fa873` (fosforescente apagado)
+  - `--el-morte`, `--el-medo`, `--falha`: mantidos (sem override no design system)
+  - Glows recalculados com novos rgba; helpers novos `--gold-dim` e `--ink-paper`
+- **Status**: Implementado no Passo 5 (commit `abef18b`).
+- **Consequências**: Todos os componentes que usam vars de elemento herdam a nova paleta automaticamente. Auditoria de contraste WCAG AA mantida. rgba dos `@keyframes piscar-energia` foi atualizado em `terminal.css` para alinhar com novo roxo (Passo 2 commit também).
+
+---
+
+## Decisão 026: Sprite de dados — IDs `geo-d*` preservados ao copiar do design system
+- **Contexto**: O design system trouxe `dice-icons.svg` com 7 `<symbol>` (d4..d100) + sigil. Os IDs do sprite deles são `d4`, `d6`, ..., `d100` — sem prefixo. Nosso código atual em `rolagem/index.php` e `assets/js/dados.js` referencia o sprite via `<use href="#geo-dN">` (com prefixo `geo-`), conforme Decisão 008.
+- **Decisão**: Ao copiar o sprite para `assets/img/dice-icons.svg`, **renomear os IDs** de `dN` para `geo-dN` via regex no PowerShell antes de salvar. Mantém compat total com `dados.js` sem precisar alterar uma linha de JS.
+- **Justificativa**: ADR 008 canonizou o prefixo `geo-` para distinguir o sprite geométrico de outros possíveis sprites futuros (`#el-sangue`, `#geo-d20`, etc — namespacing semântico). Quebrar essa convenção pelo design system seria inconsistência interna sem ganho.
+- **Status**: Implementado no Passo 3 (commit `4232911`). O sprite anterior inline em `rolagem/index.php` (50 linhas com polygons + cross-lines + divisores) substituído por `<?php readfile() ?>` apontando ao novo sprite global. Outer `<text>` redundante removido (sprite novo já inclui label dentro do `<symbol>`).
+- **Consequências**: Decisão 011 (tripla defesa `hidden`/`display="none"`/`.is-oculta`) preservada — `dados.js` toggla um SVG separado (`formasSvg` com `<g data-dado="...">`), não o sprite que foi trocado. Sem regressão.
+
+---
+
+## Decisão 027: Tokens novos do `colors_and_type.css` como acréscimo, não substituição
+- **Contexto**: Comparação cuidadosa entre o `:root` do design system (`colors_and_type.css`, 135 linhas) e o nosso atual mostrou que **todas as variáveis presentes em ambos são idênticas** (mesmas hex codes, mesmos gradientes, mesmas font stacks). O `colors_and_type.css` **adiciona** novos tokens semânticos que ainda não existiam: spacing scale, type scale, letter-spacing, shadow, animation easing.
+- **Decisão**: No Passo 5, **estender** o `:root` do `terminal.css` com os tokens novos. Não tocar nas vars existentes (apenas as 4 cores envenenadas conforme D025). Conflito zero.
+- **Tokens novos adicionados ao `:root`**:
+  - **Spacing**: `--space-1` (4px) ... `--space-8` (32px) — escala de 7 níveis
+  - **Type semantic shorthands**: `--t-h1`, `--t-h2`, `--t-h3`, `--t-display`, `--t-ui`, `--t-label`, `--t-body`, `--t-small`, `--t-mono` (todos no formato `font:` shorthand para uso direto)
+  - **Letter-spacing**: `--ls-tight`, `--ls-base`, `--ls-ui`, `--ls-label`, `--ls-caps`, `--ls-wide`
+  - **Shadow**: `--shadow-card`, `--shadow-lift` (com gold envenenado), `--shadow-inset`
+  - **Animation**: `--ease-standard`, `--ease-overshoot`, `--t-fast` (150ms), `--t-base` (220ms), `--t-slow` (380ms)
+- **Status**: Implementado no Passo 5 (commit `abef18b`).
+- **Consequências**: Componentes novos (cards de criatura no Passo 4, faixa de stats no Passo 6) usam esses tokens. Componentes legados continuam funcionando com hardcoded values — refit pode acontecer organicamente quando cada componente for tocado.
+
+---
+
+## Decisão 028: Cormorant Garamond + IM Fell English com escopo restrito
+- **Contexto**: O design system extraído carrega **2 fontes adicionais** via Google Fonts no `ui_kits/painel/index.html`: `Cormorant Garamond` (italic, usada em citações com `❝...❞` no `.hero__sub`) e `IM Fell English` (subtítulos poéticos). Não constam nos 4 layers tipográficos canônicos (Cinzel/Montserrat/Helvetica/JetBrains Mono — ADR 004).
+- **Decisão**: Adicionar ambas com **escopo de uso restrito**:
+  - **Cormorant Garamond** → APENAS em "Sussurros do Outro Lado" e citações italic do Painel (ex: `.painel-hero__sub`, `.ultima-critica__desc`)
+  - **IM Fell English** → APENAS em subtítulos poéticos diegéticos (ex: `.sussurros__poetico`)
+  - Carregadas via Google Fonts no `<link>` de `views/cabecalho.php` (mesma estratégia das outras 4 — ADR 004)
+  - **NÃO** promovidas para `--titulo` ou `--corpo` globais; criadas vars específicas `--font-sussurro` (Cormorant) e `--font-poetica` (IM Fell)
+- **Razão**: Manter o sistema tipográfico de 4 famílias limpo e consistente para componentes gerais. Usar essas duas extras como "tinta de cena" só onde a atmosfera narrativa pede — preserva impacto.
+- **Status**: Implementado no Passo 6 (commit `1765f3e`).
+- **Consequências**: 6 famílias carregadas no total agora (4 originais + 2 de cena). Tamanho do request Google Fonts aumenta marginalmente (~30 KB extras). Se algum dia surgir `--font-narrativa` ou similar, pode entrar pelo mesmo padrão.
+
+---
+
+## Decisão 029: Botão "// INICIAR" antes da animação da Hero (resolve política de autoplay)
+- **Contexto**: A Hero D20 dispara áudio (`som_para_a_hero.mp3`) sincronizado com a queda do dado em t=0 da timeline. A política de autoplay dos browsers (Chrome ≥66, Firefox ≥66, Safari ≥11) bloqueia `audio.play()` automático antes de gesto humano — Promise rejeita com `NotAllowedError`. Em first-visit, o som da queda ficava perdido.
+- **Tentativa rejeitada**: instalar `document.addEventListener('click', ativar, { once: true })` para liberar o áudio no primeiro click do usuário em qualquer lugar. Funcionou para o LOOP ambiente (que dispara em t=3.7s), mas NÃO para o áudio de queda (que dispara em t=0 — quando o click chega, a queda já passou). Desync permanente entre visual e som da queda.
+- **Decisão**: Introduzir um **gate de gesto humano** ANTES da animação. Página carrega com:
+  - Dado D20 em pose **RESTING estática** (com leve hover senoidal)
+  - Bloco centralizado "// AUTORIZAR RITUAL" + botão "// INICIAR"
+  - Sem áudio tocando, sem console warnings
+  - Click em "// INICIAR" → audio.play() chamado dentro do user-gesture context → autoplay liberado para a sessão → fade-out do bloco (200ms) → `dispararAnimacao()` com `await audioQueda.play()` antes do RAF inicial → sincronia frame-a-frame perfeita
+- **Razões**:
+  - Audio + visual queda 100% sincronizados na primeira visita (não só após F5)
+  - Não há mais janela "silenciosa" durante a queda na primeira interação
+  - Console limpo (sem warnings de autoplay block)
+  - Fallback `document.addEventListener('click')` do loop pode ser removido (gesto humano direto resolve)
+  - Texto "AUTORIZAR RITUAL" mantém vibe diegética (consentimento ritual)
+- **Trade-off aceito**: +1 click necessário para ver a animação. Aceitável dado que é entrada do site (usuário esperava interação) e que o ganho de UX (audio + visual sincronizados) compensa.
+- **Status**: Implementado nos commits `b1fe3e5` (botão final) + `c935acd` (loop ambiente) + `c9ba77f` (sincronia 3.2s).
+- **Consequências**: Estilo do botão "// INICIAR" idêntico ao "// ROMPER O VÉU" (mesma família visual de UI). Logs diagnósticos `[Hero] ...` no console permitem debug sem necessidade de instrumentação adicional. Lição L1 de `INTEGRACAO_DESIGN.md` referencia esta decisão como solução final.
+
+---
+
+## Decisão 030: `body.hero-ativa { overflow: hidden }` + Esc/wheel como acionadores alternativos
+- **Contexto**: A Hero está em `position: fixed` cobrindo a viewport, mas o conteúdo do Painel do Mestre já está renderizado no DOM por baixo (para ficar acessível imediatamente após o "// ROMPER O VÉU"). Resultado colateral: a scrollbar lateral aparecia durante a Hero, criando ruído visual durante o momento mais cinematográfico do produto.
+- **Decisão**:
+  - CSS: `body.hero-ativa { overflow: hidden }` — uma regra simples
+  - JS: `document.body.classList.add('hero-ativa')` quando a Hero monta (logo após passar pelo gate Decisão 019)
+  - JS: `document.body.classList.remove('hero-ativa')` no setTimeout de 950ms após `.is-saindo` (junto com `display: none`) — libera scroll exatamente quando a Hero some
+  - **Bonus**: Esc + scroll-down (wheel deltaY > 0) como **acionadores alternativos** do botão "// ROMPER O VÉU", liberados após a flag `_podeFinalizar` ser setada em t=5.8s (botão clicável + 0.8s fade-in)
+- **Razões**:
+  - Scrollbar lateral durante a Hero quebra a imersão — overlay deve ser totalmente isolado
+  - Esc como atalho de fechar é UX padrão (modal-like)
+  - Scroll-down sinaliza intenção de "ver o conteúdo abaixo" — alinhado com a metáfora "romper o véu"
+  - `_podeFinalizar` impede que gestos prematuros (durante a animação) interrompam o show
+- **Status**: Implementado no commit `f5acea3`.
+- **Consequências**: `wheel` listener com `{ passive: true }` para não bloquear o scroll engine. Listeners ficam ativos após `_heroFinalizado` (já bloqueia internamente — não precisa removeEventListener para limpeza). Nenhum impacto de performance.

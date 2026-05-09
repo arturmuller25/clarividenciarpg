@@ -137,6 +137,53 @@
 
 ---
 
+### 08–09/05/2026 — Refatoração visual via Claude Design (sessão Phase 6)
+
+##### Sprint 17 — Setup do design system + plano de integração
+- Bug do HY093 em `AgenteRepositorio::inserirAgente` corrigido (commit `2e107c6`): o INSERT sempre incluía `:foto_arquivo` no SQL, mas `bindAgente()` só fazia bind se a key existia no array. Default `null` antes do bind resolveu sem alterar o caminho dinâmico do UPDATE.
+- Tentativa de fetch do design system via URL `api.anthropic.com/v1/design/h/...` retornou 404 sem `WWW-Authenticate` — endpoint não responde para esse ID. Usuário extraiu o ZIP manualmente em `_design_import/clarivid-ncia-paranormal-design-system/`.
+- Mapeamento dos 32 arquivos. **Descoberta crítica**: `diff -q` confirmou que `assets/terminal.css` deles é **idêntico** ao nosso — o "design system" é uma **curadoria documentada**, não uma reforma. O genuinamente novo: 6 SVGs (3 logos, d20-hero estático, dice sprite, elementos sprite), tokens novos no `colors_and_type.css`, paleta envenenada page-scoped no `index.html` do painel, hero standalone com geometria 3D real (487 linhas de JS).
+- `INTEGRACAO_DESIGN.md` criado com plano em **7 passos sequenciais**, checklist de validação, riscos por componente, dependências, decisões D1-D5 registradas (commit `37f19cb`).
+
+##### Sprint 18 — Passo 1: Logo stacked + Menu hambúrguer
+- Bloco `.menu-hamburger__logo` adicionado no painel hambúrguer com 3 camadas: CLARIVIDÊNCIA fino (Cinzel 500, ls 0.62em) / PARANORMAL grande dourado com glow / icosaedro inline 22px (commit `2f21aca`).
+- Estratégia HTML+SVG inline (texto selecionável, currentColor) em vez de `<object data="logo-stacked.svg">` — recomendada pelo `preview/logo.html` e `Header.jsx` do design system.
+- Bug do círculo escuro flutuando + "MENU" solto + X com box quadrado destacado (Bug 2 do round de correções) corrigido depois no commit `db930a8`: `.menu-hamburger__painel::before/::after` decoradores órfãos removidos, `.menu-hamburger__rotulo` escondido quando `:checked`, borda do botão atenuada quando aberto, padding-top reduzido de 80px → 40px.
+
+##### Sprint 19 — Passo 5: Paleta envenenada global + grain SVG + tokens novos
+- Reforma direta no `:root` (Decisão D4/025): `--el-conhecimento` `#ffd60a→#e0b53d` (mostarda envelhecida), `--el-energia` `#9d4edd→#7b4d9e` (roxo cinza), `--el-sangue` `#c8102e→#a53846` (sangue antigo), `--critico` `#00ff66→#5fa873` (fosforescente apagado). Glows recalculados (commit `abef18b`).
+- Tokens novos do `colors_and_type.css` adicionados como **acréscimo** ao `:root` (Decisão D3/027): spacing scale, type semantic shorthands, letter-spacing, shadow, animation easing.
+- Background contínuo: 6 radial gradients fixos cobrindo o scroll inteiro (extraídos do `index.html` do painel). `body::before` substituído por SVG noise fractal inline base64 (em vez de scanlines lineares). Vignette ajustada para 38% transparente → 55% black.
+- Decisão de adiar audit de glows decorativos para os Passos 6/7 — paleta envenenada por si reduz a intensidade percebida.
+
+##### Sprint 20 — Passos 2/3/4/6/7 em batelada
+- **Passo 2 (commit `efc584c`)** — `assets/img/elementos-icons.svg` copiado do design system. Sprite incluído via `readfile()` em `views/cabecalho.php`. `criaturas/listar.php` e `criaturas/visualizar.php` agora usam `<svg><use href="#el-X"/></svg>`. CSS `.tag-elemento` com 5 variantes + drop-shadow do glow envenenado. **Sem FontAwesome** (Decisão D1/024).
+- **Passo 3 (commit `4232911`)** — `assets/img/dice-icons.svg` copiado renomeando IDs `dN→geo-dN` via PowerShell regex (Decisão D2/026 — preserva compat com `dados.js`). Sprite inline antigo de `rolagem/index.php` (50 linhas) substituído por `readfile()`. Outer `<text>` redundante removido (sprite novo já tem label dentro do `<symbol>`).
+- **Passo 4 (commit `9af1eec`)** — `.cartao-criatura` refit: background `--metalico` (papel texturizado), border-left 4px, padding ajustado, sombra `--shadow-card`/`--shadow-lift` no hover. Tipografia hierárquica via tokens semânticos. Bug fix: classe `.cartao-npc__nome-link` (copy-paste leftover) corrigida para `.cartao-criatura__nome-link`.
+- **Passo 6 (commit `1765f3e`)** — refator pesado do `index.php` em **5 seções cinematográficas**: `.painel-hero` (com glitch sutil em "T" + card `.ultima-critica`), `.faixa-stats` (5 tiles + sparkline 7d gerado em PHP), `.trilhas` (3 principais + 3 auxiliares), `.sussurros` (atmosférico, fontes Cormorant Garamond + IM Fell English), `.atalhos-rapidos`. Microcopy oculto `// nao confiar nos numeros pares`. `LogRepositorio::buscarUltimaCritica()` e `::contarPorDia(int)` adicionados. Cormorant Garamond + IM Fell English no `<link>` Google Fonts (Decisão D5/028).
+- **Passo 7 v1 (commit `37cc563`)** — Hero D20 cinematográfica primeira versão: queda 4.6s + brilho dourado intenso 4 camadas + pool of light dourado-púrpura no chão.
+
+##### Sprint 21 — Bug fixes pontuais
+- **Bugs 1+2 (commit `db930a8`)**: "PAINEL DO MESTRE" quebrava em "MEST/RE" — `white-space: nowrap` + `font-size: clamp(2rem, 6vw, 5rem)` + `word-break: keep-all` + media query mobile. Menu hambúrguer com elementos antigos sobrepostos (4 sub-correções listadas no Sprint 18).
+- **Bug 3 (commit `1e8ca4a`)**: easter egg `// nao confiar nos numeros pares` invisível por causa do stacking context da `.terminal` (z-index 1) capando a visibilidade. Movido para fora de `.terminal` (em `rodape.php`), z-index 100, opacity 0.30 com `--gold-dim`.
+- **Refinamento (commit `de7ce7f`)**: 4 stat-tiles sem sparkline ganharam hint contextual diegético (`// EM_ANDAMENTO`, `// EM_CAMPO`, `// DOSSIES_ABERTOS`, `// CATALOGADAS` quando há dados; alternativas vazias quando 0).
+
+##### Sprint 22 — Refinamento da Hero (sincronia áudio + loop ambiente + botões)
+- **Sincronia 3.2s (commit `c9ba77f`)** — usuário trocou `som_para_a_hero.mp3` por uma versão de 320 kbps @ 48 kHz. MP3 header parseado: 127.724 bytes / 320 kbps = **3.19s**. Animação encurtada de 4.5s → 3.2s para casar com a duração real do som (T_SETTLE_END, retiming de shockwaves/floor/aura/título/subtítulo, `data-duracao-ms` 6500 → 5200).
+- **Loop ambiente + botão "// ROMPER O VÉU" (commit `c935acd`)** — `clarividencia_paranormal_loop.mp3` (2.45 MB, 61.2s @ 320 kbps). `iniciarLoop()` em t=3.7s (sincronizado com title reveal). `fadeInLoop` 1s, `fadeOutLoopEFechar` 800ms ao clicar. Botão "// MANIFESTAR TRANSMISSÃO" (fallback de autoplay) substituído por "// ROMPER O VÉU" (CSS keyframe entra em 5.0s). `await audioQueda.play()` antes do primeiro RAF para sincronia frame-a-frame.
+- **Trava scroll + Esc/wheel + diagnóstico autoplay (commit `f5acea3`)** — `body.hero-ativa { overflow: hidden }` (Decisão D030). Esc + wheel-down como acionadores alternativos do "// ROMPER O VÉU" após `_podeFinalizar` em 5.8s. Logs diagnósticos `[Hero] ...` adicionados.
+- **Botão "// INICIAR" antes da animação (commit `b1fe3e5`)** — Decisão final D029. A tentativa anterior de "deixa rodar muda + libera no primeiro click qualquer" falhava para o áudio de queda (que dispara em t=0; quando o click chega, a queda já passou). Solução: gate de gesto humano antes da animação — dado em pose RESTING + bloco "// AUTORIZAR RITUAL" + botão "// INICIAR". Click libera autoplay para a sessão → animação dispara com áudio sincronizado frame-a-frame na primeira tentativa. Fluxo definitivo do produto.
+
+##### Sprint 23 — Fechamento e documentação consolidada
+- **decisoes.md** estendido com 8 ADRs novas (023-030) cobrindo a refatoração visual completa.
+- **logs.md** (este arquivo) com sprints 17-23 cronológicos.
+- **claude.md** com Phase 6 marcada concluída, Phase 7 backlog atualizado, tabela "Onde olhar" expandida com novas entradas (gate de autoplay, geometria 3D do icosaedro, sprite de dados global, trava de scroll da Hero).
+- **INTEGRACAO_DESIGN.md** marcado com seção Conclusão (totais de commits e LOC), preservado no repo como artefato histórico.
+- **`_design_import/`** comprimido em ZIP arquivado em `~/Downloads/clarividencia-design-archive-2026-05-09.zip` (caso seja necessário consultar SVG/HTML originais no futuro), pasta deletada do XAMPP.
+- Push final pra GitHub depois de tudo aplicado.
+
+---
+
 ## Como retomar em uma nova sessão
 
 1. **Leia primeiro**: `claude.md` (guia master).
