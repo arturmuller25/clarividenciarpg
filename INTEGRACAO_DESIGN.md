@@ -390,19 +390,42 @@ Passo 7 (Hero D20)                   DEPENDE de:
 > Surpresas, armadilhas, atalhos descobertos.
 > Útil para próxima refatoração visual grande.
 
-### L1 (2026-05-08) — Autoplay policy é browser-side e não tem workaround limpo
-- **Sintoma:** ao recarregar a página pela primeira vez, o áudio de queda do d20 e o loop ambiente ficam silenciosos. Animação visual roda normal.
-- **Causa raiz:** browsers modernos (Chrome ≥66, Firefox ≥66, Safari ≥11) bloqueiam `audio.play()` automático se o usuário **não interagiu com a página ainda nesta sessão**. A Promise retornada pelo `play()` rejeita com `NotAllowedError`. Isso é proteção contra anúncios sonoros invasivos — não é bug do código.
-- **Implementação correta no `hero.js`:**
-  1. `audio.load()` no DOMContentLoaded — pré-cache reduz latência do `play()` quando finalmente liberado.
-  2. `await audioQueda.play()` antes do RAF inicial — sincronia frame-a-frame se permitido.
-  3. Para o loop: try `play()` em t=3.7s; se falhar, instala `document.addEventListener('click', ativar, { once: true })` que toca no primeiro click do usuário em qualquer lugar (inclusive o próprio botão "// ROMPER O VÉU").
-- **Não funciona como workaround:**
+### L1 (2026-05-08) — Autoplay policy é browser-side e não tem workaround técnico limpo, mas tem solução de UX
+- **Sintoma original:** ao recarregar a página pela primeira vez, o áudio de queda do d20 e o loop ambiente ficavam silenciosos. Animação visual rodava normal.
+- **Causa raiz:** browsers modernos (Chrome ≥66, Firefox ≥66, Safari ≥11) bloqueiam `audio.play()` automático se o usuário **não interagiu com a página ainda nesta sessão**. A Promise retornada pelo `play()` rejeita com `NotAllowedError`. Isso é proteção contra anúncios sonoros invasivos.
+- **Tentativa 1 (funcional mas com lacuna):** instalar `document.addEventListener('click', ativar, { once: true })` no `iniciarLoop()`. Liberava o LOOP no primeiro click — mas o ÁUDIO DE QUEDA já tinha passado (ele dispara no t=0 da animação). O click chegava tarde demais para ele. Desync permanente entre visual da queda e som da queda na primeira visita.
+- **Solução final (Decisão D6 — botão "// INICIAR" antes da animação):** ver decisão D6 abaixo. O fluxo passa a SEMPRE esperar gesto humano antes de iniciar a animação. Click no botão libera autoplay para a sessão toda — ambos os áudios tocam normalmente, sincronia frame-a-frame na primeira tentativa.
+- **Não funciona como workaround técnico:**
   - Web Audio API com `AudioContext.resume()` — também exige user gesture
-  - Botão invisível no início "para iniciar o ritual" — UX enganosa, descartado
+  - Botão invisível "// MANIFESTAR" enganoso — UX ruim, descartado
   - Autoplay com `muted` + unmute via JS — funciona para vídeo, mas o som inicial fica perdido mesmo se desmutar
-- **Como reconhecer no console:** log `[Hero] Audio queda: BLOQUEADO pelo browser (NotAllowedError)`. Logs diagnósticos foram adicionados ao `hero.js` para ajudar a identificar o estado em sessões futuras.
-- **Mitigação acordada:** documentação explícita + console logs honestos. Usuários que recarregam frequentemente acabam com o autoplay liberado pelo histórico de interação. Primeira visita: animação silenciosa, loop libera no primeiro click.
+- **O que a solução D6 traz:**
+  - Audio queda + loop ambos tocam na primeira visita (sem precisar reload)
+  - Sincronia frame-a-frame da queda funciona desde o primeiro click
+  - `body.hero-ativa { overflow: hidden }` impede flash de scrollbar antes do click
+  - UX honesta — usuário consente em "ROMPER O VÉU" → "AUTORIZAR RITUAL" (vibe diegética)
+- **Logs diagnósticos no `hero.js`:** mantidos para identificar problemas em sessões futuras. Padrão `[Hero] ...` no console.
+
+### D6 (2026-05-08) — Botão de iniciar antes da Hero ✅ APROVADO (resolve L1)
+- **Contexto:** versão anterior tentava `audio.play()` automaticamente no DOMContentLoaded da Hero. Em first-visit, autoplay era bloqueado e o áudio de queda ficava perdido (não dava para reproduzir retroativamente — o ponto t=0 da timeline já tinha passado). Tentamos vários workarounds (document click listener fallback, etc.), mas nenhum resolvia a sincronia frame-a-frame da queda na primeira visita.
+- **Decisão:** introduzir um **gate de gesto humano** antes da animação:
+  1. Página carrega com a Hero exibindo o dado em pose RESTING (estática, leve hover senoidal) + bloco `// AUTORIZAR RITUAL` + botão `// INICIAR` centralizado
+  2. **Sem áudio tocando**, sem console errors de autoplay (logs `[Hero]` informam que pose RESTING está renderizada e aguarda click)
+  3. Click em `// INICIAR` → `audio.play()` é chamado dentro do contexto do user gesture (autoplay liberado para a sessão) → fade-out do grupo (200ms) → `dispararAnimacao()` que faz `await audioQueda.play()` antes do RAF inicial
+  4. Resto da timeline (queda, RESTING, título, subtítulo, loop, botão `// ROMPER O VÉU`) procede normalmente com áudio sincronizado
+- **Por que isso é melhor que a tentativa anterior:**
+  - Audio queda + visual queda 100% sincronizados na primeira visita (não só após F5)
+  - Não há mais janela "silenciosa" durante a queda na primeira interação
+  - Console limpo (sem warnings de autoplay block)
+  - Document click listener fallback do loop pode ser removido (não é mais necessário)
+- **Implementação:**
+  - `index.php`: novo bloco `.hero__iniciar-grupo` com `<button id="hero-iniciar-botao">// INICIAR</button>` antes de `.hero__particles`
+  - `terminal.css`: estilo do botão **idêntico ao `.hero__continuar`** (coerência de UI: o usuário entra com um botão dourado dessaturado, sai com outro). Fade-in 800ms / fade-out 200ms
+  - `hero.js`: novo `iniciarEspera()` (pose RESTING + loop hover), `clicouIniciar()` (handler do botão), `_modoEspera`/`_animacaoIniciou` flags. `dispararAnimacao()` agora só é chamado pelo handler, nunca automaticamente
+- **Trade-off aceito:**
+  - +1 click necessário para ver a animação (vs autoplay direto). Aceitável dado que é entrada do site (usuário esperava interação) e que o ganho de UX (audio + visual sincronizados) compensa
+  - Animação não roda automaticamente para usuários "passivos" — mas isso é honesto, não engana
+- **Status:** Implementado. Lição L1 atualizada referenciando esta decisão como solução final.
 
 ---
 

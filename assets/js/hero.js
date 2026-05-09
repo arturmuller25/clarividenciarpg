@@ -4,8 +4,19 @@
  * Animacao 3D dinamica do icosaedro com paragem matematicamente exata
  * na face 20 (RESTING * integer turns) + 2 fases de audio.
  *
- * SEQUENCIA (timeline ms):
- *   0     : await audioQueda.play() — sincroniza visual + som no mesmo tick
+ * NOVO FLUXO (Decisao D6): a animacao NAO dispara automaticamente. O usuario
+ * ve o dado em pose RESTING estatica (com leve hover) + bloco "// AUTORIZAR
+ * RITUAL" + botao "// INICIAR". Click no botao = gesto humano = libera
+ * autoplay para a sessao toda. Resolve elegantemente o problema de sincronia
+ * audio-queda que ocorria quando autoplay era bloqueado (audio nao podia
+ * ser sincronizado retroativamente — o ponto t=0 da timeline ja teria passado).
+ *
+ * SEQUENCIA (timeline ms — t=0 e o instante do click em INICIAR):
+ *   load          : pose RESTING renderizada + loop hover suave + grupo
+ *                   iniciar fade-in (800ms apos 200ms delay)
+ *   click INICIAR : grupo iniciar fade-out (200ms) + audio.play() liberado
+ *                   pelo gesto humano
+ *   0             : await audioQueda.play() — sincroniza visual + som
  *   0     - 1400  : queda do topo + scale-in (easeIn) + offset X esquerdo
  *   1400  - 1700  : bounce/squash no impacto
  *   0     - 3200  : tumble decelerante (rollEase) com integer turns por
@@ -17,25 +28,28 @@
  *                   + fade-in 1s; volume 0 -> 0.5)
  *   4800          : subtitulo entra (CSS)
  *   5000          : botao "// ROMPER O VEU" aparece (CSS keyframe 0.8s fade-in)
- *   click         : fadeOutLoopEFechar — fade do loop (800ms) + .is-saindo
- *                   no panel (sem fadeout automatico, espera o click)
+ *   5800          : Esc/wheel acionadores liberados (_podeFinalizar = true)
+ *   click final   : fadeOutLoopEFechar — fade do loop (800ms) + .is-saindo
+ *                   no panel + body.hero-ativa removido (libera scroll)
  *
  * SINCRONIA FRAME-A-FRAME do audio de queda:
- *   Apos audio.load() no DOMContentLoaded (pre-cache), o async dispararAnimacao
- *   faz `await audioQueda.play()` antes do primeiro RAF. play() resolve
- *   quando o audio realmente comecou. RAF dispara ~16ms depois (1 frame).
- *   Desync residual <= 16ms (limite hard do refresh rate). Imperceptivel.
+ *   audio.load() no DOMContentLoaded (pre-cache). dispararAnimacao() faz
+ *   `await audioQueda.play()` antes do primeiro RAF. play() resolve quando
+ *   o audio realmente comecou. RAF dispara ~16ms depois (1 frame). Desync
+ *   residual <= 16ms (limite hard do refresh rate). Imperceptivel.
  *
- * AUTOPLAY POLICY:
- *   - Audio queda: try play(); se falhar (Promise rejected), animacao roda
- *     silenciosa. Sem botao fallback (removido nesta sessao).
- *   - Audio loop: try play() em 3.7s; se falhar, instala click listener
- *     global que toca no PRIMEIRO click do usuario em qualquer lugar.
+ * AUTOPLAY POLICY (Decisao D6 — ver INTEGRACAO_DESIGN.md):
+ *   Browsers bloqueiam audio.play() automatico antes de gesto humano. Em
+ *   vez de tentar e falhar (versao anterior), o novo fluxo SEMPRE espera
+ *   o click em "// INICIAR". Apos esse gesto, audio queda + audio loop
+ *   ambos tocam normalmente. Se mesmo com gesto algo bloquear o loop,
+ *   nao ha fallback (foi removido) — animacao roda em silencio gracioso.
  *
  * DECISAO 019: gate first-visit/F5 preservado.
  *
- * REDUCED MOTION: short-circuit para pose final estatica (RESTING) sem
- * loop 3D, sem particulas. Audio + botao Continuar funcionam normal.
+ * REDUCED MOTION: pose RESTING estatica (sem hover loop, sem RAF de
+ * animacao). Botao INICIAR aparece imediatamente (sem fade-in CSS).
+ * Audio normal apos click.
  */
 (() => {
     'use strict';
@@ -200,6 +214,8 @@
         const dice           = hero.querySelector('#hero-dice');
         const particles      = hero.querySelector('#hero-particles');
         const botaoContinuar = hero.querySelector('.hero__continuar');
+        const grupoIniciar   = hero.querySelector('#hero-iniciar-grupo');
+        const botaoIniciar   = hero.querySelector('#hero-iniciar-botao');
         const audioQuedaSrc  = hero.dataset.audio || '';
         const audioLoopSrc   = hero.dataset.audioLoop || '';
 
@@ -225,8 +241,10 @@
         }
 
         /* Flags de orquestracao */
-        let _heroFinalizado = false;   /* true apos click em "Continuar" */
-        let _podeFinalizar  = false;   /* true apos botao Continuar ficar clicavel (~5.8s) */
+        let _heroFinalizado  = false;  /* true apos click em "// ROMPER O VEU" */
+        let _podeFinalizar   = false;  /* true apos botao Continuar ficar clicavel (~5.8s post-click INICIAR) */
+        let _modoEspera      = true;   /* true antes do click em "// INICIAR" — dado fica em hover */
+        let _animacaoIniciou = false;  /* true apos click em "// INICIAR" — bloqueia clicks duplos */
         let _loopFading     = false;   /* lock para evitar fadeOuts concorrentes */
 
         const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -515,26 +533,21 @@
             window.setTimeout(() => { _podeFinalizar = true; }, 5800);
         }
 
-        /* iniciarLoop — try play; se autoplay bloqueado, instala click listener
-         * global que libera o loop no PRIMEIRO click do usuario em qualquer lugar. */
+        /* iniciarLoop — apos Decisao D6 (botao "// INICIAR" como gate), audio
+         * ja foi liberado por gesto humano. play() deve resolver normalmente.
+         * Se algo bizarro bloquear (raro), animacao continua silenciosa — sem
+         * fallback document click listener (foi removido). */
         async function iniciarLoop() {
             if (_heroFinalizado || !audioLoop) return;
             audioLoop.volume = 0;
             console.log('[Hero] Audio loop: tentando play() em t=3.7s...');
             try {
                 await audioLoop.play();
-                console.log('[Hero] Audio loop: tocando (autoplay liberado), fade-in iniciado.');
+                console.log('[Hero] Audio loop: tocando, fade-in iniciado.');
                 fadeInLoop();
             } catch (err) {
-                /* Autoplay do loop bloqueado — primeiro click libera */
-                console.log('[Hero] Audio loop: BLOQUEADO (' + err.name +
-                            '). Aguardando primeira interacao do usuario (click em qualquer lugar).');
-                const ativarApos = () => {
-                    if (_heroFinalizado || !audioLoop) return;
-                    console.log('[Hero] Audio loop: liberado pelo click do usuario, tocando agora.');
-                    audioLoop.play().then(fadeInLoop).catch(() => { /* ignore */ });
-                };
-                document.addEventListener('click', ativarApos, { once: true });
+                console.log('[Hero] Audio loop: falha inesperada apos gesto humano (' + err.name +
+                            '). Animacao continuara em silencio — sem fallback.');
             }
         }
 
@@ -611,6 +624,56 @@
             botaoContinuar.addEventListener('click', fadeOutLoopEFechar);
         }
 
-        dispararAnimacao();
+        /* =========================================================
+         * MODO ESPERA — antes do click em "// INICIAR"
+         *
+         * Renderiza pose RESTING + leve hover (oscilacao senoidal sutil)
+         * via loop de RAF. Para quando _modoEspera = false (no click).
+         * ========================================================= */
+        let _t0Espera = 0;
+        function loopEspera(now) {
+            if (!_modoEspera) return;
+            if (_t0Espera === 0) _t0Espera = now;
+            /* t > T_SETTLE_END entra no branch "hover" do computePose
+             * (RESTING + oscilacao senoidal sutil) */
+            const tEspera = T_SETTLE_END + (now - _t0Espera);
+            renderPose(computePose(tEspera), tEspera);
+            requestAnimationFrame(loopEspera);
+        }
+
+        function iniciarEspera() {
+            console.log('[Hero] Pose inicial RESTING renderizada. Aguardando click no botao INICIAR.');
+            if (reduced) {
+                /* Reduced motion: pose estatica, sem RAF loop */
+                renderPose({ rot: RESTING, tx: 0, ty: 0, scale: 1 }, T_SETTLE_END + 1000);
+            } else {
+                requestAnimationFrame(loopEspera);
+            }
+        }
+
+        function clicouIniciar() {
+            if (_animacaoIniciou) return;
+            _animacaoIniciou = true;
+            _modoEspera      = false;   /* loopEspera para no proximo frame */
+            console.log('[Hero] Botao INICIAR clicado — autorizacao do usuario obtida.');
+
+            /* Fade-out visual do grupo iniciar (200ms) */
+            if (grupoIniciar) grupoIniciar.classList.add('is-saindo');
+
+            /* Apos fade visual, esconde grupo do DOM e dispara animacao 3D + audio.
+             * setTimeout 200ms ainda esta dentro da janela de "user gesture"
+             * (~5s no Chrome) — autoplay continua liberado para o audio.play()
+             * dentro de dispararAnimacao(). */
+            window.setTimeout(() => {
+                if (grupoIniciar) grupoIniciar.style.display = 'none';
+                dispararAnimacao();
+            }, 200);
+        }
+
+        if (botaoIniciar) {
+            botaoIniciar.addEventListener('click', clicouIniciar);
+        }
+
+        iniciarEspera();
     });
 })();

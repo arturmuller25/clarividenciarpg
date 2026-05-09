@@ -78,6 +78,15 @@ require __DIR__ . '/views/cabecalho.php';
 <div class="hero" role="dialog" aria-label="Tela de boas-vindas"
      data-audio="<?= escapar(url('/assets/audio/som_para_a_hero.mp3')) ?>"
      data-audio-loop="<?= escapar(url('/assets/audio/clarividencia_paranormal_loop.mp3')) ?>">
+    <!-- Grupo de iniciacao — visivel ate o usuario clicar em INICIAR.
+         Click libera autoplay para a sessao toda (gesto humano), depois
+         dispara dispararAnimacao() em hero.js. Justificativa em
+         INTEGRACAO_DESIGN.md, Decisao D6. -->
+    <div class="hero__iniciar-grupo" id="hero-iniciar-grupo">
+        <span class="hero__iniciar-rotulo">// AUTORIZAR RITUAL</span>
+        <button type="button" class="hero__iniciar-botao" id="hero-iniciar-botao">// INICIAR</button>
+    </div>
+
     <div class="hero__particles" id="hero-particles" aria-hidden="true"></div>
     <div class="hero__palco">
         <div class="hero__floor" aria-hidden="true"></div>

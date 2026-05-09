@@ -2422,6 +2422,76 @@ pre, code {
     100% { opacity: 1; transform: translateY(0); filter: blur(0); }
 }
 
+/* Grupo "// AUTORIZAR RITUAL" + botao "// INICIAR" — visivel antes da
+ * animacao. Click no botao libera autoplay (gesto humano) e dispara
+ * dispararAnimacao() em hero.js. Centralizado sobre o dado em pose RESTING
+ * (z-index 5 para sobrepor). Decisao D6. */
+.hero__iniciar-grupo {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+    text-align: center;
+    opacity: 0;
+    pointer-events: none;
+    /* Fade-in 800ms apos 200ms de delay para coordenar com o load da pagina */
+    animation: hero-iniciar-fade-in 800ms ease-out 200ms forwards;
+}
+.hero__iniciar-grupo.is-saindo {
+    /* Click no botao -> JS adiciona is-saindo. Anula a animation forwards
+     * (que segurava opacity:1) para que opacity volte ao default 0 com
+     * transition de 200ms. */
+    animation: none !important;
+    opacity: 0;
+    transition: opacity 200ms ease-out;
+    pointer-events: none;
+}
+.hero__iniciar-rotulo {
+    font-family: var(--mono);
+    font-weight: 500;
+    font-size: 0.72rem;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: rgba(160, 133, 39, 0.7);   /* gold-dim dessaturado */
+}
+.hero__iniciar-botao {
+    /* Estilo idêntico ao .hero__continuar (mantém coerência de UI) */
+    padding: 14px 32px;
+    background: transparent;
+    border: 1px solid rgba(224, 181, 61, 0.55);
+    border-radius: var(--r);
+    color: var(--el-conhecimento);
+    font-family: var(--mono);
+    font-weight: 500;
+    font-size: 0.85rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition:
+        background var(--t-fast, 150ms) ease,
+        border-color var(--t-fast, 150ms) ease,
+        box-shadow var(--t-fast, 150ms) ease,
+        color var(--t-fast, 150ms) ease;
+}
+.hero__iniciar-botao:hover,
+.hero__iniciar-botao:focus-visible {
+    background: rgba(224, 181, 61, 0.06);
+    border-color: var(--el-conhecimento);
+    box-shadow: 0 0 24px -4px rgba(224, 181, 61, 0.55);
+    outline: none;
+}
+
+@keyframes hero-iniciar-fade-in {
+    0%   { opacity: 0; transform: translate(-50%, calc(-50% + 8px)); pointer-events: none; }
+    99%  { opacity: 1; transform: translate(-50%, -50%);             pointer-events: none; }
+    100% { opacity: 1; transform: translate(-50%, -50%);             pointer-events: auto; }
+}
+
 /* Botao "// ROMPER O VEU" — aparece em 5.0s apos o subtitulo entrar.
  * Click dispara fadeOutLoopEFechar() em hero.js: fade do loop ambiente
  * (800ms) -> .is-saindo no panel -> display:none.
@@ -2475,6 +2545,7 @@ pre, code {
  * CSS abaixo desliga as animations CSS auxiliares (titulo/subtitulo/aura/
  * shockwaves/floor/particulas), exibindo estado final sem movimento. */
 @media (prefers-reduced-motion: reduce) {
+    .hero__iniciar-grupo              { animation: none; opacity: 1; pointer-events: auto; }
     .hero.is-rodando .hero__d20-3d    { animation: none; transform: none; }
     .hero.is-rodando .hero__titulo    { animation: none; opacity: 1; transform: none; filter: none; letter-spacing: 0.18em; }
     .hero.is-rodando .hero__subtitulo { animation: none; opacity: 1; transform: none; filter: none; }
