@@ -420,6 +420,4 @@ require __DIR__ . '/views/cabecalho.php';
     </div>
 </section>
 
-<aside class="microcopy-oculto" aria-hidden="true">// nao confiar nos numeros pares</aside>
-
 <?php require __DIR__ . '/views/rodape.php'; ?>

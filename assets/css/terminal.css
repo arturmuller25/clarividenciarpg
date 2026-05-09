@@ -4060,7 +4060,11 @@ pre, code {
 }
 .atalho-rapido__plus { color: var(--el-conhecimento); margin-right: 8px; }
 
-/* --- Microcopy oculto (easter egg "// não confiar nos números pares") -- */
+/* --- Microcopy oculto (easter egg "// não confiar nos números pares") --
+ * Vive fora de .terminal (em rodape.php apos o </div>) — caso contrario o
+ * stacking context de .terminal (z-index:1) capa a visibilidade abaixo do
+ * body::after vignette (z-index:2). Aqui z-index 100 garante posicao
+ * sobre TUDO (vignette, modais futuros, etc). */
 .microcopy-oculto {
     position: fixed;
     bottom: 8px;
@@ -4068,9 +4072,9 @@ pre, code {
     font: var(--t-mono);
     font-size: 9px;
     letter-spacing: 0.16em;
-    color: rgba(160, 133, 39, 0.18);
+    color: rgba(224, 181, 61, 0.30);  /* gold envenenado @ 0.30 — discreto mas legivel sobre vignette */
     pointer-events: none;
     user-select: none;
-    z-index: 3;
+    z-index: 100;
 }
 @media (max-width: 540px) { .microcopy-oculto { display: none; } }
