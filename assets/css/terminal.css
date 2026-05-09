@@ -2188,32 +2188,25 @@ pre, code {
 }
 
 /* Wrapper 3D — recebe os transforms; SVG e faces ficam dentro */
+/* Container do dado 3D — JS injeta SVG dinamico aqui via #hero-dice.
+ * O JS aplica `transform: translate(...) scale(...)` em tempo real durante
+ * a queda, bounce e hover; a rotacao 3D e dentro do SVG (matrizes em JS,
+ * sem CSS 3D). Mantido `will-change` para otimizacao do compositor. */
 .hero__d20-3d {
     position: relative;
     width: 100%;
     height: 100%;
-    transform-style: preserve-3d;
     will-change: transform;
 }
-
-.hero__d20 {
+.hero__d20-3d > svg {
     width: 100%;
     height: 100%;
     display: block;
+    overflow: visible;
 }
 
-/* Animação 3D ativa quando JS adiciona .is-rodando — queda 4.6s.
- * Rolagem mais longa (2.4s) com easing mais "pesado" + impacto/bounce
- * em 0.7s. Total = 3.1s ate o dado parar. */
-.hero.is-rodando .hero__d20-3d {
-    animation:
-        hero-rolar-3d 2.4s cubic-bezier(0.15, 0.9, 0.25, 1) 0s 1 forwards,
-        hero-assentar-3d 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) 2.4s 1 forwards;
-}
-
-/* Pool of light dourado no chao — brilha quando o dado assenta (3.1s).
- * Adiciona materialidade ao impacto, como se o d20 estivesse sobre uma
- * mesa iluminada por um foco. Origem: design system hero_d20.html. */
+/* Pool of light dourado no chao — fade-in quando o dado assenta (4.5s).
+ * Materialidade ao impacto. Origem: design system hero_d20.html. */
 .hero__floor {
     position: absolute;
     left: 50%; top: 60%;
@@ -2231,75 +2224,33 @@ pre, code {
     z-index: -1;
 }
 .hero.is-rodando .hero__floor {
-    animation: hero-floor-fade 1.2s ease 3.1s forwards;
+    animation: hero-floor-fade 1.2s ease 4.5s forwards;
 }
 @keyframes hero-floor-fade {
     0%   { opacity: 0; }
     100% { opacity: 1; }
 }
 
-/* Hero d20 v2: borda externa + 11 faces individuais com sombreamento + arestas finas */
-
-.hero__d20-borda {
-    fill: none;
-    stroke: #ffd60a;
-    stroke-width: 3;
-    stroke-linejoin: round;
-}
-
-.hero__d20-face {
-    stroke: rgba(255, 214, 10, 0.45);
-    stroke-width: 1;
-    stroke-linejoin: round;
-}
-.hero__d20-face--claro  { fill: url(#hero-face-claro); }
-.hero__d20-face--medio  { fill: url(#hero-face-medio); }
-.hero__d20-face--escuro { fill: url(#hero-face-escuro); }
-
-.hero__d20-arestas line {
-    stroke: rgba(255, 214, 10, 0.55);
-    stroke-width: 1.2;
-}
-
-/* Camada especular (highlight) que dá noção de face refletindo luz */
-.hero__d20-spec {
-    fill: url(#hero-spec);
+/* Particulas dos 4 elementos flutuando para cima atras do dado.
+ * .particle e criada dinamicamente em hero.js (cor + tamanho + drift
+ * aleatorios), e CSS aqui so define o keyframe `float-up`. */
+.hero__particles {
+    position: absolute;
+    inset: 0;
     pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
 }
-
-/*
- * Rolagem 3D — três fases controladas por animation-timing-function
- * declarado dentro de cada keyframe (afeta a TRANSIÇÃO até o próximo).
- *   0% → 50%   : aceleração rápida (cubic-bezier "ease-in-out" agressivo)
- *   50% → 80%  : rotação contínua (linear)
- *   80% → 100% : desaceleração com leve overshoot (settle)
- */
-@keyframes hero-rolar-3d {
-    0% {
-        transform: rotateX(0) rotateY(0) rotateZ(0) scale(0.7) translate3d(0, 0, 0);
-        animation-timing-function: cubic-bezier(0.55, 0, 0.45, 1);
-    }
-    25% {
-        transform: rotateX(180deg) rotateY(140deg) rotateZ(60deg) scale(1.12) translate3d(-22px, -34px, 40px);
-        animation-timing-function: linear;
-    }
-    50% {
-        transform: rotateX(360deg) rotateY(280deg) rotateZ(140deg) scale(0.95) translate3d(28px, 18px, -30px);
-        animation-timing-function: linear;
-    }
-    75% {
-        transform: rotateX(560deg) rotateY(450deg) rotateZ(240deg) scale(1.08) translate3d(-14px, -10px, 20px);
-        animation-timing-function: cubic-bezier(0.33, 0, 0.45, 1);
-    }
-    100% {
-        transform: rotateX(720deg) rotateY(720deg) rotateZ(360deg) scale(1.02) translate3d(0, 0, 0);
-    }
+.particle {
+    position: absolute;
+    border-radius: 50%;
+    opacity: 0;
+    animation: float-up linear forwards;
 }
-
-@keyframes hero-assentar-3d {
-    0%   { transform: rotateX(720deg) rotateY(720deg) rotateZ(360deg) scale(1.02); }
-    40%  { transform: rotateX(720deg) rotateY(720deg) rotateZ(360deg) scale(1.22); }
-    100% { transform: rotateX(720deg) rotateY(720deg) rotateZ(360deg) scale(1.10); }
+@keyframes float-up {
+    0%   { transform: translate(0, 0) scale(0.6);                    opacity: 0; }
+    15%  {                                                            opacity: 0.85; }
+    100% { transform: translate(var(--drift, 0), -110vh) scale(1);   opacity: 0; }
 }
 
 /*
@@ -2328,15 +2279,16 @@ pre, code {
 }
 
 .hero.is-rodando .hero__shockwave--1 {
-    animation: hero-shockwave 1.0s cubic-bezier(0, 0.55, 0.45, 1) 1.78s 1 forwards;
+    /* Onda principal sai EXATAMENTE no instante do RESTING (t=4.5s) */
+    animation: hero-shockwave 1.0s cubic-bezier(0, 0.55, 0.45, 1) 4.5s 1 forwards;
 }
 .hero.is-rodando .hero__shockwave--2 {
-    /* Segunda onda em SANGUE — combina com o impacto cinematográfico */
+    /* Segunda onda em SANGUE — leve defasagem para "echo" cinematografico */
     border-color: var(--el-sangue);
-    animation: hero-shockwave 1.3s cubic-bezier(0, 0.55, 0.45, 1) 1.95s 1 forwards;
+    animation: hero-shockwave 1.3s cubic-bezier(0, 0.55, 0.45, 1) 4.65s 1 forwards;
 }
 .hero.is-rodando .hero__shockwave--flash {
-    animation: hero-shockwave-flash 0.5s ease-out 1.78s 1 forwards;
+    animation: hero-shockwave-flash 0.5s ease-out 4.5s 1 forwards;
 }
 
 @keyframes hero-shockwave {
@@ -2363,62 +2315,11 @@ pre, code {
     100% { transform: translate(-50%, -50%) scale(2.5); opacity: 0; }
 }
 
-/* O numero central muda rapidamente durante a rolagem.
-   Cada elemento ".hero__face-N" fica visivel em uma fatia do tempo,
-   e apenas a face "20" persiste no final. */
-.hero__face {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: var(--titulo);
-    font-weight: 900;
-    font-size: clamp(3.4rem, 9vw, 5rem);
-    color: var(--ink);
-    opacity: 0;
-    pointer-events: none;
-}
-
-/* Faces piscam apenas quando a Hero esta rodando */
-.hero.is-rodando .hero__face-7  { animation: hero-piscar-face 0.18s ease 0.00s 1; }
-.hero.is-rodando .hero__face-13 { animation: hero-piscar-face 0.18s ease 0.20s 1; }
-.hero.is-rodando .hero__face-2  { animation: hero-piscar-face 0.18s ease 0.40s 1; }
-.hero.is-rodando .hero__face-18 { animation: hero-piscar-face 0.18s ease 0.60s 1; }
-.hero.is-rodando .hero__face-5  { animation: hero-piscar-face 0.18s ease 0.80s 1; }
-.hero.is-rodando .hero__face-11 { animation: hero-piscar-face 0.18s ease 1.00s 1; }
-.hero.is-rodando .hero__face-9  { animation: hero-piscar-face 0.18s ease 1.20s 1; }
-.hero.is-rodando .hero__face-16 { animation: hero-piscar-face 0.18s ease 1.40s 1; }
-.hero.is-rodando .hero__face-3  { animation: hero-piscar-face 0.18s ease 1.60s 1; }
-.hero.is-rodando .hero__face-14 { animation: hero-piscar-face 0.18s ease 1.80s 1; }
-.hero.is-rodando .hero__face-8  { animation: hero-piscar-face 0.18s ease 2.00s 1; }
-.hero.is-rodando .hero__face-19 { animation: hero-piscar-face 0.18s ease 2.20s 1; }
-
-/* O 20 entra em 2.4s (apos a queda) e fica com brilho dourado intenso */
-.hero.is-rodando .hero__face-20 {
-    animation: hero-revelar-20 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) 2.4s 1 forwards;
-}
-
-@keyframes hero-piscar-face {
-    0%, 100% { opacity: 0; }
-    50%      { opacity: 1; }
-}
-
-@keyframes hero-revelar-20 {
-    0%   { opacity: 0; transform: scale(0.6); color: var(--ink); text-shadow: none; }
-    50%  { opacity: 1; transform: scale(1.35); color: var(--el-conhecimento);
-           text-shadow:
-               0 0  6px #fff,
-               0 0 22px var(--el-conhecimento),
-               0 0 48px rgba(224, 181, 61, 0.85),
-               0 0 96px rgba(224, 181, 61, 0.45); }
-    100% { opacity: 1; transform: scale(1); color: var(--el-conhecimento);
-           text-shadow:
-               0 0 22px var(--el-conhecimento),
-               0 0 56px rgba(224, 181, 61, 0.55); }
-}
-
-/* Aura pulsante por tras do dado quando ele assenta */
+/* Aura pulsante por tras do dado quando ele assenta na face 20.
+ * Os antigos .hero__face-N (spans HTML que piscavam por keyframe CSS)
+ * foram removidos: o JS agora renderiza os 20 numeros DENTRO do SVG
+ * (em <text>), com o "20" ganhando glow dourado via filter durante
+ * a fase de fadeIn no fim do tumble (700ms antes de RESTING). */
 .hero__aura {
     position: absolute;
     inset: -20%;
@@ -2428,8 +2329,8 @@ pre, code {
     pointer-events: none;
 }
 .hero.is-rodando .hero__aura {
-    /* Aura comeca quando o dado para (3.1s = 2.4s queda + 0.7s impacto) */
-    animation: hero-aura 2.4s ease 3.1s infinite;
+    /* Aura comeca quando o dado para (4.5s) e pulsa infinitamente */
+    animation: hero-aura 2.4s ease 4.5s infinite;
 }
 @keyframes hero-aura {
     0%, 100% { opacity: 0; transform: scale(0.95); }
@@ -2452,9 +2353,10 @@ pre, code {
     will-change: transform, opacity, filter, letter-spacing;
 }
 .hero.is-rodando .hero__titulo {
-    /* Titulo aparece DEPOIS do dado parar (3.2s) — sequencia narrativa.
-     * 1.3s, ease-in-out, fantasmagorica (blur+slide+letter-spacing). */
-    animation: hero-titulo 1.3s ease-in-out 3.2s forwards;
+    /* Titulo aparece em 5.0s — 500ms apos o dado assentar em 4.5s, dando
+     * respiro para a aura/shockwaves se expressarem antes da revelacao
+     * narrativa. 1.3s ease-in-out (blur->nitido + slide + letter-spacing). */
+    animation: hero-titulo 1.3s ease-in-out 5.0s forwards;
 }
 .hero__titulo-realce {
     color: var(--el-conhecimento);
@@ -2504,8 +2406,9 @@ pre, code {
     opacity: 0;
 }
 .hero.is-rodando .hero__subtitulo {
-    /* Subtitulo entra apos o titulo se assentar (4.3s -> 5.1s end). */
-    animation: hero-subtitulo 0.8s ease-in-out 4.3s forwards;
+    /* Subtitulo entra apos o titulo se assentar (~6.1s) e fica visivel
+     * por ~400ms antes do .is-saindo (6.5s) iniciar o fadeout do panel. */
+    animation: hero-subtitulo 0.7s ease-in-out 6.1s forwards;
 }
 @keyframes hero-subtitulo {
     0%   { opacity: 0; transform: translateY(10px); filter: blur(4px); }
@@ -2545,15 +2448,19 @@ pre, code {
     50%      { box-shadow: 0 0 28px -4px rgba(255, 214, 10, 0.55); }
 }
 
-/* Respeita usuarios com motion reduzido — exibe estado final imediatamente */
+/* Respeita usuarios com motion reduzido — JS curto-circuita o loop 3D
+ * em hero.js (reduced=true) e renderiza pose RESTING estatica imediatamente.
+ * CSS abaixo desliga as animations CSS auxiliares (titulo/subtitulo/aura/
+ * shockwaves/floor/particulas), exibindo estado final sem movimento. */
 @media (prefers-reduced-motion: reduce) {
-    .hero.is-rodando .hero__d20-3d { animation: none; transform: scale(1.1); }
-    .hero.is-rodando .hero__face-20 { opacity: 1; color: var(--el-conhecimento);
-                                      text-shadow: 0 0 24px var(--el-conhecimento); }
-    .hero.is-rodando .hero__titulo  { animation: none; opacity: 1; transform: none; filter: none; letter-spacing: 0.18em; }
+    .hero.is-rodando .hero__d20-3d   { animation: none; transform: none; }
+    .hero.is-rodando .hero__titulo   { animation: none; opacity: 1; transform: none; filter: none; letter-spacing: 0.18em; }
     .hero.is-rodando .hero__subtitulo { animation: none; opacity: 1; transform: none; filter: none; }
-    .hero.is-rodando .hero__aura { animation: none; opacity: 0.5; }
+    .hero.is-rodando .hero__aura      { animation: none; opacity: 0.4; }
+    .hero.is-rodando .hero__floor     { animation: none; opacity: 0.6; }
     .hero.is-rodando .hero__shockwave { animation: none; opacity: 0; }
+    .hero__particles                  { display: none; }
+    .particle                          { animation: none !important; opacity: 0 !important; }
 }
 
 /* ====================================================================
