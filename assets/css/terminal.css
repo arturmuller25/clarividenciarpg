@@ -2207,11 +2207,40 @@ pre, code {
     display: block;
 }
 
-/* Animação 3D ativa quando JS adiciona .is-rodando */
+/* Animação 3D ativa quando JS adiciona .is-rodando — queda 4.6s.
+ * Rolagem mais longa (2.4s) com easing mais "pesado" + impacto/bounce
+ * em 0.7s. Total = 3.1s ate o dado parar. */
 .hero.is-rodando .hero__d20-3d {
     animation:
-        hero-rolar-3d 1.8s 0s 1 forwards,
-        hero-assentar-3d 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 1.8s 1 forwards;
+        hero-rolar-3d 2.4s cubic-bezier(0.15, 0.9, 0.25, 1) 0s 1 forwards,
+        hero-assentar-3d 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) 2.4s 1 forwards;
+}
+
+/* Pool of light dourado no chao — brilha quando o dado assenta (3.1s).
+ * Adiciona materialidade ao impacto, como se o d20 estivesse sobre uma
+ * mesa iluminada por um foco. Origem: design system hero_d20.html. */
+.hero__floor {
+    position: absolute;
+    left: 50%; top: 60%;
+    width: 90%; height: 30%;
+    transform: translate(-50%, 0);
+    background: radial-gradient(
+        ellipse at center,
+        rgba(224, 181, 61, 0.32),
+        rgba(123, 77, 158, 0.18) 40%,
+        transparent 70%
+    );
+    filter: blur(28px);
+    opacity: 0;
+    pointer-events: none;
+    z-index: -1;
+}
+.hero.is-rodando .hero__floor {
+    animation: hero-floor-fade 1.2s ease 3.1s forwards;
+}
+@keyframes hero-floor-fade {
+    0%   { opacity: 0; }
+    100% { opacity: 1; }
 }
 
 /* Hero d20 v2: borda externa + 11 faces individuais com sombreamento + arestas finas */
@@ -2357,22 +2386,22 @@ pre, code {
 }
 
 /* Faces piscam apenas quando a Hero esta rodando */
-.hero.is-rodando .hero__face-7  { animation: hero-piscar-face 0.15s ease 0.00s 1; }
-.hero.is-rodando .hero__face-13 { animation: hero-piscar-face 0.15s ease 0.15s 1; }
-.hero.is-rodando .hero__face-2  { animation: hero-piscar-face 0.15s ease 0.30s 1; }
-.hero.is-rodando .hero__face-18 { animation: hero-piscar-face 0.15s ease 0.45s 1; }
-.hero.is-rodando .hero__face-5  { animation: hero-piscar-face 0.15s ease 0.60s 1; }
-.hero.is-rodando .hero__face-11 { animation: hero-piscar-face 0.15s ease 0.75s 1; }
-.hero.is-rodando .hero__face-9  { animation: hero-piscar-face 0.15s ease 0.90s 1; }
-.hero.is-rodando .hero__face-16 { animation: hero-piscar-face 0.15s ease 1.05s 1; }
-.hero.is-rodando .hero__face-3  { animation: hero-piscar-face 0.15s ease 1.20s 1; }
-.hero.is-rodando .hero__face-14 { animation: hero-piscar-face 0.15s ease 1.35s 1; }
-.hero.is-rodando .hero__face-8  { animation: hero-piscar-face 0.15s ease 1.50s 1; }
-.hero.is-rodando .hero__face-19 { animation: hero-piscar-face 0.15s ease 1.65s 1; }
+.hero.is-rodando .hero__face-7  { animation: hero-piscar-face 0.18s ease 0.00s 1; }
+.hero.is-rodando .hero__face-13 { animation: hero-piscar-face 0.18s ease 0.20s 1; }
+.hero.is-rodando .hero__face-2  { animation: hero-piscar-face 0.18s ease 0.40s 1; }
+.hero.is-rodando .hero__face-18 { animation: hero-piscar-face 0.18s ease 0.60s 1; }
+.hero.is-rodando .hero__face-5  { animation: hero-piscar-face 0.18s ease 0.80s 1; }
+.hero.is-rodando .hero__face-11 { animation: hero-piscar-face 0.18s ease 1.00s 1; }
+.hero.is-rodando .hero__face-9  { animation: hero-piscar-face 0.18s ease 1.20s 1; }
+.hero.is-rodando .hero__face-16 { animation: hero-piscar-face 0.18s ease 1.40s 1; }
+.hero.is-rodando .hero__face-3  { animation: hero-piscar-face 0.18s ease 1.60s 1; }
+.hero.is-rodando .hero__face-14 { animation: hero-piscar-face 0.18s ease 1.80s 1; }
+.hero.is-rodando .hero__face-8  { animation: hero-piscar-face 0.18s ease 2.00s 1; }
+.hero.is-rodando .hero__face-19 { animation: hero-piscar-face 0.18s ease 2.20s 1; }
 
-/* O 20 entra em 1.8s e fica para sempre (fade-in com brilho) */
+/* O 20 entra em 2.4s (apos a queda) e fica com brilho dourado intenso */
 .hero.is-rodando .hero__face-20 {
-    animation: hero-revelar-20 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 1.8s 1 forwards;
+    animation: hero-revelar-20 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) 2.4s 1 forwards;
 }
 
 @keyframes hero-piscar-face {
@@ -2382,10 +2411,16 @@ pre, code {
 
 @keyframes hero-revelar-20 {
     0%   { opacity: 0; transform: scale(0.6); color: var(--ink); text-shadow: none; }
-    60%  { opacity: 1; transform: scale(1.25); color: var(--el-conhecimento);
-           text-shadow: 0 0 32px var(--el-conhecimento), 0 0 64px rgba(255, 214, 10, 0.5); }
+    50%  { opacity: 1; transform: scale(1.35); color: var(--el-conhecimento);
+           text-shadow:
+               0 0  6px #fff,
+               0 0 22px var(--el-conhecimento),
+               0 0 48px rgba(224, 181, 61, 0.85),
+               0 0 96px rgba(224, 181, 61, 0.45); }
     100% { opacity: 1; transform: scale(1); color: var(--el-conhecimento);
-           text-shadow: 0 0 24px var(--el-conhecimento), 0 0 48px rgba(255, 214, 10, 0.4); }
+           text-shadow:
+               0 0 22px var(--el-conhecimento),
+               0 0 56px rgba(224, 181, 61, 0.55); }
 }
 
 /* Aura pulsante por tras do dado quando ele assenta */
@@ -2393,12 +2428,13 @@ pre, code {
     position: absolute;
     inset: -20%;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(255, 214, 10, 0.18), transparent 60%);
+    background: radial-gradient(circle, rgba(224, 181, 61, 0.20), transparent 60%);
     opacity: 0;
     pointer-events: none;
 }
 .hero.is-rodando .hero__aura {
-    animation: hero-aura 2.4s ease 1.8s infinite;
+    /* Aura comeca quando o dado para (3.1s = 2.4s queda + 0.7s impacto) */
+    animation: hero-aura 2.4s ease 3.1s infinite;
 }
 @keyframes hero-aura {
     0%, 100% { opacity: 0; transform: scale(0.95); }
@@ -2421,8 +2457,9 @@ pre, code {
     will-change: transform, opacity, filter, letter-spacing;
 }
 .hero.is-rodando .hero__titulo {
-    /* Entrada cinematografica: 1.4s, ease-in-out, fantasmagorica */
-    animation: hero-titulo 1.4s ease-in-out 2.4s forwards;
+    /* Titulo aparece DEPOIS do dado parar (3.2s) — sequencia narrativa.
+     * 1.3s, ease-in-out, fantasmagorica (blur+slide+letter-spacing). */
+    animation: hero-titulo 1.3s ease-in-out 3.2s forwards;
 }
 .hero__titulo-realce {
     color: var(--el-conhecimento);
@@ -2472,7 +2509,8 @@ pre, code {
     opacity: 0;
 }
 .hero.is-rodando .hero__subtitulo {
-    animation: hero-subtitulo 0.8s ease-in-out 3.6s forwards;
+    /* Subtitulo entra apos o titulo se assentar (4.3s -> 5.1s end). */
+    animation: hero-subtitulo 0.8s ease-in-out 4.3s forwards;
 }
 @keyframes hero-subtitulo {
     0%   { opacity: 0; transform: translateY(10px); filter: blur(4px); }
