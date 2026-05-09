@@ -2424,18 +2424,19 @@ pre, code {
 
 /* Grupo "// AUTORIZAR RITUAL" + botao "// INICIAR" — visivel antes da
  * animacao. Click no botao libera autoplay (gesto humano) e dispara
- * dispararAnimacao() em hero.js. Centralizado sobre o dado em pose RESTING
- * (z-index 5 para sobrepor). Decisao D6. */
+ * dispararAnimacao() em hero.js. Decisao D6/029.
+ *
+ * AGORA NO FLOW FLEX da .hero (era position:absolute centralizado sobre
+ * o palco — gerava sobreposicao + amontoamento). order:2 garante que
+ * aparece DEPOIS do palco mesmo estando antes no DOM. margin-top adiciona
+ * respiro entre o dado e o rotulo (somado ao gap:32px da .hero = ~70px). */
 .hero__iniciar-grupo {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 5;
+    order: 2;                      /* fica apos o palco no flex column */
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 18px;
+    gap: 36px;                     /* respiro entre rotulo e botao (~--space-6+12) */
+    margin-top: 36px;              /* somado ao gap:32px da .hero = ~68px do palco */
     text-align: center;
     opacity: 0;
     pointer-events: none;
@@ -2454,14 +2455,16 @@ pre, code {
 .hero__iniciar-rotulo {
     font-family: var(--mono);
     font-weight: 500;
-    font-size: 0.72rem;
-    letter-spacing: 0.28em;
+    font-size: 0.78rem;            /* +0.06rem para legibilidade com ls maior */
+    letter-spacing: 0.3em;         /* alinhado com outros textos diegeticos */
     text-transform: uppercase;
     color: rgba(160, 133, 39, 0.7);   /* gold-dim dessaturado */
 }
 .hero__iniciar-botao {
-    /* Estilo idêntico ao .hero__continuar (mantém coerência de UI) */
-    padding: 14px 32px;
+    /* Estilo idêntico ao .hero__continuar (mantém coerência de UI).
+     * Padding ligeiramente aumentado (14x32 -> 16x38) para dar mais peso
+     * visual na hora do gate (botao e o foco da tela durante a espera). */
+    padding: 16px 38px;
     background: transparent;
     border: 1px solid rgba(224, 181, 61, 0.55);
     border-radius: var(--r);
@@ -2487,9 +2490,22 @@ pre, code {
 }
 
 @keyframes hero-iniciar-fade-in {
-    0%   { opacity: 0; transform: translate(-50%, calc(-50% + 8px)); pointer-events: none; }
-    99%  { opacity: 1; transform: translate(-50%, -50%);             pointer-events: none; }
-    100% { opacity: 1; transform: translate(-50%, -50%);             pointer-events: auto; }
+    /* Sem mais translate(-50%, -50%) — grupo nao e mais position:absolute */
+    0%   { opacity: 0; transform: translateY(12px); pointer-events: none; }
+    99%  { opacity: 1; transform: translateY(0);    pointer-events: none; }
+    100% { opacity: 1; transform: translateY(0);    pointer-events: auto; }
+}
+
+/* Pre-animacao: titulo/subtitulo/botao "// ROMPER O VEU" sao display:none
+ * para nao ocuparem altura no flex layout durante a espera. Sem isso,
+ * eles "puxavam" o palco+iniciar-grupo para cima do center vertical da
+ * viewport (mesmo invisiveis com opacity:0 ainda ocupam altura). Quando
+ * .is-rodando entra (apos click em INICIAR), display volta ao default
+ * e as keyframes CSS animam a entrada. */
+.hero:not(.is-rodando) .hero__titulo,
+.hero:not(.is-rodando) .hero__subtitulo,
+.hero:not(.is-rodando) .hero__continuar {
+    display: none;
 }
 
 /* Botao "// ROMPER O VEU" — aparece em 5.0s apos o subtitulo entrar.
