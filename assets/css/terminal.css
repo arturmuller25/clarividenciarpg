@@ -2408,7 +2408,8 @@ pre, code {
 }
 .hero.is-rodando .hero__subtitulo {
     /* Subtitulo entra apos o titulo se assentar (~4.8s) e fica visivel
-     * por ~400ms antes do .is-saindo (5.2s) iniciar o fadeout do panel. */
+     * indefinidamente — o panel agora SO sai quando o usuario clica
+     * em "// ROMPER O VEU" (sem fadeout automatico). */
     animation: hero-subtitulo 0.7s ease-in-out 4.8s forwards;
 }
 @keyframes hero-subtitulo {
@@ -2416,37 +2417,52 @@ pre, code {
     100% { opacity: 1; transform: translateY(0); filter: blur(0); }
 }
 
-/* Botao "Iniciar Ritual" — aparece apenas se autoplay foi bloqueado */
-.hero__iniciar {
+/* Botao "// ROMPER O VEU" — aparece em 5.0s apos o subtitulo entrar.
+ * Click dispara fadeOutLoopEFechar() em hero.js: fade do loop ambiente
+ * (800ms) -> .is-saindo no panel -> display:none.
+ * Estilo: mono uppercase com letter-spacing largo, borda dourada
+ * dessaturada, fundo transparente; hover ganha tinta dourada sutil. */
+.hero__continuar {
     position: relative;
     z-index: 2;
-    padding: 14px 28px;
-    background: rgba(255, 214, 10, 0.04);
-    border: 1px solid var(--el-conhecimento);
-    color: var(--el-conhecimento);
-    font-family: var(--ui);
-    font-size: 0.9rem;
-    font-weight: 600;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
+    margin-top: 28px;
+    padding: 14px 32px;
+    background: transparent;
+    border: 1px solid rgba(224, 181, 61, 0.55);
     border-radius: var(--r);
+    color: var(--el-conhecimento);
+    font-family: var(--mono);
+    font-weight: 500;
+    font-size: 0.85rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
     cursor: pointer;
-    transition: all 220ms ease;
-    animation: hero-iniciar-pulse 2.6s ease-in-out infinite;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(8px);
+    transition:
+        background var(--t-fast, 150ms) ease,
+        border-color var(--t-fast, 150ms) ease,
+        box-shadow var(--t-fast, 150ms) ease,
+        color var(--t-fast, 150ms) ease;
 }
-.hero__iniciar:hover,
-.hero__iniciar:focus-visible {
-    background: var(--el-conhecimento);
-    color: #000;
-    box-shadow: 0 0 32px -4px rgba(255, 214, 10, 0.7);
+.hero.is-rodando .hero__continuar {
+    /* Entra com fade-in 0.8s a partir de 5.0s (apos o subtitulo).
+     * pointer-events: auto so na ultima frame (interpolacao discreta). */
+    animation: hero-continuar 0.8s ease-out 5.0s forwards;
+}
+.hero__continuar:hover,
+.hero__continuar:focus-visible {
+    background: rgba(224, 181, 61, 0.06);
+    border-color: var(--el-conhecimento);
+    box-shadow: 0 0 24px -4px rgba(224, 181, 61, 0.55);
     outline: none;
-    transform: translateY(-2px);
 }
-.hero.is-rodando .hero__iniciar { display: none; }
 
-@keyframes hero-iniciar-pulse {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(255, 214, 10, 0); }
-    50%      { box-shadow: 0 0 28px -4px rgba(255, 214, 10, 0.55); }
+@keyframes hero-continuar {
+    0%   { opacity: 0; transform: translateY(8px); pointer-events: none; }
+    99%  { opacity: 1; transform: translateY(0);  pointer-events: none; }
+    100% { opacity: 1; transform: translateY(0);  pointer-events: auto; }
 }
 
 /* Respeita usuarios com motion reduzido — JS curto-circuita o loop 3D
@@ -2454,14 +2470,15 @@ pre, code {
  * CSS abaixo desliga as animations CSS auxiliares (titulo/subtitulo/aura/
  * shockwaves/floor/particulas), exibindo estado final sem movimento. */
 @media (prefers-reduced-motion: reduce) {
-    .hero.is-rodando .hero__d20-3d   { animation: none; transform: none; }
-    .hero.is-rodando .hero__titulo   { animation: none; opacity: 1; transform: none; filter: none; letter-spacing: 0.18em; }
+    .hero.is-rodando .hero__d20-3d    { animation: none; transform: none; }
+    .hero.is-rodando .hero__titulo    { animation: none; opacity: 1; transform: none; filter: none; letter-spacing: 0.18em; }
     .hero.is-rodando .hero__subtitulo { animation: none; opacity: 1; transform: none; filter: none; }
+    .hero.is-rodando .hero__continuar { animation: none; opacity: 1; transform: none; pointer-events: auto; }
     .hero.is-rodando .hero__aura      { animation: none; opacity: 0.4; }
     .hero.is-rodando .hero__floor     { animation: none; opacity: 0.6; }
     .hero.is-rodando .hero__shockwave { animation: none; opacity: 0; }
     .hero__particles                  { display: none; }
-    .particle                          { animation: none !important; opacity: 0 !important; }
+    .particle                         { animation: none !important; opacity: 0 !important; }
 }
 
 /* ====================================================================

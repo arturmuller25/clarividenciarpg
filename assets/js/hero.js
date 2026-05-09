@@ -2,31 +2,40 @@
  * TERMINAL DA ORDEM — Hero D20 cinematografica.
  *
  * Animacao 3D dinamica do icosaedro com paragem matematicamente exata
- * na face 20 (RESTING * integer turns). Portado do hero_d20.html do
- * design system Claude.
+ * na face 20 (RESTING * integer turns) + 2 fases de audio.
  *
- * SEQUENCIA (timeline ms — calibrada para casar com som_para_a_hero.mp3 ~3.2s):
+ * SEQUENCIA (timeline ms):
+ *   0     : await audioQueda.play() — sincroniza visual + som no mesmo tick
  *   0     - 1400  : queda do topo + scale-in (easeIn) + offset X esquerdo
  *   1400  - 1700  : bounce/squash no impacto
  *   0     - 3200  : tumble decelerante (rollEase) com integer turns por
- *                   eixo (4*X / 5*Y / 3*Z) => em p=1, R_tumble = identity,
- *                   logo rot = RESTING (face 20 alinhada com +Z, exata).
- *   1760  - 3200  : late wobble com decay quadratico => 0 em p=1.
- *   3100+         : burst de particulas (28) + sustain interval 220ms.
- *   3200+         : hover senoidal infinito ate fadeout. Som termina natural
- *                   exatamente neste instante (sincronia perfeita).
- *   3700+         : titulo "CLARIVIDENCIA PARANORMAL" entra (CSS keyframe).
- *   5200          : .is-saindo => fadeout do panel.
+ *                   eixo (4*X / 5*Y / 3*Z) => em p=1, R_tumble = identity
+ *   1760  - 3200  : late wobble com decay quadratico => 0 em p=1
+ *   3100+         : burst de particulas (28) + sustain interval 220ms
+ *   3200          : RESTING (face 20 exata) + audio queda termina natural
+ *   3700          : titulo entra (CSS) + iniciarLoop() (audio loop play
+ *                   + fade-in 1s; volume 0 -> 0.5)
+ *   4800          : subtitulo entra (CSS)
+ *   5000          : botao "// ROMPER O VEU" aparece (CSS keyframe 0.8s fade-in)
+ *   click         : fadeOutLoopEFechar — fade do loop (800ms) + .is-saindo
+ *                   no panel (sem fadeout automatico, espera o click)
  *
- * AUDIO:
- *   som_para_a_hero.mp3 (~3.19s @ 320 kbps) ACOMPANHA exatamente a queda+
- *   tumble. Termina natural no instante do RESTING. Hover continua em
- *   silencio narrativo (~2s).
+ * SINCRONIA FRAME-A-FRAME do audio de queda:
+ *   Apos audio.load() no DOMContentLoaded (pre-cache), o async dispararAnimacao
+ *   faz `await audioQueda.play()` antes do primeiro RAF. play() resolve
+ *   quando o audio realmente comecou. RAF dispara ~16ms depois (1 frame).
+ *   Desync residual <= 16ms (limite hard do refresh rate). Imperceptivel.
+ *
+ * AUTOPLAY POLICY:
+ *   - Audio queda: try play(); se falhar (Promise rejected), animacao roda
+ *     silenciosa. Sem botao fallback (removido nesta sessao).
+ *   - Audio loop: try play() em 3.7s; se falhar, instala click listener
+ *     global que toca no PRIMEIRO click do usuario em qualquer lugar.
  *
  * DECISAO 019: gate first-visit/F5 preservado.
  *
  * REDUCED MOTION: short-circuit para pose final estatica (RESTING) sem
- * loop, sem particulas, titulo aparece imediatamente via class CSS.
+ * loop 3D, sem particulas. Audio + botao Continuar funcionam normal.
  */
 (() => {
     'use strict';
@@ -166,20 +175,37 @@
         }
         try { sessionStorage.setItem('terminalHeroVisto', '1'); } catch (_) {}
 
-        const dice         = hero.querySelector('#hero-dice');
-        const particles    = hero.querySelector('#hero-particles');
-        const botaoIniciar = hero.querySelector('.hero__iniciar');
-        const audioSrc     = hero.dataset.audio || '';
-        const duracaoMs    = parseInt(hero.dataset.duracaoMs || '6500', 10);
+        const dice           = hero.querySelector('#hero-dice');
+        const particles      = hero.querySelector('#hero-particles');
+        const botaoContinuar = hero.querySelector('.hero__continuar');
+        const audioQuedaSrc  = hero.dataset.audio || '';
+        const audioLoopSrc   = hero.dataset.audioLoop || '';
 
-        let audio = null;
-        if (audioSrc) {
-            audio = new Audio(audioSrc);
-            audio.preload = 'auto';
-            audio.volume  = 0.7;
+        /* Audio queda (sound do impacto/queda do dado, ~3.19s) */
+        let audioQueda = null;
+        if (audioQuedaSrc) {
+            audioQueda = new Audio(audioQuedaSrc);
+            audioQueda.preload = 'auto';
+            audioQueda.volume  = 0.7;
+            audioQueda.load();   /* pre-cache para minimizar latencia do play() */
         }
 
+        /* Audio loop ambiente (toca apos a queda, fade-in suave) */
+        let audioLoop = null;
+        if (audioLoopSrc) {
+            audioLoop = new Audio(audioLoopSrc);
+            audioLoop.preload = 'auto';
+            audioLoop.loop    = true;
+            audioLoop.volume  = 0;
+            audioLoop.load();    /* pre-cache para o loop nao demorar a iniciar em 3.7s */
+        }
+
+        /* Flags de orquestracao */
+        let _heroFinalizado = false;   /* true apos click em "Continuar" */
+        let _loopFading     = false;   /* lock para evitar fadeOuts concorrentes */
+
         const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const T_LOOP_START = 3700;     /* ms — coincide com title reveal CSS */
 
         /* Constroi SVG dinamico (20 polygons + 20 texts) */
         const svg = document.createElementNS(NS, 'svg');
@@ -416,71 +442,109 @@
             }
         }
 
-        function disparar(comAudio) {
+        /* dispararAnimacao — orquestra audio queda + animacao 3D + agendamento
+         * do loop ambiente. Sem fadeout automatico do panel (espera click). */
+        async function dispararAnimacao() {
             hero.classList.add('is-rodando');
 
+            /* SINCRONIA FRAME-A-FRAME: aguarda audio.play() resolver (audio
+             * realmente comecou) ANTES do primeiro RAF da visual. play() returns
+             * Promise — quando ela resolve, o som comecou. RAF dispara ~16ms
+             * depois (1 frame). Desync residual <= 16ms (limite do refresh rate
+             * do browser). Imperceptivel. */
+            if (audioQueda) {
+                try { await audioQueda.play(); } catch (_) { /* sem som — segue silenciosa */ }
+            }
+
             if (reduced) {
-                /* Estado estatico: pose RESTING sem translate, sem loop, sem particulas */
+                /* Pose RESTING estatica, sem RAF loop, sem particulas */
                 renderPose({ rot: RESTING, tx: 0, ty: 0, scale: 1 }, T_SETTLE_END + 1000);
             } else {
-                t0 = performance.now();
-                requestAnimationFrame(stepLoop);
-                /* Burst de particulas 100ms antes do RESTING — sai junto
-                 * com o impacto sonoro da queda. */
+                /* Primeiro frame iniciado no proprio RAF (sem 1-frame extra de lag).
+                 * stepLoop(ts) renderiza imediatamente com t=0, depois pede o
+                 * proximo RAF dentro de stepLoop. */
+                requestAnimationFrame((ts) => {
+                    t0 = ts;
+                    stepLoop(ts);
+                });
                 window.setTimeout(iniciarParticulas, T_SETTLE_END - 100);
             }
 
-            window.setTimeout(() => {
-                hero.classList.add('is-saindo');
-                if (_intervalParticulas) clearInterval(_intervalParticulas);
-                if (comAudio && audio && !audio.paused) {
-                    fadeOutAudio(audio, 700);
-                }
-            }, duracaoMs);
-
-            window.setTimeout(() => {
-                hero.style.display = 'none';
-                hero.setAttribute('aria-hidden', 'true');
-            }, duracaoMs + 950);
+            /* Loop ambiente comeca quando o titulo aparece (3.7s a partir DESTE
+             * ponto — apos o await play(), entao relativo ao inicio real da visual). */
+            window.setTimeout(iniciarLoop, T_LOOP_START);
         }
 
-        async function tentarIniciarRitual() {
-            if (!audio) { disparar(false); return; }
+        /* iniciarLoop — try play; se autoplay bloqueado, instala click listener
+         * global que libera o loop no PRIMEIRO click do usuario em qualquer lugar. */
+        async function iniciarLoop() {
+            if (_heroFinalizado || !audioLoop) return;
+            audioLoop.volume = 0;
             try {
-                await audio.play();
-                disparar(true);
+                await audioLoop.play();
+                fadeInLoop();
             } catch (_) {
-                exibirBotao();
+                /* Autoplay do loop bloqueado — primeiro click libera */
+                const ativarApos = () => {
+                    if (_heroFinalizado || !audioLoop) return;
+                    audioLoop.play().then(fadeInLoop).catch(() => { /* ignore */ });
+                };
+                document.addEventListener('click', ativarApos, { once: true });
             }
         }
-        function exibirBotao() {
-            if (!botaoIniciar) { disparar(false); return; }
-            botaoIniciar.hidden = false;
-            botaoIniciar.focus({ preventScroll: true });
-            botaoIniciar.addEventListener('click', () => {
-                botaoIniciar.hidden = true;
-                if (audio) audio.play().catch(err => console.warn('Audio Hero falhou:', err));
-                disparar(true);
-            }, { once: true });
+
+        /* fadeInLoop — volume 0 -> 0.5 em 1s (suave apos silencio do assentamento) */
+        function fadeInLoop() {
+            if (_heroFinalizado || !audioLoop) return;
+            const VOL_TARGET = 0.5;
+            const DUR        = 1000;
+            const start      = performance.now();
+            function passo(now) {
+                if (_heroFinalizado || !audioLoop) return;
+                const t = Math.min(1, (now - start) / DUR);
+                audioLoop.volume = VOL_TARGET * t;
+                if (t < 1) requestAnimationFrame(passo);
+            }
+            requestAnimationFrame(passo);
         }
 
-        function fadeOutAudio(audioEl, duracao) {
-            const v0  = audioEl.volume;
-            const ini = performance.now();
-            function passo(agora) {
-                const t = (agora - ini) / duracao;
-                if (t >= 1) {
-                    audioEl.pause();
-                    audioEl.currentTime = 0;
-                    audioEl.volume = v0;
-                    return;
+        /* fadeOutLoopEFechar — disparado pelo click no botao "// ROMPER O VEU".
+         * Fade do volume atual -> 0 (800ms), pause, depois .is-saindo no panel.
+         * Lock _heroFinalizado bloqueia callbacks pendentes (fadeInLoop, click
+         * listener global do iniciarLoop, etc). */
+        function fadeOutLoopEFechar() {
+            if (_loopFading || _heroFinalizado) return;
+            _heroFinalizado = true;
+            _loopFading     = true;
+
+            const DUR   = 800;
+            const v0    = audioLoop ? audioLoop.volume : 0;
+            const start = performance.now();
+            function passo(now) {
+                const t = Math.min(1, (now - start) / DUR);
+                if (audioLoop) audioLoop.volume = v0 * (1 - t);
+                if (t < 1) {
+                    requestAnimationFrame(passo);
+                } else {
+                    if (audioLoop) {
+                        audioLoop.pause();
+                        audioLoop.volume = v0;
+                    }
+                    hero.classList.add('is-saindo');
+                    if (_intervalParticulas) clearInterval(_intervalParticulas);
+                    window.setTimeout(() => {
+                        hero.style.display = 'none';
+                        hero.setAttribute('aria-hidden', 'true');
+                    }, 950);
                 }
-                audioEl.volume = v0 * (1 - t);
-                window.requestAnimationFrame(passo);
             }
-            window.requestAnimationFrame(passo);
+            requestAnimationFrame(passo);
         }
 
-        tentarIniciarRitual();
+        if (botaoContinuar) {
+            botaoContinuar.addEventListener('click', fadeOutLoopEFechar);
+        }
+
+        dispararAnimacao();
     });
 })();

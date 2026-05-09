@@ -77,7 +77,7 @@ require __DIR__ . '/views/cabecalho.php';
      ============================================================ -->
 <div class="hero" role="dialog" aria-label="Tela de boas-vindas"
      data-audio="<?= escapar(url('/assets/audio/som_para_a_hero.mp3')) ?>"
-     data-duracao-ms="5200">
+     data-audio-loop="<?= escapar(url('/assets/audio/clarividencia_paranormal_loop.mp3')) ?>">
     <div class="hero__particles" id="hero-particles" aria-hidden="true"></div>
     <div class="hero__palco">
         <div class="hero__floor" aria-hidden="true"></div>
@@ -98,10 +98,10 @@ require __DIR__ . '/views/cabecalho.php';
     </h1>
     <p class="hero__subtitulo">// TERMINAL DA ORDEM // ACESSO LIBERADO</p>
 
-    <!-- Fallback quando autoplay do audio for bloqueado -->
-    <button type="button" class="hero__iniciar" hidden>
-        &#9678; CLIQUE PARA INICIAR O RITUAL
-    </button>
+    <!-- Botao "Continuar" — aparece apos subtitulo (CSS keyframe em 5.0s).
+         Click dispara fadeOutLoopEFechar() em hero.js: fade do loop ambiente
+         (800ms) -> .is-saindo no panel -> display:none. -->
+    <button type="button" class="hero__continuar">// ROMPER O V&Eacute;U</button>
 </div>
 
 <!-- ===========================================================
